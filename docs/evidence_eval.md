@@ -40,7 +40,7 @@ API 키·모델 미설정, 오류·시간 초과, 거부·미완료, 잘못된 �
   카드에 원문 인용·발행 정보·시험 후보 필드를 추가하고 공통 JSON Schema와 UI 타입을 재생성했다.
   팀 작성 데모 규정은 team_authored_demo이며 모의 고정 응답인 team_authored_fixture와 구분한다.
   report.mock은 evidence.mock 또는 simulation.mock이다. 부족·실패·미확인 조건은 보류한다.
-  현재 서버는 비모의 결과가 한계를 넘으면 차단, 통과해도 LIVE_POLICY_NOT_CONFIGURED로 보류한다.
+  현재 서버는 지정 v3 모델과 팀 문서/fixture를 가상 전용 정책으로 확인하며 통과 시 담당자 승인 대기로 보낸다. 다른 계산·출처·범위는 보류한다.
 - 2번: 기존 `Scenario(kind='degraded_cooling', evidence_id=...)` 그대로 전달한다.
   효율 수치나 자유 변수를 생성하지 않는다. 수치는 시뮬레이터가 결정하며 카드에는 demo_assumption으로 표시한다.
 - 4번: 기존 title/claim/locator/limitation 필드 유지. 카드의 stance, excerpt, applicability,

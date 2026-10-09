@@ -213,8 +213,6 @@ def test_schema_v1_migration_preserves_history_and_setpoint(tmp_path):
 
 def test_clock_advance_invalidates_approval_before_execution(tmp_path, monkeypatch):
     monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
-    calculation = simulator.simulate
-    monkeypatch.setattr(simulator, "simulate", lambda *args: calculation(*args).model_copy(update={"mock": True}))
     gateway = Gateway(tmp_path / "approval.sqlite3")
     try:
         row = gateway.create(NewRequest(command=Command(target_pct=80)))
@@ -247,8 +245,8 @@ def test_paused_observation_stays_stale_until_explicit_sample(tmp_path, monkeypa
         gateway.adapter.sample_state()
         refreshed = gateway.evaluate(row["id"])
         assert refreshed["report"]["snapshot"]["observed_at"] == 1700000061.0
-        assert refreshed["status"] == "hold"
-        assert refreshed["report"]["reason_code"] == "LIVE_POLICY_NOT_CONFIGURED"
+        assert refreshed["status"] == "awaiting_approval"
+        assert refreshed["report"]["reason_code"] == "DEMO_PASS"
         assert gateway.adapter.read_state().simulation_time_s == 0
         assert not gateway.adapter.executions
     finally:

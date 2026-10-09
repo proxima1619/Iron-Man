@@ -117,3 +117,7 @@ JSON Schema/OpenAPI와 TypeScript 생성 파일을 직접 수정하지 마세요
 
 
 평가 작업의 필드·취소·시간 초과·재시작 동작은 [평가 안내](../docs/EVALUATION.md)에 있습니다. `evaluation`은 기존 기록에서 null일 수 있습니다. `examples/request-evaluating.json`, `examples/request-timed-out.json`으로 진행·실패 화면을 개발할 수 있습니다.
+
+## 가상 승인 정책
+
+보고서의 `execution_scope`는 `virtual` 또는 `unconfigured`입니다. 과거 보고서의 누락 필드는 unconfigured로 해석합니다. `virtual-cooling-policy-v2`를 통과한 요청만 승인 대기로 전환되며 승인·적용 시 현재 상태와 원래 보고서 유효 시간을 다시 검사합니다. `DEMO_POLICY_OUT_OF_SCOPE`는 지정 모델·어댑터·합성 상태·300초 예측 범위 이외의 요청을 보류한 상태입니다. [정책 조건](../docs/VIRTUAL_POLICY.md)을 참고하세요.

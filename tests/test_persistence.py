@@ -1,4 +1,4 @@
-"""SQLite restart/crash tests. Approval scenarios deliberately use a test-only mock policy."""
+"""SQLite restart/crash tests. Approval scenarios use the real virtual-only policy and simulator."""
 import json
 import os
 from pathlib import Path
@@ -17,14 +17,13 @@ from tests.test_gateway import OP, APP
 
 @pytest.fixture
 def approved_db(tmp_path, monkeypatch):
-    calculation = simulator.simulate
-    monkeypatch.setattr(simulator, 'simulate', lambda *args: calculation(*args).model_copy(update={'mock': True}))
+    monkeypatch.setenv('IRON_MAN_EVIDENCE_MODE', 'fixture')
     path = tmp_path / 'persistent.sqlite3'
     gateway = Gateway(path)
     row = gateway.create(NewRequest(command={'target_pct':80}))
     row = gateway.evaluate(row['id'])
     row = gateway.decide(row['id'], DecisionInput(report_digest=row['report']['digest'],
-        decision='approve', reason='test-only mock approval'), 'approver')
+        decision='approve', reason='virtual-only policy approval'), 'approver')
     gateway.close()
     return path, row
 

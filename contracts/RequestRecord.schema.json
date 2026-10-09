@@ -230,6 +230,15 @@
           "title": "Policy Version",
           "type": "string"
         },
+        "execution_scope": {
+          "default": "unconfigured",
+          "enum": [
+            "virtual",
+            "unconfigured"
+          ],
+          "title": "Execution Scope",
+          "type": "string"
+        },
         "mock": {
           "title": "Mock",
           "type": "boolean"
@@ -277,6 +286,7 @@
             "SIMULATION_INCOMPLETE",
             "MODULE_FAILURE",
             "LIVE_POLICY_NOT_CONFIGURED",
+            "DEMO_POLICY_OUT_OF_SCOPE",
             "EVALUATION_CONTEXT_CHANGED",
             "EVALUATION_TIMEOUT",
             "EVALUATION_CANCELLED",

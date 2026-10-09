@@ -1226,6 +1226,15 @@
             "type": "string",
             "title": "Policy Version"
           },
+          "execution_scope": {
+            "type": "string",
+            "enum": [
+              "virtual",
+              "unconfigured"
+            ],
+            "title": "Execution Scope",
+            "default": "unconfigured"
+          },
           "mock": {
             "type": "boolean",
             "title": "Mock"
@@ -1274,6 +1283,7 @@
               "SIMULATION_INCOMPLETE",
               "MODULE_FAILURE",
               "LIVE_POLICY_NOT_CONFIGURED",
+              "DEMO_POLICY_OUT_OF_SCOPE",
               "EVALUATION_CONTEXT_CHANGED",
               "EVALUATION_TIMEOUT",
               "EVALUATION_CANCELLED",
@@ -1300,6 +1310,7 @@
           "snapshot_digest",
           "model_version",
           "policy_version",
+          "execution_scope",
           "mock",
           "can_approve",
           "evidence",

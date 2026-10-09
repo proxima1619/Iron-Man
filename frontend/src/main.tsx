@@ -51,11 +51,17 @@ function App() {
     return data;
   }
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setPlant(null);
+      return;
+    }
     let active = true;
     api("/state")
       .then((state) => {
-        if (active) setPlant(state);
+        if (active) {
+          setPlant(state);
+          setError("");
+        }
       })
       .catch((e) => {
         if (active) setError(e instanceof Error ? e.message : "상태 조회 오류");
@@ -63,7 +69,7 @@ function App() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [token]);
   useEffect(() => {
     if (!row || row.status !== "evaluating") return;
     const requestId = row.id;
@@ -157,8 +163,8 @@ function App() {
           />
         </label>
         <p className="muted">
-          초기 합성 상태에서는 60%가 위험 시험에서 차단되고, 80%는 승인 정책
-          미설정으로 보류됩니다. 아래 가상 상태가 바뀌면 계산 결과도 달라집니다.
+          초기 합성 상태에서는 60%가 위험 시험에서 차단되고, 80%는 가상 설비
+          전용 정책을 통과해 담당자 승인 대기가 됩니다. 아래 가상 상태가 바뀌면 계산 결과도 달라집니다.
           예측 구간은 300초이며, 가상 적용한 목표 속도는 다음 명령까지
           유지됩니다.
         </p>
@@ -381,6 +387,13 @@ function App() {
               </div>
             )}
             <strong>{row.report?.reason}</strong>
+            {row.report && (
+              <p className="muted">
+                실행 범위: {row.report.execution_scope === "virtual" ? "가상 설비 전용" : "미설정"}
+                {" · "}모델: {row.report.model_version}{" · "}정책: {row.report.policy_version}
+                {" · "}실제 설비 안전 승인이 아닙니다.
+              </p>
+            )}
             {row.report?.simulation && (
               <>
                 <table>

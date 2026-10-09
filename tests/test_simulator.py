@@ -57,13 +57,13 @@ def test_unknown_model_version_rejected():
         simulate(Command(target_pct=80), snapshot(), [Scenario(kind="normal")], "unknown")
 
 
-def test_real_calculation_without_live_policy_holds_virtual_execution():
+def test_real_calculation_waits_for_human_virtual_approval():
     gateway = Gateway()
     try:
         row = gateway.create(NewRequest(command=Command(target_pct=80)))
         evaluated = gateway.evaluate(row["id"])
-        assert evaluated["status"] == "hold"
-        assert evaluated["report"]["reason_code"] == "LIVE_POLICY_NOT_CONFIGURED"
+        assert evaluated["status"] == "awaiting_approval"
+        assert evaluated["report"]["reason_code"] == "DEMO_PASS"
         assert evaluated["report"]["simulation"]["mock"] is False
         assert gateway.adapter.executions == {}
     finally:
@@ -147,15 +147,15 @@ def test_runtime_domain_failure_in_candidate_returns_no_partial_scenarios():
     assert "out_of_domain:temperature_c" in result.limitation
 
 
-def test_runtime_domain_failure_holds_gateway_and_preserves_virtual_state():
+def test_unsupported_forecast_holds_gateway_and_preserves_virtual_state():
     gateway = Gateway()
     try:
         before = gateway.adapter.read_state().model_dump(exclude={"observed_at"})
         row = gateway.create(NewRequest(command=Command(target_pct=20, duration_s=3600)))
         evaluated = gateway.evaluate(row["id"])
         assert evaluated["status"] == "hold"
-        assert evaluated["report"]["reason_code"] == "SIMULATION_INCOMPLETE"
-        assert evaluated["report"]["simulation"]["scenarios"] == []
+        assert evaluated["report"]["reason_code"] == "DEMO_POLICY_OUT_OF_SCOPE"
+        assert evaluated["report"]["simulation"] is None
         assert not evaluated["report"]["can_approve"]
         assert gateway.adapter.read_state().model_dump(exclude={"observed_at"}) == before
         assert gateway.adapter.executions == {}

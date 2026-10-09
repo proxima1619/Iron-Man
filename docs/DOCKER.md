@@ -70,7 +70,7 @@ docker compose config --quiet
 - Docker daemon 연결 오류: Docker Desktop/Engine 실행 확인.
 - 포트 충돌: `.env`에서 `IRON_MAN_HTTP_PORT` 변경.
 - DB already in use: 같은 볼륨을 사용하는 다른 API 서버가 있는지 확인. API를 여러 worker/replica로 늘리지 않습니다.
-- 60% 요청은 위험 차단, 80% 요청은 현재 승인 정책 미설정 보류입니다. Docker로 감쌌다고 승인 정책이 바뀌지는 않습니다.
+- 60% 요청은 위험 차단, 80% 요청은 가상 전용 정책을 통과하면 승인 대기입니다. Docker로 감쌌다고 승인 정책이 바뀌지는 않습니다.
 
 ## 격리된 통합 시험
 

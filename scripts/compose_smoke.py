@@ -12,6 +12,7 @@ import urllib.request
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8080').rstrip('/')
 TOKEN = os.environ.get('IRON_MAN_OPERATOR_TOKEN', 'local-operator')
+APPROVER = os.environ.get('IRON_MAN_APPROVER_TOKEN', 'local-approver')
 
 def api(path, body=None, token=TOKEN):
     headers = {'Content-Type': 'application/json'}
@@ -51,11 +52,24 @@ if __name__ == '__main__':
         time.sleep(0.2)
         report = api(f'/requests/{row["id"]}')
     assert report['status'] == 'blocked'
+    approved = api('/requests', {'command': {'target_pct': 80}, 'purpose': 'Virtual approval persistence smoke'})
+    approved = api(f'/requests/{approved["id"]}/evaluate', {})
+    deadline = time.monotonic() + 100
+    while approved['status'] == 'evaluating' and time.monotonic() < deadline:
+        time.sleep(0.2)
+        approved = api(f'/requests/{approved["id"]}')
+    assert approved['status'] == 'awaiting_approval'
+    request_path = f'/requests/{approved["id"]}'
+    api(request_path + '/decisions', {'decision': 'approve', 'reason': 'virtual-only policy check',
+        'report_digest': approved['report']['digest']}, token=APPROVER)
+    applied = api(request_path + '/execute', {'report_digest': approved['report']['digest']})
+    assert applied['status'] == 'completed' and applied['execution']['virtual'] is True
     before_state = api('/state')
     before_state.pop('observed_at')
     compose('up', '-d', '--no-deps', '--force-recreate', 'api')
     wait_ready()
     assert api(f'/requests/{row["id"]}') == report
+    assert api(request_path) == applied
     after_state = api('/state')
     after_state.pop('observed_at')
     assert after_state == before_state
@@ -63,5 +77,6 @@ if __name__ == '__main__':
     compose('up', '-d', '--wait', '--wait-timeout', '90')
     wait_ready()
     assert api(f'/requests/{row["id"]}') == report
+    assert api(request_path + '/execute', {'report_digest': approved['report']['digest']}) == applied
     assert api(f'/requests/{row["id"]}/history')['reports']
     print('PASS: web, proxy, auth, API replacement, full stack recreation, persistent request/report/state')

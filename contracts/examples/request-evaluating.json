@@ -27,8 +27,8 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "hold",
-      "report_digest": "7acff3b5b8a3e56ff11d74dbda950b70ec1302698847b4412ee677d83e76d8ef",
+      "verdict": "awaiting_approval",
+      "report_digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd",
       "actor": null,
       "reason": null,
       "execution_id": null

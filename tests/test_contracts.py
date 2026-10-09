@@ -69,18 +69,13 @@ def test_invalid_boundary_dictionary_holds(client, monkeypatch):
     monkeypatch.setattr(evidence, 'review_evidence', lambda *args: {'approved': True})
     assert evaluated(client)['report']['reason_code'] == 'MODULE_FAILURE'
 
-def test_non_mock_module_does_not_implicitly_enable_execution(client, monkeypatch):
+def test_mock_results_cannot_enable_virtual_approval(client, monkeypatch):
     original = simulator.simulate
-    def real_shape(*args):
-        data = original(*args).model_dump()
-        data['mock'] = False
-        for row in data['scenarios']:
-            row['value_origin'] = 'model_calculation'
-        return data
-    monkeypatch.setattr(simulator, 'simulate', real_shape)
+    monkeypatch.setattr(simulator, 'simulate', lambda *args: original(*args).model_copy(update={'mock': True}))
     row = evaluated(client)
     assert row['status'] == 'hold'
     assert row['report']['reason_code'] == 'LIVE_POLICY_NOT_CONFIGURED'
+
 
 def test_published_schema_matches_backend():
     assert json.loads(Path('contracts/openapi.json').read_text(encoding='utf-8')) == app.openapi()

@@ -341,6 +341,12 @@ export interface components {
             model_version: string;
             /** Policy Version */
             policy_version: string;
+            /**
+             * Execution Scope
+             * @default unconfigured
+             * @enum {string}
+             */
+            execution_scope: "virtual" | "unconfigured";
             /** Mock */
             mock: boolean;
             /** Can Approve */
@@ -356,7 +362,7 @@ export interface components {
              * Reason Code
              * @enum {string}
              */
-            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "LIVE_POLICY_NOT_CONFIGURED" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
+            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "LIVE_POLICY_NOT_CONFIGURED" | "DEMO_POLICY_OUT_OF_SCOPE" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
             /** Reason */
             reason: string;
             /** Digest */

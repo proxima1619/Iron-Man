@@ -2,12 +2,12 @@
 import time
 import uuid
 from fastapi import HTTPException
-from backend.contracts import NewRequest, DecisionReport, Snapshot
+from backend.contracts import NewRequest, DecisionReport, Snapshot, EvidenceReview, SimulationResult
 from backend.simulator import service as simulator
 from backend.simulator.adapter import DemoAdapter
 from backend.gateway.storage import SQLiteStore
 
-POLICY_VERSION = "demo-policy-v1"
+from backend.gateway.policy import POLICY_VERSION, scope_issue, evidence_issue, simulation_issue, LIMIT_C
 APPROVAL_TTL_S = 300
 SNAPSHOT_TTL_S = 60
 
@@ -88,6 +88,7 @@ class Gateway:
             return row, {"request_id": row["id"], "revision": row["revision"],
                 "request": body.model_dump(), "snapshot": snapshot.model_dump(),
                 "model_version": simulator.MODEL_VERSION, "policy_version": POLICY_VERSION,
+                "execution_scope": "virtual" if type(self.adapter) is DemoAdapter else "unconfigured",
                 "task_id": task["id"] if task else None}
 
     def _finish_evaluation(self, context, report, task_status="completed"):
@@ -103,7 +104,7 @@ class Gateway:
                 report = failure_report(context, "EVALUATION_TIMEOUT", "평가 제한 시간을 초과했습니다.")
             if task_status == "completed":
                 expected = failure_report(context, "WORKER_FAILURE", "")
-                for key in ("revision", "command_digest", "snapshot", "snapshot_digest", "model_version", "policy_version"):
+                for key in ("revision", "command_digest", "snapshot", "snapshot_digest", "model_version", "policy_version", "execution_scope"):
                     if report.get(key) != expected[key]:
                         raise ValueError("Evaluation report does not match captured input")
                 current = self.adapter.read_state()
@@ -115,7 +116,8 @@ class Gateway:
                     or (time.time() - context["snapshot"]["observed_at"] > SNAPSHOT_TTL_S
                         and not invalid_input_hold)
                     or simulator.MODEL_VERSION != context["model_version"]
-                    or POLICY_VERSION != context["policy_version"]):
+                    or POLICY_VERSION != context["policy_version"]
+                    or type(self.adapter) is not DemoAdapter):
                     report = failure_report(context, "EVALUATION_CONTEXT_CHANGED",
                         "검토 중 설비 상태·버전 또는 상태 유효 시간이 달라졌습니다. 다시 검증하세요.")
                 elif report["reason_code"] == "MODULE_FAILURE":
@@ -143,7 +145,34 @@ class Gateway:
     def cancel_evaluation(self, request_id):
         return self.evaluations.cancel(request_id)
 
+    def _approval_context_valid(self, row, report, current):
+        body = NewRequest.model_validate(row["request"])
+        try:
+            review = EvidenceReview.model_validate(report["evidence"])
+            result = SimulationResult.model_validate(report["simulation"])
+            results_valid = (result.status == "completed" and evidence_issue(review) is None
+                and simulation_issue(result) is None
+                and {s.kind for s in result.scenarios} == {"normal", "degraded_cooling"}
+                and all(s.baseline_peak_c <= LIMIT_C and s.candidate_peak_c <= LIMIT_C for s in result.scenarios))
+        except (ValueError, TypeError, KeyError, OSError):
+            return False
+        return (type(self.adapter) is DemoAdapter
+            and results_valid
+            and report.get("execution_scope") == "virtual"
+            and report.get("can_approve") is True and report["verdict"] == "awaiting_approval"
+            and report["revision"] == row["revision"]
+            and report["policy_version"] == POLICY_VERSION
+            and report["model_version"] == simulator.MODEL_VERSION
+            and digest({k: v for k, v in report.items() if k != "digest"}) == report["digest"]
+            and digest(body.command.model_dump()) == report["command_digest"]
+            and state_digest(current) == report["snapshot_digest"]
+            and 0 <= time.time() - report["snapshot"]["observed_at"] <= SNAPSHOT_TTL_S
+            and 0 <= time.time() - current.observed_at <= SNAPSHOT_TTL_S
+            and scope_issue(body, current, report["model_version"], report["execution_scope"]) is None)
+
     def decide(self, request_id, body, actor):
+        if actor != "approver":
+            raise HTTPException(403, "승인 담당자만 판단할 수 있습니다.")
         with self.lock:
             row = self.get(request_id)
             report = row["report"]
@@ -152,6 +181,11 @@ class Gateway:
             if body.decision == "reject":
                 row["status"] = "rejected"
             else:
+                if not self._approval_context_valid(row, report, self.adapter.read_state()):
+                    row.update(status="revalidation_required", approval=None)
+                    self.event(row, "execution_denied", reason="승인 대상 상태·보고서·정책이 달라졌습니다.")
+                    self.store.save(row)
+                    raise HTTPException(409, "승인 전에 재검증이 필요합니다.")
                 row["approval"] = {"actor": actor, "report_digest": report["digest"],
                     "expires_at": time.time() + APPROVAL_TTL_S, "reason": body.reason}
                 row["status"] = "approved"
@@ -172,15 +206,9 @@ class Gateway:
                 raise HTTPException(409, "현재 상태에서는 실행할 수 없습니다.")
             current = self.adapter.read_state()
             command = NewRequest.model_validate(row["request"]).command
-            valid = (approval["expires_at"] > time.time()
-                and approval["report_digest"] == report["digest"]
-                and digest({k: v for k, v in report.items() if k != "digest"}) == report["digest"]
-                and digest(command.model_dump()) == report["command_digest"]
-                and state_digest(current) == report["snapshot_digest"]
-                and current.sensor_quality == "valid"
-                and time.time() - current.observed_at <= SNAPSHOT_TTL_S
-                and simulator.MODEL_VERSION == report["model_version"]
-                and POLICY_VERSION == report["policy_version"])
+            valid = (self._approval_context_valid(row, report, current)
+                and approval["expires_at"] > time.time()
+                and approval["report_digest"] == report["digest"])
             if not valid:
                 row["status"] = "revalidation_required"
                 row["approval"] = None

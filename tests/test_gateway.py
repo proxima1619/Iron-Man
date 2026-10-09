@@ -14,11 +14,7 @@ APP = {"Authorization": "Bearer local-approver"}
 def client(monkeypatch, tmp_path):
     monkeypatch.setenv("IRON_MAN_OPERATOR_TOKEN", "local-operator")
     monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
-    # Approval-path tests exercise the explicit mock-only gateway policy.
-    calculation = simulator.simulate
-    def mock_simulate(*args):
-        return calculation(*args).model_copy(update={"mock": True})
-    monkeypatch.setattr(simulator, "simulate", mock_simulate)
+    monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
     gateway = Gateway(tmp_path / "test.sqlite3")
     # Existing module/policy tests use the synchronous helper; real async API tests are separate.
     monkeypatch.setattr(gateway, "submit_evaluation", gateway.evaluate)

@@ -5,6 +5,7 @@ import time
 from backend.contracts import NewRequest, Snapshot, Scenario, SimulationResult, EvidenceReview
 from backend.evidence import service as evidence
 from backend.simulator import service as simulator
+from backend.gateway import policy
 
 SNAPSHOT_TTL_S = 60
 
@@ -21,14 +22,20 @@ def calculate(context):
     report = {"schema_version": "1.0", "revision": context["revision"], "command_digest": digest(body.command.model_dump()),
         "snapshot": snapshot.model_dump(), "snapshot_digest": state_digest(snapshot),
         "model_version": context["model_version"], "policy_version": context["policy_version"],
+        "execution_scope": context.get("execution_scope", "unconfigured"),
         "mock": True, "can_approve": False, "evidence": None, "simulation": None}
     try:
         if (snapshot.domain_status != "ready" or snapshot.sensor_quality != "valid"
-                or time.time() - snapshot.observed_at > SNAPSHOT_TTL_S):
+                or not 0 <= time.time() - snapshot.observed_at <= SNAPSHOT_TTL_S):
             report.update(verdict="hold", reason_code="INVALID_STATE", reason="센서 품질 또는 상태 유효 시간을 확인하세요.")
         elif body.command.target_pct < 20:
             report.update(verdict="blocked", reason_code="POLICY_VIOLATION", reason="데모 정책의 최소 속도 20% 미만입니다.")
         else:
+            issue = policy.scope_issue(body, snapshot, context["model_version"], report["execution_scope"])
+            if context["policy_version"] != policy.POLICY_VERSION or issue:
+                report.update(verdict="hold", reason_code="DEMO_POLICY_OUT_OF_SCOPE",
+                              reason=issue or "허용된 정책 버전이 아닙니다.")
+                return report
             review = EvidenceReview.model_validate(evidence.review_evidence(body, snapshot))
             report["evidence"] = review.model_dump()
             report["mock"] = review.mock
@@ -39,11 +46,13 @@ def calculate(context):
                 if validated.kind not in seen:
                     scenarios.append(validated)
                     seen.add(validated.kind)
-            if review.status in {"insufficient", "failed"} or (
-                not review.mock and any(c.applicability != "applicable" or c.missing_conditions for c in review.cards)
-            ):
+            # Required by the server even when a document/agent omits a counterexample.
+            if "degraded_cooling" not in seen:
+                scenarios.append(Scenario(kind="degraded_cooling"))
+            issue = policy.evidence_issue(review)
+            if issue:
                 report.update(verdict="hold", reason_code="EVIDENCE_INCOMPLETE",
-                              reason="필수 근거 또는 적용 조건 검토가 완료되지 않았습니다.")
+                              reason=issue)
             else:
                 result = SimulationResult.model_validate(
                     simulator.simulate(body.command, snapshot, scenarios))
@@ -59,17 +68,16 @@ def calculate(context):
                     actual = {(s.kind, s.evidence_id) for s in result.scenarios}
                     if actual != expected:
                         raise ValueError("missing or unexpected scenario result")
-                    unsafe = any(s.exceeded for s in result.scenarios)
-                    if unsafe:
+                    issue = policy.simulation_issue(result)
+                    unsafe = any(s.exceeded or s.baseline_peak_c > policy.LIMIT_C for s in result.scenarios)
+                    if issue:
+                        report.update(verdict="hold", reason_code="LIVE_POLICY_NOT_CONFIGURED", reason=issue)
+                    elif unsafe:
                         report.update(verdict="blocked", reason_code="LIMIT_EXCEEDED",
                                       reason="시험 결과가 온도 한계를 초과했습니다.")
-                    elif not (review.mock and result.mock):
-                        # Real modules require an explicit policy before approval is enabled.
-                        report.update(verdict="hold", reason_code="LIVE_POLICY_NOT_CONFIGURED",
-                                      reason="실제 모듈 승인 정책이 아직 구성되지 않았습니다.")
                     else:
                         report.update(verdict="awaiting_approval", reason_code="DEMO_PASS",
-                                      can_approve=True, reason="모의 시험 통과: 가상 설비 승인 가능")
+                                      can_approve=True, reason="가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.")
     except Exception:
         report.update(verdict="hold", reason_code="MODULE_FAILURE", reason="검토 모듈 실패: 실행을 보류합니다.")
     return report
@@ -79,6 +87,7 @@ def failure_report(context, code, reason):
         "command_digest": digest(context["request"]["command"]),
         "snapshot": context["snapshot"], "snapshot_digest": state_digest(Snapshot.model_validate(context["snapshot"])),
         "model_version": context["model_version"], "policy_version": context["policy_version"],
+        "execution_scope": context.get("execution_scope", "unconfigured"),
         "mock": True, "can_approve": False, "evidence": None, "simulation": None,
         "verdict": "hold", "reason_code": code, "reason": reason}
 

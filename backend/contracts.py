@@ -129,6 +129,7 @@ class DecisionReport(StrictModel):
     snapshot_digest: str
     model_version: str
     policy_version: str
+    execution_scope: Literal["virtual", "unconfigured"] = "unconfigured"
     mock: bool
     can_approve: bool
     evidence: EvidenceReview | None
@@ -137,7 +138,7 @@ class DecisionReport(StrictModel):
     reason_code: Literal[
         "INVALID_STATE", "POLICY_VIOLATION", "LIMIT_EXCEEDED", "DEMO_PASS",
         "EVIDENCE_INCOMPLETE", "SIMULATION_INCOMPLETE", "MODULE_FAILURE",
-        "LIVE_POLICY_NOT_CONFIGURED", "EVALUATION_CONTEXT_CHANGED",
+        "LIVE_POLICY_NOT_CONFIGURED", "DEMO_POLICY_OUT_OF_SCOPE", "EVALUATION_CONTEXT_CHANGED",
         "EVALUATION_TIMEOUT", "EVALUATION_CANCELLED", "WORKER_FAILURE",
     ]
     reason: str

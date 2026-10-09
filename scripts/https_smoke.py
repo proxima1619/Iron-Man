@@ -61,7 +61,8 @@ def run(access, ca_file=None, http_url=None):
     assert request("/api/requests", login=False, token=access["operator_token"])[0] == 401
     operator, approver = access["operator_token"], access["approver_token"]
     assert request("/api/state", token=operator)[0] == 200
-    for speed, verdict in ((60, "blocked"), (80, "hold")):
+    assert request("/api/demo/reset", token=approver, body={})[0] == 200
+    for speed, verdict in ((60, "blocked"), (80, "awaiting_approval")):
         status, body = request("/api/requests", token=operator,
                                body={"command": {"target_pct": speed}, "purpose": "HTTPS deployment smoke"})
         assert status == 201
@@ -77,12 +78,41 @@ def run(access, ca_file=None, http_url=None):
             if row["status"] != "evaluating":
                 break
             time.sleep(0.2)
-        assert row["status"] == verdict and not row["report"]["can_approve"]
+        assert row["status"] == verdict
+        assert row["report"]["can_approve"] == (speed == 80)
         decision = {"decision": "approve", "reason": "smoke test must not override policy",
                     "report_digest": row["report"]["digest"]}
         assert request(path + "/decisions", token=operator, body=decision)[0] == 403
-        assert request(path + "/decisions", token=approver, body=decision)[0] == 409
-    print("PASS: trusted HTTPS, page password, role isolation, async evaluation, policy retained")
+        if speed == 60:
+            assert request(path + "/decisions", token=approver, body=decision)[0] == 409
+        else:
+            execution = {"report_digest": row["report"]["digest"]}
+            assert request(path + "/execute", token=operator, body=execution)[0] == 409
+            assert request(path + "/decisions", token=approver, body=decision)[0] == 200
+            status, body = request(path + "/execute", token=operator, body=execution)
+            applied = json.loads(body)
+            assert status == 200 and applied["execution"]["virtual"] is True
+            assert applied["execution"]["state"]["target_pump_speed_pct"] == 80
+            assert json.loads(request(path + "/execute", token=operator, body=execution)[1]) == applied
+    status, body = request("/api/demo/advance", token=approver, body={"seconds_s": 10})
+    moved = json.loads(body)
+    assert status == 200 and 80 < moved["pump_speed_pct"] < 100 and moved["temperature_c"] > 60
+    assert request("/api/demo/state", token=approver, body={"load_ratio": 1, "sensor_quality": "invalid"})[0] == 200
+    status, body = request("/api/requests", token=operator, body={"command": {"target_pct": 80}})
+    assert status == 201
+    path = f'/api/requests/{json.loads(body)["id"]}'
+    assert request(path + "/evaluate", token=operator, body={})[0] == 202
+    deadline = time.monotonic() + 100
+    while time.monotonic() < deadline:
+        row = json.loads(request(path, token=operator)[1])
+        if row["status"] != "evaluating":
+            break
+        time.sleep(.2)
+    assert row["status"] == "hold" and row["report"]["reason_code"] == "INVALID_STATE"
+    assert row["report"]["can_approve"] is False
+    # Restore a fresh starting point before the independent browser smoke test.
+    assert request("/api/demo/reset", token=approver, body={})[0] == 200
+    print("PASS: trusted HTTPS, both auth layers, blocked/held requests, human approval, virtual application and clock")
 
 
 if __name__ == "__main__":

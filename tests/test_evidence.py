@@ -84,7 +84,7 @@ def test_document_instructions_cannot_change_request_or_policy(monkeypatch):
     gateway, row = evaluate()
     assert row["status"] == "hold" and row["approval"] is None
     assert row["request"]["command"]["target_pct"] == 60
-    assert row["report"]["policy_version"] == "demo-policy-v1"
+    assert row["report"]["policy_version"] == "virtual-cooling-policy-v2"
     assert not gateway.adapter.executions
 
 

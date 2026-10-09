@@ -10,7 +10,7 @@
       "duration_s": 300
     }
   },
-  "status": "hold",
+  "status": "awaiting_approval",
   "report": {
     "schema_version": "1.0",
     "revision": 2,
@@ -32,9 +32,10 @@
     },
     "snapshot_digest": "d61783bd9c19c9656d221bbef5c095f6dbeb43175a1d6d41f92a6a7b3338056f",
     "model_version": "cooling-demo-v3",
-    "policy_version": "demo-policy-v1",
+    "policy_version": "virtual-cooling-policy-v2",
+    "execution_scope": "virtual",
     "mock": true,
-    "can_approve": false,
+    "can_approve": true,
     "evidence": {
       "schema_version": "1.0",
       "mock": true,
@@ -96,10 +97,10 @@
       ],
       "limitation": "합성 상태·데모 계수의 열수지 모델 v3입니다. 열용량 200000 J/K, 기준 열입력 35000 W, 전속도 열교환계수 1000 W/K, 냉각수 25°C를 가정합니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
     },
-    "verdict": "hold",
-    "reason_code": "LIVE_POLICY_NOT_CONFIGURED",
-    "reason": "실제 모듈 승인 정책이 아직 구성되지 않았습니다.",
-    "digest": "7acff3b5b8a3e56ff11d74dbda950b70ec1302698847b4412ee677d83e76d8ef"
+    "verdict": "awaiting_approval",
+    "reason_code": "DEMO_PASS",
+    "reason": "가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.",
+    "digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd"
   },
   "approval": null,
   "execution": null,
@@ -116,8 +117,8 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "hold",
-      "report_digest": "7acff3b5b8a3e56ff11d74dbda950b70ec1302698847b4412ee677d83e76d8ef",
+      "verdict": "awaiting_approval",
+      "report_digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd",
       "actor": null,
       "reason": null,
       "execution_id": null
