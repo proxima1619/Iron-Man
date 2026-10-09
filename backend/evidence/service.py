@@ -10,7 +10,9 @@ from backend.evidence.schema import Analysis
 SOURCE_PATH = Path(__file__).resolve().parents[2] / "data" / "sources" / "cooling-demo.json"
 
 
-def load_sources(path: Path = SOURCE_PATH) -> list[dict]:
+def load_sources(path: Path | None = None) -> list[dict]:
+    if path is None:
+        path = Path(os.environ.get("IRON_MAN_EVIDENCE_SOURCE_PATH", str(SOURCE_PATH)))
     sources = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(sources, list) or len(sources) > 20:
         raise ValueError("Invalid source collection")

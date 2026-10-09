@@ -78,7 +78,8 @@
             "executed",
             "execution_unknown",
             "evaluation_interrupted",
-            "execution_interrupted"
+            "execution_interrupted",
+            "evaluation_started"
           ],
           "title": "Kind",
           "type": "string"
@@ -275,7 +276,11 @@
             "EVIDENCE_INCOMPLETE",
             "SIMULATION_INCOMPLETE",
             "MODULE_FAILURE",
-            "LIVE_POLICY_NOT_CONFIGURED"
+            "LIVE_POLICY_NOT_CONFIGURED",
+            "EVALUATION_CONTEXT_CHANGED",
+            "EVALUATION_TIMEOUT",
+            "EVALUATION_CANCELLED",
+            "WORKER_FAILURE"
           ],
           "title": "Reason Code",
           "type": "string"
@@ -306,6 +311,60 @@
         "digest"
       ],
       "title": "DecisionReport",
+      "type": "object"
+    },
+    "EvaluationTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "timed_out",
+            "cancelled",
+            "interrupted"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "started_at": {
+          "title": "Started At",
+          "type": "number"
+        },
+        "deadline_at": {
+          "title": "Deadline At",
+          "type": "number"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finished At"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "status",
+        "started_at",
+        "deadline_at"
+      ],
+      "title": "EvaluationTask",
       "type": "object"
     },
     "EvidenceCard": {
@@ -912,6 +971,17 @@
       },
       "title": "Events",
       "type": "array"
+    },
+    "evaluation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluationTask"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

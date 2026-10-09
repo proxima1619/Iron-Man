@@ -291,3 +291,50 @@ def test_advance_api_returns_persisted_virtual_clock(plant_client):
     assert state["model_version"] == "cooling-demo-v3"
     assert state["target_pump_speed_pct"] == state["pump_speed_pct"] == 100
     assert plant_client.get("/state", headers=OP).json() == state
+
+
+def test_async_evaluation_cannot_publish_after_virtual_time_advances(tmp_path, monkeypatch):
+    from tests.test_async_evaluation import gated_worker, wait_for, finished
+
+    monkeypatch.setenv("IRON_MAN_OPERATOR_TOKEN", "local-operator")
+    monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
+    monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
+    gate = tmp_path / "virtual-clock-gate"
+    gate.mkdir()
+    gateway = Gateway(tmp_path / "async-clock.sqlite3", worker_target=gated_worker)
+    monkeypatch.setattr(main, "gateway", gateway)
+    try:
+        # Capture a plant while its actual pump is still following an earlier target.
+        gateway.adapter.apply_command("earlier-target", Command(target_pct=80))
+        gateway.adapter.advance_time(10)
+        captured = gateway.adapter.read_state()
+        receipts = gateway.adapter.executions
+        client = TestClient(main.app)
+        row = client.post("/requests", headers=OP,
+            json={"command": {"target_pct": 90}, "purpose": str(gate)}).json()
+        started = client.post(f'/requests/{row["id"]}/evaluate', headers=OP, json={})
+        assert started.status_code == 202
+        wait_for(lambda: (gate / "started").exists())
+        context = dict(next(iter(gateway.evaluations.jobs.values())).context)
+        assert context["snapshot"] == captured.model_dump()
+        assert context["snapshot"]["target_pump_speed_pct"] == 80
+        assert context["snapshot"]["simulation_time_s"] == 10
+        assert context["snapshot"]["model_version"] == "cooling-demo-v3"
+
+        advanced = client.post("/demo/advance", headers=APP, json={"seconds_s": 10})
+        assert advanced.status_code == 200
+        assert advanced.json()["simulation_time_s"] == 20
+        assert advanced.json()["temperature_c"] > captured.temperature_c
+        assert 80 < advanced.json()["pump_speed_pct"] < captured.pump_speed_pct
+        assert gateway.get(row["id"])["status"] == "evaluating"
+        (gate / "release").touch()
+        final = wait_for(lambda: finished(gateway, row["id"]))
+        assert final["status"] == "hold"
+        assert final["evaluation"]["status"] == "completed"
+        assert final["report"]["reason_code"] == "EVALUATION_CONTEXT_CHANGED"
+        assert final["report"]["can_approve"] is False
+        assert final["report"]["snapshot"] == captured.model_dump()
+        assert final["approval"] is None
+        assert gateway.adapter.executions == receipts
+    finally:
+        gateway.close()

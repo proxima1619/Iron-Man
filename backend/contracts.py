@@ -137,7 +137,8 @@ class DecisionReport(StrictModel):
     reason_code: Literal[
         "INVALID_STATE", "POLICY_VIOLATION", "LIMIT_EXCEEDED", "DEMO_PASS",
         "EVIDENCE_INCOMPLETE", "SIMULATION_INCOMPLETE", "MODULE_FAILURE",
-        "LIVE_POLICY_NOT_CONFIGURED",
+        "LIVE_POLICY_NOT_CONFIGURED", "EVALUATION_CONTEXT_CHANGED",
+        "EVALUATION_TIMEOUT", "EVALUATION_CANCELLED", "WORKER_FAILURE",
     ]
     reason: str
     digest: str
@@ -151,7 +152,7 @@ class Approval(StrictModel):
 class AuditEvent(StrictModel):
     kind: Literal["created", "evaluation_failed", "evaluated", "approve", "reject",
                   "execution_denied", "execution_reserved", "executed", "execution_unknown",
-                  "evaluation_interrupted", "execution_interrupted"]
+                  "evaluation_interrupted", "execution_interrupted", "evaluation_started"]
     at: float
     verdict: RequestStatus | None = None
     report_digest: str | None = None
@@ -170,6 +171,14 @@ class UnknownExecution(StrictModel):
     execution_id: str
     status: Literal["unknown"]
 
+class EvaluationTask(StrictModel):
+    id: str
+    revision: int
+    status: Literal["running", "completed", "failed", "timed_out", "cancelled", "interrupted"]
+    started_at: float
+    deadline_at: float
+    finished_at: float | None = None
+
 class RequestRecord(StrictModel):
     id: str
     revision: int
@@ -179,6 +188,7 @@ class RequestRecord(StrictModel):
     approval: Approval | None
     execution: AppliedExecution | UnknownExecution | None
     events: list[AuditEvent]
+    evaluation: EvaluationTask | None = None
 
 class DecisionInput(StrictModel):
     report_digest: str

@@ -8,7 +8,9 @@
 **/*.egg-info
 frontend/node_modules
 frontend/dist
-data
+data/**
+!data/sources/
+!data/sources/**
 **/*.sqlite3
 **/*.sqlite3-*
 **/*.sqlite3.lock

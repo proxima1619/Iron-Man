@@ -1,11 +1,8 @@
 """Owner 1: demo orchestration and authorization. SQLite, single worker only."""
-import hashlib
-import json
 import time
 import uuid
 from fastapi import HTTPException
-from backend.contracts import NewRequest, Scenario, SimulationResult, EvidenceReview
-from backend.evidence import service as evidence
+from backend.contracts import NewRequest, DecisionReport, Snapshot
 from backend.simulator import service as simulator
 from backend.simulator.adapter import DemoAdapter
 from backend.gateway.storage import SQLiteStore
@@ -14,31 +11,33 @@ POLICY_VERSION = "demo-policy-v1"
 APPROVAL_TTL_S = 300
 SNAPSHOT_TTL_S = 60
 
-def digest(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
-                                    ensure_ascii=False, allow_nan=False).encode()).hexdigest()
-
-def state_digest(snapshot):
-    return digest(snapshot.model_dump(exclude={"observed_at"}))
+from backend.gateway.evaluation import calculate, digest, failure_report, state_digest
+from backend.gateway.jobs import EvaluationRunner
 
 class Gateway:
-    def __init__(self, db_path=":memory:"):
+    def __init__(self, db_path=":memory:", *, max_evaluations=2, evaluation_timeout_s=90, worker_target=None):
         self.store = SQLiteStore(db_path)
         self.lock = self.store.lock
         self.adapter = DemoAdapter(self.store)
         try:
+            self.evaluations = EvaluationRunner(self, max_evaluations, evaluation_timeout_s, worker_target)
             self._recover_interrupted()
         except BaseException:
-            self.close()
+            self.store.close()
             raise
 
     def close(self):
-        self.store.close()
+        try:
+            self.evaluations.close()
+        finally:
+            self.store.close()
 
     def _recover_interrupted(self):
         for row in self.store.list_records():
             if row["status"] == "evaluating":
                 row.update(status="hold", report=None, approval=None)
+                if row.get("evaluation"):
+                    row["evaluation"].update(status="interrupted", finished_at=time.time())
                 self.event(row, "evaluation_interrupted", reason="서버 재시작: 평가를 다시 실행하세요.")
                 self.store.save(row)
             elif row["status"] == "executing":
@@ -66,84 +65,83 @@ class Gateway:
         with self.lock:
             row = {"id": str(uuid.uuid4()), "revision": 1, "request": body.model_dump(),
                    "status": "draft", "report": None, "approval": None,
-                   "execution": None, "events": []}
+                   "execution": None, "evaluation": None, "events": []}
             self.event(row, "created")
             self.store.save(row)
             return row
 
-    def evaluate(self, request_id):
+    def _prepare_evaluation(self, request_id, task=None):
         with self.lock:
             row = self.get(request_id)
+            if row["status"] == "evaluating":
+                raise HTTPException(409, "이 요청은 이미 평가 중입니다.")
             if row["status"] in {"executing", "completed", "execution_unknown"}:
                 raise HTTPException(409, "이미 실행한 요청입니다. 새 요청을 생성하세요.")
-            row["approval"] = None
-            row["status"] = "evaluating"
-            row["revision"] += 1
-            row["report"] = None
-            self.store.save(row)
             body = NewRequest.model_validate(row["request"])
             snapshot = self.adapter.read_state()
-            report = {"schema_version": "1.0", "revision": row["revision"], "command_digest": digest(body.command.model_dump()),
-                "snapshot": snapshot.model_dump(), "snapshot_digest": state_digest(snapshot),
+            row.update(status="evaluating", approval=None, report=None, revision=row["revision"] + 1,
+                       evaluation=task)
+            if task:
+                task["revision"] = row["revision"]
+                self.event(row, "evaluation_started", reason="별도 프로세스에서 검토 중입니다.")
+            self.store.save(row)
+            return row, {"request_id": row["id"], "revision": row["revision"],
+                "request": body.model_dump(), "snapshot": snapshot.model_dump(),
                 "model_version": simulator.MODEL_VERSION, "policy_version": POLICY_VERSION,
-                "mock": True, "can_approve": False, "evidence": None, "simulation": None}
-            try:
-                if (snapshot.domain_status != "ready" or snapshot.sensor_quality != "valid"
-                        or time.time() - snapshot.observed_at > SNAPSHOT_TTL_S):
-                    report.update(verdict="hold", reason_code="INVALID_STATE", reason="센서 품질 또는 상태 유효 시간을 확인하세요.")
-                elif body.command.target_pct < 20:
-                    report.update(verdict="blocked", reason_code="POLICY_VIOLATION", reason="데모 정책의 최소 속도 20% 미만입니다.")
-                else:
-                    review = EvidenceReview.model_validate(evidence.review_evidence(body, snapshot))
-                    report["evidence"] = review.model_dump()
-                    report["mock"] = review.mock
-                    scenarios = [Scenario(kind="normal")]
-                    seen = {"normal"}
-                    for candidate in review.proposed_tests[:3]:
-                        validated = Scenario.model_validate(candidate)
-                        if validated.kind not in seen:
-                            scenarios.append(validated)
-                            seen.add(validated.kind)
-                    if review.status in {"insufficient", "failed"} or (
-                        not review.mock and any(c.applicability != "applicable" or c.missing_conditions for c in review.cards)
-                    ):
-                        report.update(verdict="hold", reason_code="EVIDENCE_INCOMPLETE",
-                                      reason="필수 근거 또는 적용 조건 검토가 완료되지 않았습니다.")
-                    else:
-                        result = SimulationResult.model_validate(
-                            simulator.simulate(body.command, snapshot, scenarios))
-                        report["simulation"] = result.model_dump()
-                        report["mock"] = review.mock or result.mock
-                        if result.model_version != simulator.MODEL_VERSION:
-                            raise ValueError("simulation model version mismatch")
-                        if result.status != "completed":
-                            report.update(verdict="hold", reason_code="SIMULATION_INCOMPLETE",
-                                          reason="모델 범위 밖이거나 계산을 완료하지 못했습니다.")
-                        else:
-                            expected = {(s.kind, s.evidence_id) for s in scenarios}
-                            actual = {(s.kind, s.evidence_id) for s in result.scenarios}
-                            if actual != expected:
-                                raise ValueError("missing or unexpected scenario result")
-                            unsafe = any(s.exceeded for s in result.scenarios)
-                            if unsafe:
-                                report.update(verdict="blocked", reason_code="LIMIT_EXCEEDED",
-                                              reason="시험 결과가 온도 한계를 초과했습니다.")
-                            elif not (review.mock and result.mock):
-                                # Real modules require an explicit policy before approval is enabled.
-                                report.update(verdict="hold", reason_code="LIVE_POLICY_NOT_CONFIGURED",
-                                              reason="실제 모듈 승인 정책이 아직 구성되지 않았습니다.")
-                            else:
-                                report.update(verdict="awaiting_approval", reason_code="DEMO_PASS",
-                                              can_approve=True, reason="모의 시험 통과: 가상 설비 승인 가능")
-            except Exception:
-                report.update(verdict="hold", reason_code="MODULE_FAILURE", reason="검토 모듈 실패: 실행을 보류합니다.")
-                self.event(row, "evaluation_failed")
+                "task_id": task["id"] if task else None}
+
+    def _finish_evaluation(self, context, report, task_status="completed"):
+        with self.lock:
+            row = self.get(context["request_id"])
+            task = row.get("evaluation")
+            if (row["status"] != "evaluating" or row["revision"] != context["revision"]
+                or (task["id"] if task else None) != context["task_id"]
+                or digest(row["request"]) != digest(context["request"])):
+                return row  # Late or superseded result must never overwrite newer state.
+            if task_status == "completed" and task and time.time() >= task["deadline_at"]:
+                task_status = "timed_out"
+                report = failure_report(context, "EVALUATION_TIMEOUT", "평가 제한 시간을 초과했습니다.")
+            if task_status == "completed":
+                expected = failure_report(context, "WORKER_FAILURE", "")
+                for key in ("revision", "command_digest", "snapshot", "snapshot_digest", "model_version", "policy_version"):
+                    if report.get(key) != expected[key]:
+                        raise ValueError("Evaluation report does not match captured input")
+                current = self.adapter.read_state()
+                # An observation already rejected as stale stays INVALID_STATE.
+                # Every approval-capable result must still pass finish-time freshness.
+                invalid_input_hold = (report.get("reason_code") == "INVALID_STATE"
+                    and report.get("verdict") == "hold" and report.get("can_approve") is False)
+                if (state_digest(current) != state_digest(Snapshot.model_validate(context["snapshot"]))
+                    or (time.time() - context["snapshot"]["observed_at"] > SNAPSHOT_TTL_S
+                        and not invalid_input_hold)
+                    or simulator.MODEL_VERSION != context["model_version"]
+                    or POLICY_VERSION != context["policy_version"]):
+                    report = failure_report(context, "EVALUATION_CONTEXT_CHANGED",
+                        "검토 중 설비 상태·버전 또는 상태 유효 시간이 달라졌습니다. 다시 검증하세요.")
+                elif report["reason_code"] == "MODULE_FAILURE":
+                    task_status = "failed"
+            report = dict(report)
             report["digest"] = digest(report)
-            row["report"] = report
-            row["status"] = report["verdict"]
+            DecisionReport.model_validate(report)
+            row.update(report=report, status=report["verdict"])
+            if task:
+                task.update(status=task_status, finished_at=time.time())
+            if task_status != "completed":
+                self.event(row, "evaluation_failed", reason=report["reason"])
             self.event(row, "evaluated", verdict=row["status"], report_digest=report["digest"])
             self.store.save(row)
             return row
+
+    def evaluate(self, request_id):
+        """Synchronous helper for module tests/export; HTTP uses submit_evaluation."""
+        row, context = self._prepare_evaluation(request_id)
+        return self._finish_evaluation(context, calculate(context))
+
+    def submit_evaluation(self, request_id):
+        return self.evaluations.submit(request_id)
+
+    def cancel_evaluation(self, request_id):
+        return self.evaluations.cancel(request_id)
 
     def decide(self, request_id, body, actor):
         with self.lock:

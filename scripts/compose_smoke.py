@@ -35,6 +35,8 @@ def compose(*args):
 
 if __name__ == '__main__':
     assert wait_ready()['storage'] == 'sqlite'
+    compose('exec', '-T', 'api', 'python', '-c',
+            'from backend.evidence.service import load_sources; assert load_sources()')
     with urllib.request.urlopen(BASE, timeout=10) as response:
         assert b'<div id="root"></div>' in response.read()
     try:
@@ -44,6 +46,10 @@ if __name__ == '__main__':
         assert error.code == 401
     row = api('/requests', {'command': {'target_pct': 60}, 'purpose': 'Compose persistence smoke test'})
     report = api(f'/requests/{row["id"]}/evaluate', {})
+    deadline = time.monotonic() + 100
+    while report['status'] == 'evaluating' and time.monotonic() < deadline:
+        time.sleep(0.2)
+        report = api(f'/requests/{row["id"]}')
     assert report['status'] == 'blocked'
     before_state = api('/state')
     before_state.pop('observed_at')

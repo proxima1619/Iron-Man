@@ -107,3 +107,14 @@ def test_responses_transport(monkeypatch):
         return Response()
     monkeypatch.setattr(llm, "urlopen", send)
     assert llm.analyze({"documents": []}) == output()
+
+
+def test_source_path_override_is_read_at_load_time(monkeypatch, tmp_path):
+    source_path = tmp_path / "sources.json"
+    sources = service.load_sources()
+    source_path.write_text(json.dumps(sources), encoding="utf-8")
+    monkeypatch.setenv("IRON_MAN_EVIDENCE_SOURCE_PATH", str(source_path))
+    assert service.load_sources() == sources
+    source_path.unlink()
+    with pytest.raises(FileNotFoundError):
+        service.load_sources()

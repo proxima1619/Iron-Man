@@ -47,12 +47,16 @@ docker compose up -d --build --wait
 
 선택적으로 `.env.example`을 `.env`로 복사해 값을 수정할 수 있습니다. Compose는 이 파일을 읽지만, 일반 Python 실행은 여전히 자동 로딩하지 않습니다.
 
+- `IRON_MAN_EVALUATION_WORKERS`: 기본 2개, 별도 평가 프로세스의 최대 동시 개수.
+- `IRON_MAN_EVALUATION_TIMEOUT_S`: 기본 90초. 시간 초과 시 작업 종료·보류.
 - `IRON_MAN_HTTP_PORT`: 기본 8080. 다른 서비스가 사용 중이면 변경.
 - `IRON_MAN_BIND_HOST`: 기본 127.0.0.1. 외부 공개는 배포 단계에서 HTTPS·접근 인증과 함께 구성.
 - `IRON_MAN_OPERATOR_TOKEN`, `IRON_MAN_APPROVER_TOKEN`: API 데모 토큰. 초기값은 로컬용 공개 값이며 외부 배포 전에 변경.
 - Compose 내부 DB 경로는 `/data/ironman.sqlite3`로 고정합니다. 호스트용 `IRON_MAN_DB_PATH`를 바꿔도 Compose 볼륨 위치를 바꾸지 않습니다.
 
-API 키는 이미지·프런트 빌드 인자에 넣지 않습니다. 실제 근거 API의 비밀키 연결은 해당 모듈과 외부 배포 단계에서 추가합니다. HTTPS·실서비스 로그인·외부 도메인은 이번 단계에 포함하지 않습니다.
+`IRON_MAN_EVIDENCE_MODE`는 기본 `fixture`입니다. 실제 LLM 검토는 `live`와 `OPENAI_API_KEY`, `IRON_MAN_EVIDENCE_MODEL`을 함께 설정해야 합니다. `IRON_MAN_EVIDENCE_TIMEOUT_S`는 기본 20초입니다. Compose가 이 설정을 API에 전달하고 별도 평가 프로세스도 이를 이어받습니다. 팀 작성 근거 문서는 이미지의 `/app/data/sources/`에 포함하며, 실제 제조사 자료로 간주하지 않습니다.
+
+API 키는 런타임 환경 변수로 전달하며 이미지·프런트 빌드 인자에 넣지 않습니다. HTTPS·실서비스 로그인·외부 도메인은 외부 배포 단계에서 구성합니다.
 
 ## 확인·문제 해결
 

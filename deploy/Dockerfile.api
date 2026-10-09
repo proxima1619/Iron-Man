@@ -7,7 +7,8 @@ RUN pip wheel --no-cache-dir --wheel-dir /wheels -c requirements-dev.lock.txt .
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    IRON_MAN_DB_PATH=/data/ironman.sqlite3
+    IRON_MAN_DB_PATH=/data/ironman.sqlite3 \
+    IRON_MAN_EVIDENCE_SOURCE_PATH=/app/data/sources/cooling-demo.json
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home app \
     && mkdir /data && chown app:app /data
@@ -16,6 +17,7 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir --no-index --find-links=/wheels iron-man-gateway \
     && rm -rf /wheels
 COPY fixtures/ ./fixtures/
+COPY data/sources/ ./data/sources/
 USER app
 EXPOSE 8000
 CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

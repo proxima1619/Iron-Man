@@ -86,7 +86,7 @@ def test_published_schema_matches_backend():
     assert json.loads(Path('contracts/openapi.json').read_text(encoding='utf-8')) == app.openapi()
 
 @pytest.mark.parametrize('path, model', [
-    ('request-record-demo', RequestRecord), ('evidence-demo', EvidenceReview), ('evidence-insufficient', EvidenceReview),
+    ('request-evaluating', RequestRecord), ('request-timed-out', RequestRecord), ('request-record-demo', RequestRecord), ('evidence-demo', EvidenceReview), ('evidence-insufficient', EvidenceReview),
     ('simulation-demo', SimulationResult), ('simulation-out-of-domain', SimulationResult),
 ])
 def test_shared_example_validates(path, model):

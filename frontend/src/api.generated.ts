@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requests/{request_id}/evaluation/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Evaluation */
+        post: operations["cancel_evaluation_requests__request_id__evaluation_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requests/{request_id}/decisions": {
         parameters: {
             query?: never;
@@ -247,7 +264,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown" | "evaluation_interrupted" | "execution_interrupted";
+            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown" | "evaluation_interrupted" | "execution_interrupted" | "evaluation_started";
             /** At */
             at: number;
             /** Verdict */
@@ -339,7 +356,7 @@ export interface components {
              * Reason Code
              * @enum {string}
              */
-            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "LIVE_POLICY_NOT_CONFIGURED";
+            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "LIVE_POLICY_NOT_CONFIGURED" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
             /** Reason */
             reason: string;
             /** Digest */
@@ -360,6 +377,24 @@ export interface components {
              * @enum {string}
              */
             sensor_quality: "valid" | "invalid";
+        };
+        /** EvaluationTask */
+        EvaluationTask: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "completed" | "failed" | "timed_out" | "cancelled" | "interrupted";
+            /** Started At */
+            started_at: number;
+            /** Deadline At */
+            deadline_at: number;
+            /** Finished At */
+            finished_at: number | null;
         };
         /** EvidenceCard */
         EvidenceCard: {
@@ -496,6 +531,7 @@ export interface components {
             execution: components["schemas"]["AppliedExecution"] | components["schemas"]["UnknownExecution"] | null;
             /** Events */
             events: components["schemas"]["AuditEvent"][];
+            evaluation: components["schemas"]["EvaluationTask"] | null;
         };
         /** Scenario */
         Scenario: {
@@ -812,6 +848,39 @@ export interface operations {
         };
     };
     evaluate_requests__request_id__evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_evaluation_requests__request_id__evaluation_cancel_post: {
         parameters: {
             query?: never;
             header?: {

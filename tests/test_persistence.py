@@ -189,6 +189,10 @@ def test_api_lifespan_reopens_database(tmp_path, monkeypatch):
     with TestClient(main.app) as client:
         row = client.post('/requests', headers=OP, json={'command':{'target_pct':60}}).json()
         result = client.post(f'/requests/{row["id"]}/evaluate', headers=OP, json={}).json()
+        deadline = time.monotonic() + 10
+        while result['status'] == 'evaluating' and time.monotonic() < deadline:
+            time.sleep(0.02)
+            result = client.get(f'/requests/{row["id"]}', headers=OP).json()
         assert result['status'] == 'blocked'
     with TestClient(main.app) as client:
         assert client.get('/health').json()['storage'] == 'sqlite'
