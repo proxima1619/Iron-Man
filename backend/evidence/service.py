@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 from backend.contracts import NewRequest, Snapshot, EvidenceReview, Scenario
 from backend.evidence import llm
 from backend.evidence.schema import Analysis
@@ -25,8 +26,14 @@ def load_sources(path: Path | None = None) -> list[dict]:
         if any(not isinstance(source[k], str) or not source[k].strip()
                for k in required - {"source_url"}):
             raise ValueError("Missing source metadata")
-        if source["source_url"] is not None and not str(source["source_url"]).startswith("https://"):
-            raise ValueError("Invalid source URL")
+        if source["source_type"] not in {"team_authored_demo", "team_authored_fixture", "paper", "manual", "field_record"}:
+            raise ValueError("Invalid source type")
+        if source["source_url"] is not None:
+            if not isinstance(source["source_url"], str):
+                raise ValueError("Invalid source URL")
+            url = urlsplit(source["source_url"])
+            if url.scheme != "https" or not url.hostname or url.username or url.password:
+                raise ValueError("Invalid source URL")
         if source["source_id"] in seen or len(source["text"]) > 10000:
             raise ValueError("Duplicate or oversized source")
         seen.add(source["source_id"])
@@ -55,10 +62,12 @@ def validate_analysis(raw: dict, sources: list[dict]) -> EvidenceReview:
         if claim.proposed_test and not tests:
             tests.append(Scenario(kind=claim.proposed_test, evidence_id=evidence_id))
     sufficient = bool(cards) and any(c["applicability"] in {"applicable", "partial"} for c in cards)
-    sufficient = sufficient and not analysis.missing_conditions
+    missing = list(dict.fromkeys([*analysis.missing_conditions,
+                                 *(condition for c in cards for condition in c["missing_conditions"])]))
+    sufficient = sufficient and not missing
     limitation = "사전 수집 문서의 실제 LLM 검토. 팀 작성 가상 설비 규정이며 실제 제조사 자료·현실 안전 검증이 아닙니다."
-    if analysis.missing_conditions:
-        limitation += " 미확인 조건: " + "; ".join(analysis.missing_conditions)
+    if missing:
+        limitation += " 미확인 조건: " + "; ".join(missing)
     fingerprint = hashlib.sha256(json.dumps(sources, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     limitation += f" 문서 묶음 SHA256: {fingerprint}"
     return EvidenceReview(mock=False, status="completed" if sufficient else "insufficient",
