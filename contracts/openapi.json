@@ -313,6 +313,61 @@
           }
         ],
         "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/evaluation/cancel": {
+      "post": {
+        "summary": "Cancel Evaluation",
+        "operationId": "cancel_evaluation_requests__request_id__evaluation_cancel_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
@@ -603,7 +658,8 @@
               "executed",
               "execution_unknown",
               "evaluation_interrupted",
-              "execution_interrupted"
+              "execution_interrupted",
+              "evaluation_started"
             ],
             "title": "Kind"
           },
@@ -861,7 +917,11 @@
               "EVIDENCE_INCOMPLETE",
               "SIMULATION_INCOMPLETE",
               "MODULE_FAILURE",
-              "LIVE_POLICY_NOT_CONFIGURED"
+              "LIVE_POLICY_NOT_CONFIGURED",
+              "EVALUATION_CONTEXT_CHANGED",
+              "EVALUATION_TIMEOUT",
+              "EVALUATION_CANCELLED",
+              "WORKER_FAILURE"
             ],
             "title": "Reason Code"
           },
@@ -919,6 +979,60 @@
           "load_ratio"
         ],
         "title": "DemoStateInput"
+      },
+      "EvaluationTask": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "completed",
+              "failed",
+              "timed_out",
+              "cancelled",
+              "interrupted"
+            ],
+            "title": "Status"
+          },
+          "started_at": {
+            "type": "number",
+            "title": "Started At"
+          },
+          "deadline_at": {
+            "type": "number",
+            "title": "Deadline At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "started_at",
+          "deadline_at",
+          "finished_at"
+        ],
+        "title": "EvaluationTask"
       },
       "EvidenceCard": {
         "properties": {
@@ -1250,6 +1364,16 @@
             },
             "type": "array",
             "title": "Events"
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluationTask"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -1262,7 +1386,8 @@
           "report",
           "approval",
           "execution",
-          "events"
+          "events",
+          "evaluation"
         ],
         "title": "RequestRecord"
       },

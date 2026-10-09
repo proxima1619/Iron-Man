@@ -1,0 +1,54 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "revision": 3,
+  "request": {
+    "equipment_id": "cooling-demo-01",
+    "purpose": "냉각 펌프 속도 변경 검토",
+    "command": {
+      "type": "set_pump_speed",
+      "target_pct": 80.0,
+      "duration_s": 300
+    }
+  },
+  "status": "evaluating",
+  "report": null,
+  "approval": null,
+  "execution": null,
+  "events": [
+    {
+      "kind": "created",
+      "at": 1700000000.0,
+      "verdict": null,
+      "report_digest": null,
+      "actor": null,
+      "reason": null,
+      "execution_id": null
+    },
+    {
+      "kind": "evaluated",
+      "at": 1700000000.0,
+      "verdict": "hold",
+      "report_digest": "cb6a1e21441095d02f168bb1426d524d82a3d28262413b42815b6d43654651a3",
+      "actor": null,
+      "reason": null,
+      "execution_id": null
+    },
+    {
+      "kind": "evaluation_started",
+      "at": 1700000000.0,
+      "verdict": null,
+      "report_digest": null,
+      "actor": null,
+      "reason": "별도 프로세스에서 검토 중입니다.",
+      "execution_id": null
+    }
+  ],
+  "evaluation": {
+    "id": "eval-example-001",
+    "revision": 3,
+    "status": "running",
+    "started_at": 1700000000.0,
+    "deadline_at": 1700000090.0,
+    "finished_at": null
+  }
+}

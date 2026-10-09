@@ -60,20 +60,24 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 | `MODULE_FAILURE` | hold | 모듈 예외·잘못된 형식·필수 결과 누락 |
 | `LIVE_POLICY_NOT_CONFIGURED` | hold | 비모의 모듈을 연결했지만 승인 정책 미설정 |
 | `DEMO_PASS` | awaiting_approval | 모의 모듈끼리의 가상 설비 승인 가능 |
+| `EVALUATION_CONTEXT_CHANGED` | hold | 검토 도중 상태·버전·snapshot 유효 시간 변경 |
+| `EVALUATION_TIMEOUT` | hold | 제한 시간 초과 |
+| `EVALUATION_CANCELLED` | hold | 사용자 취소 또는 정상 서버 종료 |
+| `WORKER_FAILURE` | hold | 평가 프로세스 시작·실행·출력 오류 |
 
 **실제 모듈을 연결했다고 자동으로 승인 가능해지지는 않습니다.** 현 단계에는 검증된 실제 모델·필수 근거 정책이 없으므로 비모의 결과는 위험 시 차단, 그 외에는 보류합니다. 실제 연동 승인 정책은 1·2·3번이 모델 범위·안전 기준·필수 근거를 합의한 뒤 구현합니다.
 
 ## 4번: API 순서
 
 1. `POST /requests` — `examples/request.json` 입력, 201과 `RequestRecord` 반환.
-2. `POST /requests/{id}/evaluate` — 현재는 동기 처리, 완료 보고서 반환.
-3. `GET /requests/{id}` — 현재 상태 조회.
+2. `POST /requests/{id}/evaluate` — **202**와 `evaluating` 상태 반환. `GET /requests/{id}`로 완료를 조회합니다.
+3. `GET /requests/{id}` — 현재 상태·evaluation 작업 정보 조회. `POST /requests/{id}/evaluation/cancel`로 취소합니다.
 4. `POST /requests/{id}/decisions` — `{ "report_digest": "보고서 digest", "decision": "approve 또는 reject", "reason": "판단 이유" }`.
 5. `POST /requests/{id}/execute` — `{ "report_digest": "보고서 digest" }`.
 
 저장된 요청 목록은 `GET /requests`, 이전 보고서·승인 이력은 `GET /requests/{id}/history`에서 조회합니다. 목록은 현재 데모용 전체 반환이며 페이지네이션은 후속입니다. 재시작으로 검토가 중단되면 `hold`와 report=null, 실행이 중단되면 `execution_unknown`으로 복구됩니다. 이유는 events의 `evaluation_interrupted` 또는 `execution_interrupted`에 기록됩니다.
 
-모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, DB 처리 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
+모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, 평가 용량 초과 429, DB·작업 시작 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
 
 승인 버튼은 `status == awaiting_approval`이고 `report.can_approve == true`일 때 활성화합니다. 실행 버튼은 `status == approved`일 때 활성화합니다. `report.verdict`는 검토 당시 판정, `status`는 이후 승인·실행까지 포함하는 현재 상태입니다.
 
@@ -92,3 +96,6 @@ npm run build
 ```
 
 JSON Schema/OpenAPI와 TypeScript 생성 파일을 직접 수정하지 마세요. 원본 Python 타입을 바꾸고 다시 생성합니다. 테스트는 서버와 저장된 OpenAPI의 일치를 확인하고, CI는 생성된 TypeScript 차이를 확인합니다.
+
+
+평가 작업의 필드·취소·시간 초과·재시작 동작은 [평가 안내](../docs/EVALUATION.md)에 있습니다. `evaluation`은 기존 기록에서 null일 수 있습니다. `examples/request-evaluating.json`, `examples/request-timed-out.json`으로 진행·실패 화면을 개발할 수 있습니다.

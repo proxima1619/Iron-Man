@@ -20,6 +20,8 @@ def client(monkeypatch, tmp_path):
         return calculation(*args).model_copy(update={"mock": True})
     monkeypatch.setattr(simulator, "simulate", mock_simulate)
     gateway = Gateway(tmp_path / "test.sqlite3")
+    # Existing module/policy tests use the synchronous helper; real async API tests are separate.
+    monkeypatch.setattr(gateway, "submit_evaluation", gateway.evaluate)
     monkeypatch.setattr(main, "gateway", gateway)
     yield TestClient(main.app)
     gateway.close()

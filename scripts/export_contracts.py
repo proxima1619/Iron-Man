@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from backend.main import app
 from backend.gateway.service import Gateway
+from backend.gateway.evaluation import failure_report
 from unittest.mock import patch
 from uuid import UUID
 from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord
@@ -41,4 +42,12 @@ if __name__ == '__main__':
         row = gateway.create(request)
         record = RequestRecord.model_validate(gateway.evaluate(row['id']))
         write('contracts/examples/request-record-demo.json', record.model_dump())
+        task = {"id": "eval-example-001", "revision": 0, "status": "running",
+                "started_at": 1700000000, "deadline_at": 1700000090, "finished_at": None}
+        running, context = gateway._prepare_evaluation(row['id'], task)
+        write('contracts/examples/request-evaluating.json', RequestRecord.model_validate(running).model_dump())
+        with patch('backend.gateway.service.time.time', return_value=1700000090.0):
+            timed_out = gateway._finish_evaluation(context, failure_report(context,
+                'EVALUATION_TIMEOUT', '예시: 평가 제한 시간 초과'), 'timed_out')
+        write('contracts/examples/request-timed-out.json', RequestRecord.model_validate(timed_out).model_dump())
         gateway.close()

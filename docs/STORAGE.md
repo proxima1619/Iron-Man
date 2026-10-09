@@ -35,7 +35,7 @@ Linux/macOS는 파일 잠금, Windows는 바이트 잠금으로 같은 DB의 서
 |---|---|
 | 접수·차단·보류·승인 대기·거절 | 그대로 조회 가능 |
 | 승인 완료 | 승인 유지. 실행 시 만료·상태·명령·버전을 다시 검사 |
-| 검토 중 | hold, 현재 report/approval 제거, 중단 이벤트 추가; 사용자가 재검증 |
+| 검토 중 | 비정상 종료 후 hold, 현재 report/approval 제거, evaluation은 interrupted. 정상 종료 시 cancelled 보류 보고서 저장. 사용자가 재검증 |
 | 실행 중 | execution_unknown; execution ID 유지, 자동 재전송 금지 |
 | 실행 완료 | 완료 기록·가상 상태 유지. 같은 요청의 재실행 호출은 기존 결과 반환 |
 

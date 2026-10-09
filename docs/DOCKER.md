@@ -47,6 +47,8 @@ docker compose up -d --build --wait
 
 선택적으로 `.env.example`을 `.env`로 복사해 값을 수정할 수 있습니다. Compose는 이 파일을 읽지만, 일반 Python 실행은 여전히 자동 로딩하지 않습니다.
 
+- `IRON_MAN_EVALUATION_WORKERS`: 기본 2개, 별도 평가 프로세스의 최대 동시 개수.
+- `IRON_MAN_EVALUATION_TIMEOUT_S`: 기본 90초. 시간 초과 시 작업 종료·보류.
 - `IRON_MAN_HTTP_PORT`: 기본 8080. 다른 서비스가 사용 중이면 변경.
 - `IRON_MAN_BIND_HOST`: 기본 127.0.0.1. 외부 공개는 배포 단계에서 HTTPS·접근 인증과 함께 구성.
 - `IRON_MAN_OPERATOR_TOKEN`, `IRON_MAN_APPROVER_TOKEN`: API 데모 토큰. 초기값은 로컬용 공개 값이며 외부 배포 전에 변경.

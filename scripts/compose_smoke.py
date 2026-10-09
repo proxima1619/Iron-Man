@@ -44,6 +44,10 @@ if __name__ == '__main__':
         assert error.code == 401
     row = api('/requests', {'command': {'target_pct': 60}, 'purpose': 'Compose persistence smoke test'})
     report = api(f'/requests/{row["id"]}/evaluate', {})
+    deadline = time.monotonic() + 100
+    while report['status'] == 'evaluating' and time.monotonic() < deadline:
+        time.sleep(0.2)
+        report = api(f'/requests/{row["id"]}')
     assert report['status'] == 'blocked'
     before_state = api('/state')
     before_state.pop('observed_at')

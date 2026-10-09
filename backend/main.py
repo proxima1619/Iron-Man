@@ -14,7 +14,9 @@ gateway = None
 async def lifespan(app):
     global gateway
     default_path = Path(__file__).resolve().parents[1] / "data" / "ironman.sqlite3"
-    gateway = Gateway(os.getenv("IRON_MAN_DB_PATH", str(default_path)))
+    gateway = Gateway(os.getenv("IRON_MAN_DB_PATH", str(default_path)),
+        max_evaluations=int(os.getenv("IRON_MAN_EVALUATION_WORKERS", "2")),
+        evaluation_timeout_s=float(os.getenv("IRON_MAN_EVALUATION_TIMEOUT_S", "90")))
     try:
         yield
     finally:
@@ -67,9 +69,13 @@ def read(request_id: str, actor=Depends(identity)):
     with gateway.lock:
         return gateway.get(request_id)
 
-@app.post("/requests/{request_id}/evaluate", response_model=RequestRecord)
+@app.post("/requests/{request_id}/evaluate", status_code=202, response_model=RequestRecord)
 def evaluate(request_id: str, actor=Depends(identity)):
-    return gateway.evaluate(request_id)
+    return gateway.submit_evaluation(request_id)
+
+@app.post("/requests/{request_id}/evaluation/cancel", response_model=RequestRecord)
+def cancel_evaluation(request_id: str, actor=Depends(identity)):
+    return gateway.cancel_evaluation(request_id)
 
 @app.post("/requests/{request_id}/decisions", response_model=RequestRecord)
 def decide(request_id: str, body: DecisionInput, actor=Depends(approver)):

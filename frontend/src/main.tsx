@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 
@@ -44,6 +44,38 @@ function App() {
       );
     return data;
   }
+  useEffect(() => {
+    if (!row || row.status !== "evaluating") return;
+    const requestId = row.id;
+    const controller = new AbortController();
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      try {
+        const response = await fetch(`/api/requests/${requestId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("평가 상태 조회 실패");
+        const next: Row = await response.json();
+        if (stopped) return;
+        setRow((current) => (current?.id === requestId ? next : current));
+        setError("");
+        if (next.status !== "evaluating") return;
+      } catch {
+        if (stopped) return;
+        setError("평가 상태를 가져오지 못했습니다. 연결·토큰을 확인하세요.");
+      }
+      timer = setTimeout(poll, 1000);
+    }
+    timer = setTimeout(poll, 300);
+    return () => {
+      stopped = true;
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [row?.id, row?.status, token]);
+
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -167,6 +199,28 @@ function App() {
             <p>
               요청 속도: {row.request.command.target_pct}% · 요청 ID: {row.id}
             </p>
+            {row.status === "evaluating" && (
+              <div role="status" aria-live="polite">
+                <p>
+                  검토 중입니다. 결과를 자동으로 갱신합니다. 다른 요청도 생성할
+                  수 있습니다.
+                </p>
+                <p className="muted">
+                  평가 ID: {row.evaluation?.id} · 제한 시각:{" "}
+                  {row.evaluation
+                    ? new Date(
+                        row.evaluation.deadline_at * 1000,
+                      ).toLocaleTimeString()
+                    : "—"}
+                </p>
+                <button
+                  disabled={busy}
+                  onClick={() => post("evaluation/cancel")}
+                >
+                  평가 취소
+                </button>
+              </div>
+            )}
             <strong>{row.report?.reason}</strong>
             {row.report?.simulation && (
               <>
