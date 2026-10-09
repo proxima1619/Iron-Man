@@ -19,6 +19,8 @@
 - 코어 고정 커밋: `81a7ac9dc04f91bc0898c36f8522372e0e437fc1` (2022-08-08). `backend/simulator/tep/source.lock.json`에 파일별 SHA-256을 보존한다.
 - `vendor/teprob.cpp`, `teprob.h`는 **바이트 변경 없이** 포함했다. 원본의 NIST 사용·복제·수정·배포 허가와 보증 부인, 비추천·비보증 안내를 `vendor/LICENSE.md`, `DISCLAIMER.md`로 함께 보존한다. 미국에서는 NIST 직원 저작물이 public domain이며 해외 권리 범위의 허가 문구도 포함되어 있다. 상용 MATLAB 라이선스는 필요 없다. NIST의 제품 보증이나 공식 검증을 뜻하지 않는다.
 
+네 vendored 파일은 고정 커밋의 **Git blob 바이트**와 대조했다. Windows 체크아웃의 자동 줄바꿈 변환을 제거했고 `.gitattributes`로 이후 변환을 막는다. lock과 모델 사전의 SHA는 해당 원본 바이트 기준이다.
+
 **전체 NIST TESIM 프로그램을 그대로 실행하는 것은 아니다.** 공정 방정식 코어는 그대로 쓰고 Iron-Man의 `runner.cpp`가 CLI·CSV·적분 루프를 제공한다. NIST `TEPlant`의 다른 초기 상태, `TEController`, 무선 채널, HIL, 비용 모듈은 사용하지 않는다. 따라서 전체 TESIM 제어기 포함 실험이나 Harvard 데이터와 수치가 동일하다는 주장은 하지 않는다.
 
 ## 실행 설정과 지원 범위
