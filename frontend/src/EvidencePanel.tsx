@@ -81,6 +81,11 @@ export function EvidencePanel({
   evidence?: Review;
 }) {
   const review = evidence || report?.evidence;
+  const coolingSnapshot = report && "observed_at" in report.snapshot ? report.snapshot : null;
+  const pumpCommand = record?.request.command.type === "set_pump_speed" ? record.request.command : null;
+  const appliedExecution = record?.execution?.status === "applied" && record.execution.command.type === "set_pump_speed"
+    ? record.execution
+    : null;
   const origin = review ? evidenceOrigin(review) : null;
   const orderedCards = [...(review?.cards || [])].sort(
     (a, b) =>
@@ -152,11 +157,11 @@ export function EvidencePanel({
               없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요.
             </p>
           )}
-          {record?.execution?.status === "applied" ? (
+          {appliedExecution ? (
             <p>
               <strong>가상 적용 기록:</strong> 목표 속도{" "}
-              {record.execution.command.target_pct}% 접수 · 접수 당시 실제 속도{" "}
-              {record.execution.state.pump_speed_pct.toFixed(2)}%. 적용 접수는
+              {appliedExecution.command.target_pct}% 접수 · 접수 당시 실제 속도{" "}
+              {appliedExecution.state.pump_speed_pct.toFixed(2)}%. 적용 접수는
               예측 온도와 실측 결과가 일치했다는 검증이 아닙니다.
             </p>
           ) : record?.execution?.status === "unknown" ? (
@@ -174,23 +179,30 @@ export function EvidencePanel({
           )}
           <h3>이 판단에 사용한 조건</h3>
           <dl>
-            <dt>초기 온도·부하</dt>
+            <dt>{coolingSnapshot ? "초기 온도·부하" : "초기 상태"}</dt>
             <dd>
-              {report.snapshot.temperature_c.toFixed(2)}°C · 부하{" "}
-              {report.snapshot.load_ratio}
+              {coolingSnapshot
+                ? `${coolingSnapshot.temperature_c.toFixed(2)}°C · 부하 ${coolingSnapshot.load_ratio}`
+                : report.tep_simulation
+                  ? "TEP 표준 프로필 · 공개 공정 모델 초기화"
+                  : "상태 정보 없음"}
             </dd>
-            <dt>기존 목표·초기 속도</dt>
-            <dd>
-              {report.snapshot.target_pump_speed_pct ??
-                report.snapshot.pump_speed_pct}
-              % · 초기 실제 속도 {report.snapshot.pump_speed_pct}%
-            </dd>
+            {coolingSnapshot && <>
+              <dt>기존 목표·초기 속도</dt>
+              <dd>
+                {coolingSnapshot.target_pump_speed_pct ?? coolingSnapshot.pump_speed_pct}
+                % · 초기 실제 속도 {coolingSnapshot.pump_speed_pct}%
+              </dd>
+            </>}
             {record && (
               <>
                 <dt>변경 요청</dt>
                 <dd>
-                  {record.request.command.target_pct}% · 예측 구간{" "}
-                  {record.request.command.duration_s}초
+                  {pumpCommand
+                    ? `${pumpCommand.target_pct}% · 예측 구간 ${pumpCommand.duration_s}초`
+                    : record.request.command.type === "set_tep_cooling_water"
+                      ? `${record.request.command.variable} ${record.request.command.value} percent_full_scale · ${record.request.command.duration_s}초`
+                      : "명령 정보 없음"}
                 </dd>
               </>
             )}
@@ -200,14 +212,15 @@ export function EvidencePanel({
             </dd>
             <dt>센서·모델 범위</dt>
             <dd>
-              {report.snapshot.sensor_quality === "valid" ? "유효" : "불량"} ·{" "}
-              {report.snapshot.domain_status === "ready"
-                ? "지원 범위"
-                : "지원 범위 밖"}
+              {coolingSnapshot
+                ? `${coolingSnapshot.sensor_quality === "valid" ? "유효" : "불량"} · ${coolingSnapshot.domain_status === "ready" ? "지원 범위" : "지원 범위 밖"}`
+                : report.tep_simulation
+                  ? "현장 센서 없음 · TEP 내부 상태 및 지원 조건 사용"
+                  : "확인되지 않음"}
             </dd>
             <dt>데이터·실행 범위</dt>
             <dd>
-              합성 상태 ·{" "}
+              {report.tep_simulation ? "공개 TEP 시뮬레이션 · 현장 실측 아님" : "합성 상태 · "}{" "}
               {report.execution_scope === "virtual"
                 ? "가상 설비 전용"
                 : "미설정"}

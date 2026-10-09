@@ -4,6 +4,10 @@ import type { components } from "./api.generated";
 import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
 import { TepResults } from "./TepResults";
+import { Home } from "./Home";
+import { DemoPage } from "./DemoPage";
+import { EvidencePanel } from "./EvidencePanel";
+import { RecordFeedback } from "./RecordFeedback";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -521,7 +525,9 @@ function App() {
                   <span className="eyebrow">PEAK TEMPERATURE / °C</span>
                 </div>
                 <p className="muted">
-                  최고 온도 비교입니다. 현재 API에는 시계열이 없습니다.
+                  {report?.tep_simulation
+                    ? "위 TEP 시계열은 공개 공정 모델의 기준·변경 계산 비교입니다. 실측 오차가 아닙니다."
+                    : "정상 및 냉각 효율 저하 조건의 최고 온도를 비교합니다."}
                 </p>
                 {!!report?.simulation?.scenarios.length ? (
                   <>

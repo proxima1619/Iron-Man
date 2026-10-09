@@ -1,9 +1,10 @@
 import copy
 import json
 import time
+from types import SimpleNamespace
 import pytest
-from backend.contracts import NewRequest, Command, EvidenceReview, RequestRecord
-from backend.evidence import service, llm
+from backend.contracts import NewRequest, Command, TEPCommand, EvidenceReview, RequestRecord
+from backend.evidence import service, llm, feedback
 from backend.gateway.service import Gateway
 
 
@@ -118,6 +119,41 @@ def test_responses_transport(monkeypatch):
         return Response()
     monkeypatch.setattr(llm, "urlopen", send)
     assert llm.analyze({"documents": []}) == output()
+
+
+def test_saved_tep_feedback_uses_tep_specific_instructions(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("IRON_MAN_EVIDENCE_MODEL", "test-model")
+    report = SimpleNamespace(
+        digest="report-digest",
+        model_dump=lambda: {"tep_simulation": {"status": "completed", "data_origin": "simulation"}},
+    )
+    record = SimpleNamespace(
+        id="tep-record", revision=2, status="hold", report=report, execution=None,
+        request=SimpleNamespace(
+            command=TEPCommand(type="set_tep_cooling_water", variable="XMV10", value=42),
+            purpose="TEP XMV10 영향 비교",
+        ),
+    )
+    captured = {}
+
+    def analyze(payload, **kwargs):
+        captured.update(payload=payload, kwargs=kwargs)
+        return {
+            "cards": [], "missing_conditions": ["현장 설비 조건 미확인"],
+            "summary": "저장된 TEP 계산을 검토했습니다.",
+            "result_interpretation": "기준과 변경 결과는 시뮬레이션 비교입니다.",
+            "model_limitations": ["현장 실측으로 검증되지 않았습니다."],
+            "recommended_checks": ["설비와 입력 매핑을 확인하세요."],
+        }
+
+    monkeypatch.setattr(feedback.llm, "analyze", analyze)
+    result = feedback.review_record(record)
+    assert result.model == "test-model"
+    assert captured["payload"]["saved_record"]["report"]["tep_simulation"]["data_origin"] == "simulation"
+    instructions = captured["kwargs"]["base_instructions"]
+    assert "펌프 RPM" in instructions
+    assert "TEP 안전 승인 정책은 미설정" in instructions
 
 
 def test_source_path_override_is_read_at_load_time(monkeypatch, tmp_path):

@@ -145,8 +145,13 @@ export function DemoExperience() {
   }, [row?.id, row?.status, operator]);
 
   const report = row?.report;
+  const coolingSnapshot = report && "observed_at" in report.snapshot ? report.snapshot : null;
+  const pumpCommand = row?.request.command.type === "set_pump_speed" ? row.request.command : null;
+  const appliedExecution = row?.execution?.status === "applied" && row.execution.command.type === "set_pump_speed"
+    ? row.execution
+    : null;
   const locked = busy || row?.status === "evaluating";
-  const age = report ? now - report.snapshot.observed_at : Infinity;
+  const age = coolingSnapshot ? now - coolingSnapshot.observed_at : Infinity;
   const fresh = age >= 0 && age <= 60;
   return (
     <section className="demo-experience" id="demo" aria-labelledby="demo-title">
@@ -200,14 +205,15 @@ export function DemoExperience() {
                         setConfirmed(false);
                         setReason("");
                         setPlant(null);
-                        setSpeed(stored.request.command.target_pct);
+                        if (stored.request.command.type === "set_pump_speed")
+                          setSpeed(stored.request.command.target_pct);
                       });
                   }}
                 >
                   <option value="">기록을 선택하세요</option>
-                  {savedRows.map((stored) => (
+                  {savedRows.filter((stored) => stored.request.command.type === "set_pump_speed").map((stored) => (
                     <option value={stored.id} key={stored.id}>
-                      {stored.request.command.target_pct}% ·{" "}
+                      {stored.request.command.type === "set_pump_speed" ? `${stored.request.command.target_pct}%` : "TEP"} ·{" "}
                       {statusLabels[stored.status] || stored.status} ·{" "}
                       {stored.id.slice(0, 8)}
                       {stored.report
@@ -398,9 +404,11 @@ export function DemoExperience() {
                 <p className="demo-state">
                   DB 기록 조회 · {row.request.purpose}
                   <br />
-                  {report
-                    ? `저장된 관측 시각: ${new Date(report.snapshot.observed_at * 1000).toLocaleString("ko-KR")}`
-                    : "아직 저장된 검토 보고서가 없습니다."}
+                  {coolingSnapshot
+                    ? `저장된 관측 시각: ${new Date(coolingSnapshot.observed_at * 1000).toLocaleString("ko-KR")}`
+                    : report?.tep_simulation
+                      ? "TEP 초기화 프로필을 사용한 저장 기록입니다. 현장 관측값은 없습니다."
+                      : "아직 저장된 검토 보고서가 없습니다."}
                   <br />
                   당시 저장된 결과입니다. 아래 AI 피드백으로 설명을 받을 수
                   있습니다.
@@ -413,32 +421,33 @@ export function DemoExperience() {
                     : "저장된 검토 보고서가 없습니다. AI 피드백으로 현재 기록에 대한 설명을 받을 수 있습니다.")}
               </p>
               <p className="muted">
-                요청 {row.id.slice(0, 8)} · 목표{" "}
-                {row.request.command.target_pct}% ·{" "}
+                요청 {row.id.slice(0, 8)} · {pumpCommand
+                  ? `목표 ${pumpCommand.target_pct}%`
+                  : "TEP 입력 변경"} ·{" "}
                 {report?.reason_code || "검토 전"}
               </p>
               <dl>
                 <dt>저장된 명령</dt>
                 <dd>
-                  펌프 목표 속도 {row.request.command.target_pct}% · 예측 구간{" "}
-                  {row.request.command.duration_s}초
+                  {pumpCommand
+                    ? `펌프 목표 속도 ${pumpCommand.target_pct}% · 예측 구간 ${pumpCommand.duration_s}초`
+                    : "TEP 제어 입력 변경 요청"}
                 </dd>
                 <dt>가상 적용 기록</dt>
                 <dd>
-                  {row.execution?.status === "applied"
-                    ? `가상 목표 속도 ${row.execution.command.target_pct}% 적용됨`
+                  {appliedExecution
+                    ? `가상 목표 속도 ${appliedExecution.command.target_pct}% 적용됨`
                     : row.execution?.status === "unknown"
                       ? "적용 결과 불명 · 다시 실행하지 마세요"
                       : "적용 기록 없음 · 계산 결과와 구분"}
                 </dd>
-                {row.execution?.status === "applied" && (
+                {appliedExecution && (
                   <>
                     <dt>적용 당시 상태</dt>
                     <dd>
-                      온도 {row.execution.state.temperature_c}°C · 실제 가상
-                      속도 {row.execution.state.pump_speed_pct}% · 목표 속도{" "}
-                      {row.execution.state.target_pump_speed_pct ??
-                        row.execution.command.target_pct}
+                      온도 {appliedExecution.state.temperature_c}°C · 실제 가상
+                      속도 {appliedExecution.state.pump_speed_pct}% · 목표 속도{" "}
+                      {appliedExecution.state.target_pump_speed_pct ?? appliedExecution.command.target_pct}
                       %
                     </dd>
                   </>
@@ -514,9 +523,9 @@ export function DemoExperience() {
             <aside className="evidence-hold">
               <h3>왜 검토가 멈췄나요?</h3>
               <p>
-                {report.snapshot.sensor_quality !== "valid"
+                {coolingSnapshot?.sensor_quality !== "valid"
                   ? "당시 센서 품질이 불량했습니다."
-                  : report.snapshot.domain_status !== "ready"
+                  : coolingSnapshot?.domain_status !== "ready"
                     ? "당시 상태가 모델이 지원하는 범위를 벗어났습니다."
                     : "센서와 모델 범위는 유효합니다. 당시 관측 시각이 60초 유효 시간을 벗어났거나 서버 시각보다 미래였기 때문에 검토가 시작되지 않았습니다."}
               </p>

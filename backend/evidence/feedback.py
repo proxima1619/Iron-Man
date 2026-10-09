@@ -5,7 +5,7 @@ import os
 import time
 from urllib.error import HTTPError, URLError
 from fastapi import HTTPException
-from backend.contracts import RequestRecord, RecordFeedback
+from backend.contracts import RequestRecord, RecordFeedback, TEPCommand
 from backend.evidence import llm, papers
 from backend.evidence.schema import RecordAnalysis
 from backend.evidence.service import load_sources, validate_analysis
@@ -23,6 +23,16 @@ model_limitations에는 모델과 합성 데이터의 한계, recommended_checks
 missing_conditions에는 논문과 기록의 설비·유체·온도·운전 범위 차이와 검증하지 못한 조건을 구체적으로 적어라.
 피드백은 안전 승인·실행 허가가 아니다. proposed_test는 모두 null로 반환하라.
 문헌 주장은 반드시 제공된 documents의 정확한 인용과 연결하라. 한국어로 답하라."""
+
+TEP_INSTRUCTIONS = """지금 수행하는 작업은 DB에 저장된 TEP 시뮬레이션 결과의 사후 설명이다.
+saved_record.report.tep_simulation에 저장된 결과만 해석하고, 새 계산·설비 조회·실행을 하지 마라.
+기준 입력 유지와 후보 입력의 같은 시간축 시계열 및 comparison 수치를 비교해 설명하라. 숫자는 저장된 기록에 있는 값만 써라.
+XMV10/XMV11은 TEP의 정규화된 냉각수 제어 입력(percent_full_scale)이며 펌프 RPM, 펌프 속도, 실제 유량으로 바꾸어 부르거나 환산하지 마라.
+이 구현은 공개 NIST Tennessee Eastman Process 모델을 이용한 연구용 공정 시뮬레이션이다. 현장 설비나 Rieth의 RData 실측 이력이 아니다.
+기록의 운전 모드, open-loop 입력 유지, 초기 상태, 시험 시간, 관측 주기, 외란과 모델 버전을 고려하라. 두 분기의 차이가 실제 설비의 예측 정확도나 안전성을 증명한다고 말하지 마라.
+내부 shutdown 규칙과 status는 해당 TEP 모델의 시뮬레이션 결과로 설명하라. TEP 안전 승인 정책은 미설정이며 verdict=hold는 승인 대기가 아니다. 피드백은 권고이며 승인·실행 권한이 없다.
+문헌 조건과 TEP 조건이 다르거나 확인되지 않으면 mismatch/unknown 및 missing_conditions로 분명히 밝혀라. 지지 논문이나 반례를 찾지 못하면 만들지 말고 근거 부족으로 표시하라.
+proposed_test는 모두 null로 반환하라. 한국어로 summary, result_interpretation, model_limitations, missing_conditions, recommended_checks를 작성하라."""
 
 
 def review_record(record: RequestRecord) -> RecordFeedback:
@@ -49,8 +59,13 @@ def review_record(record: RequestRecord) -> RecordFeedback:
     except Exception:
         raise HTTPException(502, "논문 원문을 가져오지 못했습니다. 서버의 문서 경로 또는 검색 연결을 확인하세요.") from None
     try:
-        raw = llm.analyze({"saved_record": saved, "documents": sources},
-                          output_schema=RecordAnalysis, extra_instructions=INSTRUCTIONS)
+        is_tep = isinstance(record.request.command, TEPCommand)
+        review_options = {"output_schema": RecordAnalysis}
+        if is_tep:
+            review_options["base_instructions"] = TEP_INSTRUCTIONS
+        else:
+            review_options["extra_instructions"] = INSTRUCTIONS
+        raw = llm.analyze({"saved_record": saved, "documents": sources}, **review_options)
         analysis = RecordAnalysis.model_validate(raw)
     except HTTPError as exc:
         detail = {401: "API 키 인증에 실패했습니다.", 403: "해당 모델을 사용할 권한이 없습니다.",

@@ -26,7 +26,8 @@ matched_conditions와 missing_conditions에 현재 온도·실제/기존 목표/
 관련 근거가 없으면 cards를 비우고 부족한 조건을 적어라. 한국어로 응답하라."""
 
 
-def analyze(payload: dict, *, output_schema=Analysis, extra_instructions: str = "") -> dict:
+def analyze(payload: dict, *, output_schema=Analysis, extra_instructions: str = "",
+            base_instructions: str | None = None) -> dict:
     key = os.environ.get("OPENAI_API_KEY")
     model = os.environ.get("IRON_MAN_EVIDENCE_MODEL")
     if not key or not model:
@@ -34,7 +35,7 @@ def analyze(payload: dict, *, output_schema=Analysis, extra_instructions: str = 
     timeout = float(os.environ.get("IRON_MAN_EVIDENCE_TIMEOUT_S", "20"))
     if not 0 < timeout <= 60:
         raise ValueError("Invalid timeout")
-    instructions = INSTRUCTIONS
+    instructions = base_instructions if base_instructions is not None else INSTRUCTIONS
     instructions += "\n각 논문에서 요청의 기대 효과를 지지하는 주장과 위험·실패 조건을 따로 검토하라. 같은 논문에 두 관점이 있으면 각 원문 인용과 적용 조건을 별도 카드로 작성하라. 반대 결론인 논문이 없더라도 실제 문서에 있는 실패 조건을 counter로 제시할 수 있다. 관련 지지 또는 반례가 없으면 최상위 missing_conditions에 그 부재를 명시하라. 개수를 맞추기 위해 카드나 인용문을 만들지 마라. 단순 한계는 limitation으로 분류하라."
     instructions += "\n" + extra_instructions
     body = {"model": model, "store": False, "instructions": instructions,
