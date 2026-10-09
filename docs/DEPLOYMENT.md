@@ -2,9 +2,9 @@
 
 ## 현재 상태
 
-2026-10-09에 EC2 공개 서버를 TEP 포함 커밋 `4de39be6ad8ba6f57d75c9cd04a1c6b1a1edea51`로 갱신했습니다. [공개 홈페이지](https://43.201.63.65.sslip.io/)와 [TEP 검토 콘솔](https://43.201.63.65.sslip.io/#review)을 사용할 수 있습니다. 접속 정보는 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
+2026-10-09에 공개 서버 API와 프런트를 검증 커밋 `3a2ad447909fde017bf63e1910d2c1d275054360`으로 갱신했습니다. [공개 홈페이지](https://ironman.2bc93f41.nip.io/)와 [TEP 검토 콘솔](https://ironman.2bc93f41.nip.io/#review)은 사이트 아이디·비밀번호 없이 열립니다. [기존 주소](https://43.201.63.65.sslip.io/)도 함께 제공합니다. API 역할 토큰은 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
 
-TEP 이미지는 별도 Compose 프로젝트에서 비root 실행·XMV10/XMV11 HTTP 평가·승인/실행 거절·API 및 전체 스택 재생성 후 보고서 보존을 검증했습니다. [전체 CI](https://github.com/proxima1619/Iron-Man/actions/runs/37889292732) 통과 후 공개 서버에 반영하고, 공인 TLS의 HTTP 평가와 실제 Chrome 화면을 다시 확인했습니다. 배포 전 6건의 SQLite 원본을 백업·대조했고, 공개 시험 후 API 컨테이너를 재생성하여 18건의 요청·보고서·판단·실행·감사 기록이 동일하게 유지됨을 확인했습니다. [배포 검증 기록](codex-log/tep-public-deployment-validation.md).
+[전체 CI](https://github.com/proxima1619/Iron-Man/actions/runs/37893527452) 성공 뒤 EC2 timer가 별도 체크아웃에서 프런트를 빌드·교체했고, 공개 HTTPS의 `/deployment.json`으로 버전을 확인했습니다. 자동 프런트 교체 전후 API 컨테이너 ID가 동일했습니다. 기존 18건의 SQLite 원본 행이 배포 후 유지됐으며, HTTP·실제 Chrome 시험 뒤 API 재시작으로 30건의 요청·보고서·판단·실행·감사 이력이 동일하게 보존됨을 확인했습니다. [이번 배포 검증 기록](codex-log/public-frontend-deployment-validation.md). 이전 TEP 코어 검증은 [별도 기록](codex-log/tep-public-deployment-validation.md)에 남깁니다.
 
 현재 EC2는 콘솔에서 직접 생성했으며 Elastic IP가 없는 자동 할당 IPv4를 사용합니다. 아래 CloudFormation 생성 계획은 기존 서버에 적용한 구성이 아닙니다. 인스턴스를 중지 후 다시 시작하면 IP·DNS·HTTPS 설정 확인이 필요합니다.
 
@@ -143,7 +143,7 @@ docker compose --env-file .env.deploy -f compose.deploy.yaml ps
 
 검사는 공인 TLS 신뢰, 로그인 없는 홈페이지 200, API의 토큰 없음·잘못된 토큰 401, 유효 역할 토큰 허용, 평가 202·상태 조회를 확인합니다. TEP XMV10/XMV11의 실제 코어 실행, 코어 정지·범위 밖 입력의 보류와 승인·실행 409를 검사한 뒤, 탱크의 부하 1·60% 차단, 부하 0.6·80% 승인 대기·담당자 승인·가상 적용·가상 시간 진행·유효하지 않은 센서 보류를 확인합니다. 요청 기록 7건을 생성하며 가상 상태를 초기화합니다. 기본 fixture 설정을 전제로 하며 실제 장비·외부 LLM을 호출하지 않습니다.
 
-**5번은 별도 검증**입니다. 다른 컴퓨터·휴대폰의 다른 네트워크에서 URL을 열고 계정→토큰→요청→자동 갱신을 확인하세요. 서버 재시작 후 기록 조회와 노트북 전원을 끈 상태의 접속을 확인하고 브라우저 시연 영상을 남깁니다. 가상 전용 정책과 실제 설비 미연결·모의 근거의 한계를 발표에 명시합니다.
+**5번은 별도 검증**입니다. 다른 컴퓨터·휴대폰의 다른 네트워크에서 URL을 열고 홈페이지→역할 토큰→요청→자동 갱신을 확인하세요. 서버 재시작 후 기록 조회와 노트북 전원을 끈 상태의 접속을 확인하고 브라우저 시연 영상을 남깁니다. 가상 전용 정책과 실제 설비 미연결·모의 근거의 한계를 발표에 명시합니다.
 
 GitHub Actions `https` job은 같은 공개 설정을 사용하되 localhost·테스트 CA로 검사합니다. CA를 명시적으로 신뢰하며 TLS 검증을 끄지 않습니다. Chromium에서도 공개 홈페이지→역할 토큰→요청→자동 결과 갱신→저장 목록을 검사합니다. 공인 DNS·인증서 발급·AWS 실서버 검증을 대신하지 않습니다.
 
