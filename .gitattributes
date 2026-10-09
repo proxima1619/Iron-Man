@@ -1,2 +1,2 @@
-backend/simulator/tep/vendor/* -text
+backend/simulator/tep/vendor/* -text -whitespace
 backend/simulator/tep/runner.cpp text eol=lf

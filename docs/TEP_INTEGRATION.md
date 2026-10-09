@@ -113,7 +113,24 @@ python -m scripts.run_tep --repeat
 IRON_MAN_TEST_TEP=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
 ```
 
-Docker API 이미지는 builder에서 컴파일하고 런타임에는 실행 파일·manifest와 libstdc++만 포함한다. `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, 실행 원본은 `/data/tep-runs`에 저장한다. Docker 설정과 CI 시험을 추가했지만 **이 Windows 환경에는 Docker가 없어 컨테이너 빌드·브라우저 HTTPS 시험은 로컬에서 실행하지 않았다.** 로컬 확인은 WSL 외부 모델 + Windows API/테스트 + 프런트 빌드다.
+Docker API 이미지는 builder에서 컴파일하고 런타임에는 실행 파일·manifest와 libstdc++만 포함하도록 준비했다. `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, 실행 원본은 `/data/tep-runs`에 저장한다. **이번 2번 작업에서는 TEP 엔진을 포함한 컨테이너 빌드·브라우저 HTTPS 시험을 실행하지 않았다.** 확인은 WSL 외부 모델 + Windows API/테스트 + 프런트 빌드다.
+
+### 1번 관문·배포 담당에게 인계 (배포 미완료)
+
+2번 완료 범위는 엔진 소스 고정·입출력 계약·빌드/실행 인터페이스·로컬 반복 검증이다. **`deploy/Dockerfile.api`, Compose와 CI의 최종 검토·통합·배포 판정은 1번이 담당한다.** 이번 Dockerfile/CI 변경은 시제품 검증을 위한 준비로 보존하며 배포 완료로 확정하지 않는다.
+
+| 인계 항목 | 준비 내용 / 1번이 확인할 것 |
+|---|---|
+| builder 패키지 | GNU g++ (C++17), coreutils `timeout`; Python 표준 라이브러리로 `python -m backend.simulator.tep.build --output /opt/tep`. 소스·라이선스·래퍼·lock이 COPY되어야 함 |
+| runtime 패키지 | libstdc++6·libgcc/libm·GNU coreutils `timeout`. g++·MATLAB·OpenModelica는 런타임에 필요 없음 |
+| 아티팩트 | `/opt/tep/tep-runner`, `build.json`; wheel에 `runner.cpp`, `source.lock.json`, `vendor/*` 포함. 런타임에서 소스/래퍼/바이너리 SHA 검증 |
+| 환경변수 | `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, `IRON_MAN_TEP_RUN_DIR=/data/tep-runs`; 기존 evaluation 기본 2 workers/90s. Linux에서는 WSL 변수 사용 안 함 |
+| 볼륨·권한 | 기존 `gateway-data:/data`에 SQLite와 TEP 원본 CSV/진단 파일이 함께 남음. 비root UID 10001의 생성/읽기·백업·용량/보존 정책 확인 |
+| CI | backend job에 명시적 엔진 빌드와 `IRON_MAN_TEST_TEP=1` 추가. 브라우저 smoke는 기존 탱크를 명시 선택하고 마지막에 TEP 완료 결과·보류·승인 비활성화를 확인하도록 준비 |
+| 확인된 결과 | Windows→WSL 실제 외부 실행·재현, 전체 290 테스트, 프런트 타입/빌드 통과. 실제 코어 정지·누락/단위/입력 오류·승인/실행 거절 확인 |
+| 남은 배포 확인 | 변경된 API 이미지의 실제 Docker build, libstdc++ 동적 로딩, 비root 실행, 실제 TEP HTTP→worker→CSV→SQLite 결과, volume 재시작 보존, Compose/HTTPS/브라우저 smoke, 배포 대상 OS/CPU·빌드 해시, 리소스/종료/로그 관리 |
+
+팀의 [기존 Docker 로컬 검증 기록](codex-log/docker-local-validation.md)은 해당 기록 시점의 기존 배포 흐름에 대한 확인이다. 이번 TEP 엔진이 포함된 이미지·CI·HTTPS 배포의 완료 근거로 자동 승계하지 않는다. 배포 검증 결과는 1번이 추가해야 한다. 실측 오차·현장 적용성 미완료 상태도 유지한다.
 
 출력 `data/tep-result.json`은 실제 실행 결과다. `--repeat`는 새 프로세스들로 다시 계산하여 전체 결과를 비교한다. `.tep-cache/runs/<uuid>/`에 기준/변경 CSV·stderr·설정을 남긴다. 기준이 성공하고 변경이 실패해도 보고서에는 부분 성공 수치를 넣지 않는다. 성공 보고서는 모든 시계열·변수 사전·차이 지표·50 초기 상태·12 초기 입력·시드·적분/관측 간격·시험 구간·출처 커밋과 해시·빌드 컴파일러/플랫폼/옵션/바이너리 해시를 보존한다. 원본 CSV는 실행 디렉터리를 따로 백업하며 자동 삭제하지 않는다.
 
