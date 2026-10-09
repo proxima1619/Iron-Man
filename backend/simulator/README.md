@@ -7,9 +7,10 @@
 | 파일 | 역할 |
 |---|---|
 | `service.py` | `simulate(command, snapshot, scenarios, model_version=MODEL_VERSION)`로 변경 전·후 온도를 계산 |
-| `adapter.py` | 메모리 안의 가상 설비 상태를 읽고 승인된 명령을 적용하는 `DemoAdapter` |
+| `adapter.py` | SQLite에 저장된 가상 설비 상태를 읽고 승인된 명령을 적용하는 `DemoAdapter` |
 | `../../contracts/README.md` | 팀 공통 API v1.0의 필드와 상태 정의 |
 | `../../docs/model_card.md` | 계산식, 계수, 입력 범위와 모델 한계 |
+| `../../docs/STORAGE.md` | SQLite 경로, 재시작 복구, 백업과 운영 제약 |
 
 관문 서버(`backend/gateway/service.py`)가 모듈을 호출하고 최종 `blocked`·`hold`·`awaiting_approval`을 판정합니다. 시뮬레이터는 승인이나 실행 권한을 결정하지 않습니다.
 
@@ -23,7 +24,9 @@
 
 ## 가상 어댑터
 
-`DemoAdapter.read_state()`는 현재 메모리 상태의 스냅샷을 반환합니다. `apply_command(execution_id, command)`는 가상 펌프 속도만 바꾸며 같은 `execution_id`는 이전 결과를 반환합니다. `get_execution(execution_id)`로 기록된 적용 결과를 조회할 수 있습니다. `update_demo_state()`는 데모 전용 부하·센서 품질 변경 기능입니다.
+`DemoAdapter`는 관문 서버와 같은 `SQLiteStore`를 사용합니다. 기본 DB 경로와 서버 재시작 동작은 `docs/STORAGE.md`를 따릅니다. `read_state()`는 DB에 저장된 가상 상태의 스냅샷을 반환하고, `update_demo_state()`는 데모 전용 부하·센서 품질을 저장합니다. 상태의 `observed_at`은 읽을 때마다 현재 시각으로 생성하므로 실제 센서 관측 시각이 아닙니다.
+
+`apply_command(execution_id, command)`는 가상 펌프 속도와 적용 영수증을 **하나의 SQLite 트랜잭션**으로 저장합니다. 같은 `execution_id`와 같은 명령은 이전 결과를 반환하고, 다른 명령으로 재사용하면 오류를 냅니다. `get_execution(execution_id)`는 저장된 영수증을 조회합니다. 관문 서버는 실행 예약을 먼저 저장하며, 실행 중 재시작해 결과가 불명확하면 자동으로 재전송하지 않습니다.
 
 `simulate()`는 어댑터 상태를 변경하지 않습니다. 실제 적용은 관문 서버의 승인·재검증 절차에서만 어댑터를 호출합니다. 어댑터 온도는 현재 60°C 합성 고정값이고 명령 후 실제 물리 반응을 관측한 값이 아닙니다.
 
@@ -35,10 +38,11 @@
 
 ```bash
 python -m pytest tests/test_simulator.py -q
+python -m pytest tests/test_persistence.py -q
 python -m pytest -q
 ```
 
-현재 테스트는 반복 실행의 재현성, 같은 초기 상태 비교, 펌프 속도 방향성, 입력 범위 밖 처리, 모델 버전 검사, 비모의 결과의 승인 보류를 확인합니다.
+시뮬레이터 테스트는 반복 실행의 재현성, 같은 초기 상태 비교, 펌프 속도 방향성, 입력 범위 밖 처리, 모델 버전 검사, 비모의 결과의 승인 보류를 확인합니다. 저장 테스트는 가상 상태·적용 영수증의 재시작 후 유지, 중복 실행 방지, 저장 실패 시 원자적 취소를 확인합니다. Windows 로컬 환경에서도 전체 테스트를 실행해 55개가 통과했습니다.
 
 ## 이 모듈을 수정할 때
 
