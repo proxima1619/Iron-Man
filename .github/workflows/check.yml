@@ -9,7 +9,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -c requirements-dev.lock.txt -e '.[dev]'
+      - run: python -m backend.simulator.tep.build
       - run: pytest -q
+        env:
+          IRON_MAN_TEST_TEP: '1'
   frontend:
     runs-on: ubuntu-latest
     defaults:

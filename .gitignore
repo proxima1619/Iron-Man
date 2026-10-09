@@ -10,6 +10,8 @@ __pycache__/
 node_modules/
 dist/
 *.log
+.tep-cache/
+.tools/
 
 *.egg-info/
 

@@ -1,6 +1,42 @@
 # 시뮬레이터 모듈 안내
 
-이 폴더는 **2번 담당**의 가상 냉각 탱크 계산과 데모 설비 상태를 맡습니다. 현재 구현은 합성 상태와 데모 계수로 작동하며 실제 설비, PLC, 실측 센서와 연결되지 않습니다.
+이 폴더는 **2번 담당**의 TEP 외부 시뮬레이터 연동과 기존 합성 탱크 계산을 맡습니다. 현재 실제 설비·PLC·실측 센서 데이터는 없습니다. **공개 NIST TEP 모델을 실제 실행해 생성하는 시뮬레이션 데이터**를 제공합니다. 실측 오차 평가와 실제 설비 적용성 검증은 미완료입니다. 시뮬레이터 변경 시 이 문서도 함께 갱신합니다.
+
+## 현재 기준: TEP 외부 연동 v1
+
+상세한 선정 근거·라이선스·전체 변수 사전·재현 설정·시험 결과·후속 실측 검증 절차는 [TEP_INTEGRATION.md](../../docs/TEP_INTEGRATION.md)를 먼저 읽으세요.
+
+| 파일 | 역할 |
+|---|---|
+| `tep/vendor/teprob.cpp`, `teprob.h` | 고정 NIST 커밋의 원본 공정 방정식, 수정 없이 포함 |
+| `tep/source.lock.json`, `vendor/LICENSE.md`, `DISCLAIMER.md` | 소스 커밋·SHA-256·사용/배포 허가·보증 부인 |
+| `tep/runner.cpp` | 독립 실행 C++ 프로세스: 입력 설정, 원본 초기화, 적분, CSV 출력 |
+| `tep/build.py` | Linux g++ 또는 Windows→Ubuntu WSL에서 명시적 빌드, manifest 생성 |
+| `tep/variables.py` | 12 XMV·41 XMEAS·실제 냉각수 설정의 정의·단위 |
+| `tep/service.py` | 기준/변경 분리 실행, 엄격한 결과 확인, 같은 시간축의 비교 |
+| `../../../scripts/run_tep.py` | 실제 실행·반복 재현성 확인·JSON 저장 CLI |
+
+Windows의 기존 Ubuntu WSL, g++ 및 GNU `timeout`이 필요합니다. Linux에서도 같은 소스를 빌드합니다. MATLAB·OpenModelica·공개 이력 데이터 파일은 필요 없습니다. 저장소 루트에서:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.simulator.tep.build
+.\.venv\Scripts\python.exe -m scripts.run_tep --repeat
+$env:IRON_MAN_TEST_TEP='1'
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+`set_tep_cooling_water`, 대상 `tep-sim-01`, 변수 `XMV10/11`, 단위 `percent_full_scale`, 입력 0..100을 사용합니다. **펌프 속도 %가 아닙니다.** 기본 초기 상태·원본 시드 1431655765·제어기 없음·외란 없음, 0.1초 Euler, 기본 600초/10초 관측으로 실행합니다. 지원 구간은 1..1800초이며 관측 주기의 정수 배수입니다. 같은 초기 상태를 새 프로세스마다 구성하고 기준 MV 유지와 선택 MV 변경을 비교합니다.
+
+기존 `/requests` 흐름은 `report.tep_simulation`에 결과를 저장합니다. `baseline/candidate.points`는 같은 시간축의 입력·관측이며 `comparison`은 변수별 차이입니다. 초기 50 내부 상태·12 입력, 출처·컴파일러·바이너리/CSV 해시 등도 보존합니다. 모델 정지·실행 실패·결과 누락·불명 단위·입력 범위 밖은 완료로 처리하지 않습니다. 부분 CSV는 진단용이며 성공 수치를 보고서에 섞지 않습니다.
+
+TEP 계산이 성공해도 **TEP 승인 정책 미설정으로 hold**, `can_approve=false`, `execution_scope=unconfigured`입니다. 기존 탱크의 80°C·60/80%·0.65 효율·근거 fixture를 TEP에 적용하지 않습니다. 실제 설비 적용은 구현하지 않았습니다.
+
+2026-10-09 확인: 최신 팀원 근거 인계 변경을 포함하여 전체 **290 tests passed**, 프런트 타입 검사·빌드 통과. 600초 기준/변경 반복 결과·CSV 해시 일치, 변경 없음 차이 0, XMV10/XMV11 변경, 원본 압력 정지와 승인 차단 확인. Docker/HTTPS 브라우저 실행은 로컬 환경에서 미검증입니다. 실측 검증은 별도 미완료 단계입니다.
+
+## 기존 합성 냉각 탱크 (별도 경로)
+
+아래 문단은 `cooling-demo-01 / set_pump_speed` 전용입니다. TEP 입력·모델·정책으로 사용하지 않습니다.
 
 ## 파일과 호출 경계
 

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import type { components } from "./api.generated";
 import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
+import { TepResults } from "./TepResults";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -45,6 +46,8 @@ const labels: Record<string, string> = {
 const label = (key: string) => labels[key] || key;
 const date = (s: number) => new Date(s * 1000).toLocaleString("ko-KR");
 const num = (n: number) => n.toFixed(2);
+const commandLabel = (command: Row["request"]["command"]) => command.type === "set_pump_speed"
+  ? `${command.target_pct}% 펌프 속도` : `${command.variable} = ${command.value} percent_full_scale`;
 function safeUrl(value?: string | null) {
   try {
     const u = new URL(value || "");
@@ -62,9 +65,12 @@ function App() {
     [notes, setNotes] = useState<Note[]>([]);
   const [contact, setContact] = useState<string | null>(null),
     [speed, setSpeed] = useState(80),
-    [duration, setDuration] = useState(300);
+    [duration, setDuration] = useState(600);
+  const [model, setModel] = useState<"tep" | "cooling">("tep");
+  const [tepVariable, setTepVariable] = useState<"XMV10" | "XMV11">("XMV10");
+  const [tepValue, setTepValue] = useState(42), [samplePeriod, setSamplePeriod] = useState(10);
   const [purpose, setPurpose] = useState(
-      "냉각 펌프 속도 변경의 온도 영향 검토"
+      "TEP 냉각수 입력 변경의 공정 영향 비교"
     ),
     [email, setEmail] = useState("");
   const [reason, setReason] = useState(""),
@@ -74,8 +80,10 @@ function App() {
     [now, setNow] = useState(Date.now() / 1000);
   const report = row?.report,
     approver = session?.role === "approver";
-  const age = report ? now - report.snapshot.observed_at : 0;
-  const fresh = !!report && age >= 0 && age <= 60;
+  const coolingSnapshot = report && "temperature_c" in report.snapshot ? report.snapshot : null;
+  const snapshotTime = report ? ("observed_at" in report.snapshot ? report.snapshot.observed_at : report.snapshot.configured_at) : 0;
+  const age = now - snapshotTime;
+  const fresh = !!coolingSnapshot && age >= 0 && age <= 60;
   const pending = row?.status === "awaiting_approval" && report?.can_approve;
   const locked =
     !!row &&
@@ -227,15 +235,15 @@ function App() {
         <div>
           <span className="eyebrow">IRON MAN / OPERATOR REVIEW</span>
           <h1>변경 전에, 결과를 확인합니다.</h1>
-          <p>냉각 펌프 검토 · 담당자 판단 · 가상 설비 적용</p>
+          <p>TEP 제어 입력 비교 · 담당자 검토 · 실측 검증 미완료</p>
         </div>
         <div className="mode">
           SYNTHETIC DEMO<small>실제 설비 미연결</small>
         </div>
       </header>
       <aside>
-        합성 냉각 모델의 시연입니다. TEP 데이터·시뮬레이터는 아직 연결되지
-        않았습니다. 계산 통과나 승인은 현실 설비의 안전 검증을 뜻하지 않습니다.
+        공개 TEP 외부 모델을 실행하는 시제품입니다. 결과는 시뮬레이션 데이터이며 현장 실측 검증은 미완료입니다.
+        TEP 요청은 계산이 완료되어도 승인 정책 미설정으로 보류합니다.
       </aside>
       <section className="connection no-print">
         <div>
@@ -278,11 +286,11 @@ function App() {
           {error}
         </p>
       )}
-      <VirtualPlant
+      {model === "cooling" && <VirtualPlant
         token={token}
         approver={approver}
         onChanged={() => setConfirmed(false)}
-      />
+      />}
       <div className="workspace">
         <nav className="sidebar no-print" aria-label="요청 목록">
           <section>
@@ -294,7 +302,11 @@ function App() {
                 void run(async () => {
                   const created = await api<Row>("/requests", {
                     purpose,
-                    command: {
+                    equipment_id: model === "tep" ? "tep-sim-01" : "cooling-demo-01",
+                    command: model === "tep" ? {
+                      type: "set_tep_cooling_water", variable: tepVariable, value: tepValue,
+                      duration_s: duration, sample_period_s: samplePeriod,
+                    } : {
                       type: "set_pump_speed",
                       target_pct: speed,
                       duration_s: duration,
@@ -308,7 +320,29 @@ function App() {
                 });
               }}
             >
-              <label>
+              <label>모델
+                <select value={model} onChange={e => {
+                  const next = e.target.value as "tep" | "cooling";
+                  setModel(next); setDuration(next === "tep" ? 600 : 300);
+                  setPurpose(next === "tep" ? "TEP 냉각수 입력 변경의 공정 영향 비교" : "냉각 펌프 속도 변경의 온도 영향 검토");
+                }}>
+                  <option value="tep">TEP 외부 시뮬레이터</option><option value="cooling">기존 합성 냉각 탱크</option>
+                </select>
+              </label>
+              {model === "tep" ? <>
+                <label>냉각수 입력
+                  <select value={tepVariable} onChange={e => { setTepVariable(e.target.value as "XMV10" | "XMV11"); setTepValue(e.target.value === "XMV10" ? 42 : 19); }}>
+                    <option value="XMV10">XMV10 · 반응기 냉각수</option><option value="XMV11">XMV11 · 응축기 냉각수</option>
+                  </select>
+                </label>
+                <label>정규화 설정 (percent_full_scale)
+                  <input required type="number" min="0" max="100" step="any" value={tepValue} onChange={e => setTepValue(Number(e.target.value))} />
+                </label>
+                <label>관측 주기 (초)
+                  <input required type="number" min="1" max="60" step="1" value={samplePeriod} onChange={e => setSamplePeriod(Number(e.target.value))} />
+                </label>
+                <p className="muted">펌프 속도가 아닙니다. 기본 초기 상태의 개루프 시험이며 실제 계측 데이터와 안전 승인 정책은 없습니다.</p>
+              </> : <label>
                 목표 속도 (%)
                 <input
                   required
@@ -319,14 +353,14 @@ function App() {
                   value={speed}
                   onChange={(e) => setSpeed(Number(e.target.value))}
                 />
-              </label>
+              </label>}
               <label>
                 예측 구간 (초)
                 <input
                   required
                   type="number"
                   min="1"
-                  max="3600"
+                  max={model === "tep" ? "1800" : "3600"}
                   step="1"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
@@ -360,7 +394,7 @@ function App() {
                 type="submit"
                 disabled={busy || !session}
               >
-                요청 생성 · 가상 검토
+                요청 생성 · 시뮬레이션 검토
               </button>
             </form>
           </section>
@@ -392,7 +426,7 @@ function App() {
                   }
                 >
                   <strong>
-                    {saved.request.command.target_pct}% ·{" "}
+                    {commandLabel(saved.request.command)} ·{" "}
                     {saved.request.command.duration_s}초
                   </strong>
                   <small>
@@ -408,14 +442,12 @@ function App() {
             <section className="empty">
               <span className="eyebrow">REVIEW CONSOLE</span>
               <h2>검토할 요청을 선택하세요.</h2>
-              <p>
-                같은 초기 상태에서 기존 속도와 요청 속도의 결과를 비교합니다.
-              </p>
-              <p className="muted">
+              <p>같은 초기 상태에서 기준 입력과 변경 입력의 시뮬레이션 결과를 비교합니다.</p>
+              {model === "tep" ? <p className="muted">TEP 외부 모델의 실제 실행 결과를 읽습니다. 실제 설비 계측값은 없으며, 승인·실행 정책은 아직 미설정입니다.</p> : <p className="muted">
                 초기 부하 1에서는 80%도 장기 위험으로 차단됩니다. 부하 0.6의
                 80% 요청은 모든 가상 검사를 통과하면 담당자 검토로 이어집니다.
                 요청 300초 외에 3600초·평형 온도·계수 민감도를 검사합니다.
-              </p>
+              </p>}
             </section>
           ) : (
             <>
@@ -423,7 +455,7 @@ function App() {
                 <div className="section-head">
                   <div>
                     <span className="eyebrow">02 / DECISION REPORT</span>
-                    <h2>{row.request.command.target_pct}% 속도 변경 검토</h2>
+                    <h2>{commandLabel(row.request.command)} 변경 검토</h2>
                   </div>
                   <span className={`badge ${row.status}`}>
                     {label(row.status)}
@@ -434,10 +466,8 @@ function App() {
                   <div>
                     <small>기존 목표 → 요청 목표</small>
                     <strong>
-                      {report?.snapshot.target_pump_speed_pct ??
-                        report?.snapshot.pump_speed_pct ??
-                        "—"}
-                      % → {row.request.command.target_pct}%
+                      {row.request.command.type === "set_pump_speed" ? `${coolingSnapshot?.target_pump_speed_pct ?? coolingSnapshot?.pump_speed_pct ?? "—"}% → ${row.request.command.target_pct}%`
+                        : `${report?.tep_simulation?.provenance?.initial_xmv[Number(row.request.command.variable.slice(3))-1] ?? "기본 초기 입력"} → ${row.request.command.value} percent_full_scale`}
                     </strong>
                   </div>
                   <div>
@@ -445,13 +475,13 @@ function App() {
                     <strong>{row.request.command.duration_s}초</strong>
                   </div>
                   <div>
-                    <small>초기 온도 / 부하</small>
+                    <small>{row.request.command.type === "set_pump_speed" ? "초기 온도 / 부하" : "초기 상태"}</small>
                     <strong>
-                      {report
-                        ? `${num(report.snapshot.temperature_c)}°C / ${
-                            report.snapshot.load_ratio
+                      {coolingSnapshot
+                        ? `${num(coolingSnapshot.temperature_c)}°C / ${
+                            coolingSnapshot.load_ratio
                           }`
-                        : "검토 전"}
+                        : report && "profile" in report.snapshot ? report.snapshot.profile : "검토 전"}
                     </strong>
                   </div>
                 </div>
@@ -481,6 +511,7 @@ function App() {
                   {report?.reason_code || "—"}
                 </p>
               </section>
+              {report?.tep_simulation && <TepResults result={report.tep_simulation} />}
               <section>
                 <div className="section-head">
                   <h2>예상 효과와 위험 조건</h2>
@@ -698,7 +729,7 @@ function App() {
               <section>
                 <h2>모델 범위와 불확실성</h2>
                 <p>
-                  {report?.simulation?.limitation ||
+                  {report?.tep_simulation?.detail || report?.simulation?.limitation ||
                     "모델 한계가 전달되지 않았습니다."}
                 </p>
                 <dl>
@@ -714,23 +745,22 @@ function App() {
                     {report?.policy_version || "—"}
                   </dd>
                   <dt>데이터 출처</dt>
-                  <dd>합성 상태 · 실측 기록 아님</dd>
+                  <dd>{report?.tep_simulation ? "공개 TEP 모델의 시뮬레이션 데이터" : "합성 상태"} · 실측 기록 아님</dd>
                   <dt>센서 품질</dt>
-                  <dd>{report?.snapshot.sensor_quality || "—"}</dd>
+                  <dd>{coolingSnapshot?.sensor_quality || "실측 없음"}</dd>
                   <dt>검토 상태 시각</dt>
-                  <dd>{report ? date(report.snapshot.observed_at) : "—"}</dd>
+                  <dd>{report ? date(snapshotTime) : "—"} {report && !coolingSnapshot ? "(초기화 설정 시각)" : ""}</dd>
                 </dl>
                 <p className="muted">
-                  TEP 입력과 펌프 속도의 매핑, 정상 기록 구간, 예측 오차 지표는
-                  아직 확정되지 않았습니다. 현재 온도 차이는 예측과 실측의
-                  오차가 아닙니다.
+                  TEP 냉각수 입력은 펌프 속도와 연결하지 않습니다. 기준/변경 결과의 차이는 실측 오차가 아닙니다. 실측 데이터 기반 오차 평가와 실제 설비 적용성 검증은 미완료입니다.
                 </p>
               </section>
               <section className="no-print">
                 <span className="eyebrow">03 / HUMAN DECISION</span>
                 <h2>담당자 판단</h2>
                 <p className={fresh ? "muted" : "danger-text"}>
-                  {report
+                  {report && !coolingSnapshot ? "TEP 승인 정책 미설정: 검토 및 재시험만 가능합니다."
+                    : report
                     ? fresh
                       ? `스냅샷 유효 시간 ${Math.max(
                           0,
@@ -752,8 +782,8 @@ function App() {
                 <div className="approval-summary">
                   <strong>확인할 명령</strong>
                   <p>
-                    cooling-demo-01 · set_pump_speed ·{" "}
-                    {row.request.command.target_pct}% ·{" "}
+                    {row.request.equipment_id} · {row.request.command.type} ·{" "}
+                    {commandLabel(row.request.command)} ·{" "}
                     {row.request.command.duration_s}초
                   </p>
                   <code>보고서 SHA-256: {report?.digest || "—"}</code>
@@ -833,7 +863,7 @@ function App() {
                 {row.execution && (
                   <pre>{JSON.stringify(row.execution, null, 2)}</pre>
                 )}
-                <details>
+                {coolingSnapshot && <details>
                   <summary>가상 상태 변경 시연</summary>
                   <p>부하를 바꾸면 기존 승인을 다시 검증해야 합니다.</p>
                   <div className="actions">
@@ -855,7 +885,7 @@ function App() {
                       </button>
                     ))}
                   </div>
-                </details>
+                </details>}
               </section>
               {approver && (
                 <section className="no-print">

@@ -1568,7 +1568,15 @@
             "title": "Command Digest"
           },
           "snapshot": {
-            "$ref": "#/components/schemas/Snapshot"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Snapshot"
+              },
+              {
+                "$ref": "#/components/schemas/TEPState"
+              }
+            ],
+            "title": "Snapshot"
           },
           "snapshot_digest": {
             "type": "string",
@@ -1619,6 +1627,16 @@
               }
             ]
           },
+          "tep_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TEPResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "verdict": {
             "type": "string",
             "enum": [
@@ -1644,7 +1662,8 @@
               "EVALUATION_CONTEXT_CHANGED",
               "EVALUATION_TIMEOUT",
               "EVALUATION_CANCELLED",
-              "WORKER_FAILURE"
+              "WORKER_FAILURE",
+              "TEP_POLICY_NOT_CONFIGURED"
             ],
             "title": "Reason Code"
           },
@@ -1682,6 +1701,7 @@
           "can_approve",
           "evidence",
           "simulation",
+          "tep_simulation",
           "verdict",
           "reason_code",
           "reason",
@@ -2102,7 +2122,10 @@
         "properties": {
           "equipment_id": {
             "type": "string",
-            "const": "cooling-demo-01",
+            "enum": [
+              "cooling-demo-01",
+              "tep-sim-01"
+            ],
             "title": "Equipment Id",
             "default": "cooling-demo-01"
           },
@@ -2114,7 +2137,15 @@
             "default": "냉각 펌프 속도 변경 검토"
           },
           "command": {
-            "$ref": "#/components/schemas/Command-Input"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Command-Input"
+              },
+              {
+                "$ref": "#/components/schemas/TEPCommand-Input"
+              }
+            ],
+            "title": "Command"
           },
           "requester_contact": {
             "anyOf": [
@@ -2141,7 +2172,10 @@
         "properties": {
           "equipment_id": {
             "type": "string",
-            "const": "cooling-demo-01",
+            "enum": [
+              "cooling-demo-01",
+              "tep-sim-01"
+            ],
             "title": "Equipment Id",
             "default": "cooling-demo-01"
           },
@@ -2153,7 +2187,15 @@
             "default": "냉각 펌프 속도 변경 검토"
           },
           "command": {
-            "$ref": "#/components/schemas/Command-Output"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Command-Output"
+              },
+              {
+                "$ref": "#/components/schemas/TEPCommand-Output"
+              }
+            ],
+            "title": "Command"
           }
         },
         "additionalProperties": false,
@@ -2935,6 +2977,627 @@
           "domain_reason"
         ],
         "title": "Snapshot"
+      },
+      "TEPBranch": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TEPPoint"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Points"
+          },
+          "csv_sha256": {
+            "type": "string",
+            "title": "Csv Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "points",
+          "csv_sha256"
+        ],
+        "title": "TEPBranch"
+      },
+      "TEPCommand-Input": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "set_tep_cooling_water",
+            "title": "Type"
+          },
+          "variable": {
+            "type": "string",
+            "enum": [
+              "XMV10",
+              "XMV11"
+            ],
+            "title": "Variable"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "duration_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Duration S",
+            "default": 600
+          },
+          "sample_period_s": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Sample Period S",
+            "default": 10
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "variable",
+          "value"
+        ],
+        "title": "TEPCommand"
+      },
+      "TEPCommand-Output": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "set_tep_cooling_water",
+            "title": "Type"
+          },
+          "variable": {
+            "type": "string",
+            "enum": [
+              "XMV10",
+              "XMV11"
+            ],
+            "title": "Variable"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "duration_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Duration S",
+            "default": 600
+          },
+          "sample_period_s": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Sample Period S",
+            "default": 10
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "variable",
+          "value",
+          "duration_s",
+          "sample_period_s"
+        ],
+        "title": "TEPCommand"
+      },
+      "TEPConfiguration": {
+        "properties": {
+          "variable": {
+            "type": "string",
+            "enum": [
+              "XMV10",
+              "XMV11"
+            ],
+            "title": "Variable"
+          },
+          "candidate_value": {
+            "type": "number",
+            "title": "Candidate Value"
+          },
+          "horizon_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Horizon S"
+          },
+          "sample_period_s": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Sample Period S"
+          },
+          "integration_step_s": {
+            "type": "number",
+            "const": 0.1,
+            "title": "Integration Step S",
+            "default": 0.1
+          },
+          "integrator": {
+            "type": "string",
+            "const": "forward_euler",
+            "title": "Integrator",
+            "default": "forward_euler"
+          },
+          "controller": {
+            "type": "string",
+            "const": "none_open_loop_hold",
+            "title": "Controller",
+            "default": "none_open_loop_hold"
+          },
+          "operating_mode": {
+            "type": "string",
+            "const": "original_teinit_base_case",
+            "title": "Operating Mode",
+            "default": "original_teinit_base_case"
+          },
+          "random_seed": {
+            "type": "integer",
+            "const": 1431655765,
+            "title": "Random Seed",
+            "default": 1431655765
+          },
+          "disturbances": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 20,
+            "title": "Disturbances"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variable",
+          "candidate_value",
+          "horizon_s",
+          "sample_period_s",
+          "integration_step_s",
+          "integrator",
+          "controller",
+          "operating_mode",
+          "random_seed",
+          "disturbances"
+        ],
+        "title": "TEPConfiguration"
+      },
+      "TEPMetric": {
+        "properties": {
+          "baseline_min": {
+            "type": "number",
+            "title": "Baseline Min"
+          },
+          "baseline_max": {
+            "type": "number",
+            "title": "Baseline Max"
+          },
+          "candidate_min": {
+            "type": "number",
+            "title": "Candidate Min"
+          },
+          "candidate_max": {
+            "type": "number",
+            "title": "Candidate Max"
+          },
+          "final_delta": {
+            "type": "number",
+            "title": "Final Delta"
+          },
+          "max_abs_delta": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Abs Delta"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline_min",
+          "baseline_max",
+          "candidate_min",
+          "candidate_max",
+          "final_delta",
+          "max_abs_delta"
+        ],
+        "title": "TEPMetric"
+      },
+      "TEPPoint": {
+        "properties": {
+          "time_s": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Time S"
+          },
+          "xmv": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 12,
+            "title": "Xmv"
+          },
+          "xmeas": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 41,
+            "minItems": 41,
+            "title": "Xmeas"
+          },
+          "actual_cooling_setting": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Actual Cooling Setting"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "time_s",
+          "xmv",
+          "xmeas",
+          "actual_cooling_setting"
+        ],
+        "title": "TEPPoint"
+      },
+      "TEPProvenance": {
+        "properties": {
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "source_commit": {
+            "type": "string",
+            "title": "Source Commit"
+          },
+          "source_files_sha256": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Source Files Sha256"
+          },
+          "wrapper_sha256": {
+            "type": "string",
+            "title": "Wrapper Sha256"
+          },
+          "binary_sha256": {
+            "type": "string",
+            "title": "Binary Sha256"
+          },
+          "compiler": {
+            "type": "string",
+            "title": "Compiler"
+          },
+          "compiler_flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Compiler Flags"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "initial_state": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 50,
+            "title": "Initial State"
+          },
+          "initial_xmv": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 12,
+            "title": "Initial Xmv"
+          },
+          "initial_state_sha256": {
+            "type": "string",
+            "title": "Initial State Sha256"
+          },
+          "license": {
+            "type": "string",
+            "title": "License"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_url",
+          "source_commit",
+          "source_files_sha256",
+          "wrapper_sha256",
+          "binary_sha256",
+          "compiler",
+          "compiler_flags",
+          "platform",
+          "initial_state",
+          "initial_xmv",
+          "initial_state_sha256",
+          "license"
+        ],
+        "title": "TEPProvenance"
+      },
+      "TEPResult": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "tep-1.0",
+            "title": "Schema Version",
+            "default": "tep-1.0"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "mock": {
+            "type": "boolean",
+            "const": false,
+            "title": "Mock",
+            "default": false
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "out_of_domain",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/TEPConfiguration"
+          },
+          "variables": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TEPVariable"
+            },
+            "type": "object",
+            "title": "Variables"
+          },
+          "core_shutdown_rules": {
+            "items": {
+              "$ref": "#/components/schemas/TEPShutdownRule"
+            },
+            "type": "array",
+            "title": "Core Shutdown Rules"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TEPProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TEPBranch"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TEPBranch"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparison": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TEPMetric"
+            },
+            "type": "object",
+            "title": "Comparison"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "field_validation": {
+            "type": "string",
+            "const": "not_performed_no_measured_data",
+            "title": "Field Validation",
+            "default": "not_performed_no_measured_data"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "data_origin",
+          "mock",
+          "status",
+          "model_version",
+          "configuration",
+          "variables",
+          "core_shutdown_rules",
+          "provenance",
+          "baseline",
+          "candidate",
+          "comparison",
+          "failure_code",
+          "detail",
+          "field_validation"
+        ],
+        "title": "TEPResult"
+      },
+      "TEPShutdownRule": {
+        "properties": {
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          },
+          "source": {
+            "type": "string",
+            "const": "nist_tefunc_internal_shutdown",
+            "title": "Source",
+            "default": "nist_tefunc_internal_shutdown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "quantity",
+          "unit",
+          "minimum",
+          "maximum",
+          "source"
+        ],
+        "title": "TEPShutdownRule"
+      },
+      "TEPState": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "nist-teinit-base-case-v1",
+            "title": "Profile",
+            "default": "nist-teinit-base-case-v1"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "configured_at": {
+            "type": "number",
+            "title": "Configured At"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "wrapper_sha256": {
+            "type": "string",
+            "title": "Wrapper Sha256"
+          },
+          "variables_sha256": {
+            "type": "string",
+            "title": "Variables Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile",
+          "data_origin",
+          "configured_at",
+          "model_version",
+          "source_sha256",
+          "wrapper_sha256",
+          "variables_sha256"
+        ],
+        "title": "TEPState"
+      },
+      "TEPVariable": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "percent_full_scale",
+              "kscm/h",
+              "kg/h",
+              "kPa_gauge",
+              "percent",
+              "degC",
+              "m3/h",
+              "kW",
+              "mole_percent"
+            ],
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "unit"
+        ],
+        "title": "TEPVariable"
       },
       "UnknownExecution": {
         "properties": {

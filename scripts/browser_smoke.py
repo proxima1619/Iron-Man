@@ -20,6 +20,8 @@ def run(access, url):
         expect(page.get_by_role("heading", name="변경 전에, 결과를 확인합니다.")).to_be_visible()
         page.get_by_label("데모 토큰").fill(access["approver_token"])
         page.get_by_role("button", name="연결 확인").click()
+        # Default workflow is now TEP. Keep the legacy virtual-plant regression explicit.
+        page.get_by_label("모델", exact=True).select_option("cooling")
         expect(page.get_by_role("button", name="가상 설비 초기화")).to_be_enabled()
         page.get_by_role("button", name="가상 설비 초기화").click()
         page.get_by_label("데모 토큰").fill(access["operator_token"])
@@ -36,7 +38,7 @@ def run(access, url):
             page.get_by_label("목표 속도 (%)").fill(str(speed))
             with page.expect_response(lambda response: response.url.endswith("/evaluate")
                                       and response.request.method == "POST") as submitted:
-                page.get_by_role("button", name="요청 생성 · 가상 검토").click()
+                page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
             assert submitted.value.status == 202
             expect(page.locator(".review > section:first-child .badge")).to_have_text(verdict, timeout=30000)
             expect(page.get_by_role("alert")).to_have_count(0)
@@ -62,7 +64,7 @@ def run(access, url):
         with page.expect_response("**/api/demo/state") as changed:
             page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
         assert changed.value.status == 200
-        page.get_by_role("button", name="요청 생성 · 가상 검토").click()
+        page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
         expect(page.locator(".review > section:first-child .badge")).to_have_text("승인 대기", timeout=30000)
         page.get_by_role("checkbox").check()
         page.get_by_role("button", name="가상 명령 승인", exact=True).click()
@@ -74,6 +76,13 @@ def run(access, url):
         expect(page.locator(".review > section:first-child .badge")).to_have_text("재검증 필요")
         page.get_by_role("button", name="새로고침", exact=True).click()
         expect(page.locator(".request-list button").first).to_be_visible()
+        page.get_by_label("모델", exact=True).select_option("tep")
+        page.get_by_label("예측 구간 (초)").fill("60")
+        page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("보류", timeout=30000)
+        expect(page.get_by_role("heading", name="TEP 외부 시뮬레이션 비교")).to_be_visible()
+        expect(page.get_by_text("실행 상태: completed", exact=True)).to_be_visible()
+        expect(page.get_by_role("button", name="가상 명령 승인", exact=True)).to_be_disabled()
         context.close()
         browser.close()
     print("PASS: Chromium login, blocked request, human approval, virtual application, stale approval denial, records")

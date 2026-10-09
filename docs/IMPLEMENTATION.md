@@ -1,5 +1,15 @@
 # 현재 구현과 팀원 인계
 
+## 최신 변경: TEP 외부 연동 v1
+
+2026-10-09: NIST TEP 코어를 실제 C++ 프로세스로 실행하는 `backend/simulator/tep`를 추가했습니다. 소스 고정·라이선스 보존·명시적 빌드·기준/변경 독립 실행·시계열/단위/비교·실패 보류를 구현했습니다. 선택 근거, 원본 코어와 래퍼의 차이, 전체 실행 설정과 후속 데이터 요구는 [TEP_INTEGRATION.md](TEP_INTEGRATION.md)에 있습니다.
+
+기존 `/requests`에 `tep-sim-01 / set_tep_cooling_water`를 추가했습니다. TEP 초기화 프로필과 `report.tep_simulation`을 SQLite/이력/비동기 평가에 보존합니다. UI 기본 모델은 TEP이며 시계열과 변수별 비교를 표시합니다. TEP의 `simulation/assessment/evidence`는 null입니다. 기존 탱크·근거 모듈을 TEP 검증으로 재사용하지 않습니다.
+
+계산 성공은 `hold / TEP_POLICY_NOT_CONFIGURED`입니다. 승인·실행 거절 및 알림 미발송을 계약과 관문에서 강제합니다. 1번은 TEP 전용 정책, 3번은 TEP 운전 조건에 맞는 근거·반례, 4번은 해당 정책/검증 범위 표시를 후속 검토해야 합니다. 실측 데이터가 없어도 외부 연동은 진행했고, 실측 오차 및 실제 설비 적용성은 **미완료**로 남깁니다.
+
+최신 팀원 근거 인계 변경을 포함한 전체 290 테스트와 프런트 타입·빌드 통과. Docker 빌드 설정과 CI 실제 외부 시험을 추가했으며 컨테이너/HTTPS 브라우저는 로컬 미검증입니다. 아래 기존 구현 설명은 합성 탱크의 별도 경로를 설명합니다.
+
 ## 1번
 
 `Gateway`는 요청·검토·판단·실행을 조율합니다. 단일 프로세스 `RLock`으로 승인과 실행을 직렬화하고, report digest와 command/state/model/policy를 확인합니다. 요청별 중복 실행은 이전 결과를 반환합니다.

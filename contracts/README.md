@@ -1,6 +1,23 @@
 # 팀 연동 계약 v1.0
 
-**1번이 먼저 제공하는 공동 개발 기준**입니다. 이 계약을 기준으로 2·3번은 반환값을 만들고, 4번은 샘플 응답으로 화면을 개발할 수 있습니다. 실제 계산·검색·LLM 구현은 포함하지 않습니다.
+공동 개발 기준입니다. Python 타입 원본과 OpenAPI를 함께 갱신합니다. 기존 합성 탱크에 TEP 외부 실행 경로를 추가했으며 두 모델의 입력·상태·결과·정책을 구분합니다.
+
+## TEP 추가 계약 `tep-1.0`
+
+2·3번 인계용 모델·변수·지원 시험 사전은 [tep-model.json](tep-model.json)입니다. 입력 범위, 정상 운전 범위(null), 안전 허용 범위(null), 코어 정지 조건을 구분합니다. 현재 고장/외란 시험 레지스트리는 비어 있으며 기존 `degraded_cooling`을 연결하지 않습니다. 근거 확장 초안은 [TEP 근거 계약 초안](../docs/tep_evidence_contract_draft.md)과 비교해 후속 합의하세요.
+
+- 요청 예시: [examples/request-tep.json](examples/request-tep.json). 대상은 `tep-sim-01`, 명령은 `set_tep_cooling_water`, `variable=XMV10/XMV11`, `value`의 단위는 `percent_full_scale`. `target_pct` 펌프 명령과 섞을 수 없습니다.
+- `NewRequest.command`는 `Command | TEPCommand`, 대상과 명령 조합이 다르면 422입니다. 지원 값은 0..100, 시험 1..1800초, 출력 주기 1..60초 정수, 시험이 출력 주기의 정수 배수여야 합니다. 접수 가능한 범위 밖 값은 평가 시 보류합니다.
+- `DecisionReport.snapshot`은 기존 `Snapshot` 또는 `TEPState`입니다. TEP의 `configured_at`은 초기화 설정 시각이며 계측 시각이 아닙니다. `profile`로 구분하고 탱크 `temperature_c/load_ratio/sensor_quality`를 만들지 마세요.
+- `DecisionReport.tep_simulation`은 선택 필드 `TEPResult | null`입니다. [TEPResult.schema.json](TEPResult.schema.json)을 확인하세요. 과거 탱크 보고서에서는 null입니다. TEP 보고서의 기존 `simulation`, `assessment`, `evidence`는 null입니다.
+- 결과의 `data_origin=simulation`, `mock=false`는 실제 외부 계산 실행을 뜻합니다. **현장 실측·검증 완료를 뜻하지 않습니다.** `field_validation=not_performed_no_measured_data`를 보존하세요.
+- `baseline/candidate.points`: `time_s`, 길이 12의 `xmv`, 길이 41의 `xmeas`, 길이 2의 `actual_cooling_setting` (XMV10/11 액추에이터). 번호는 1부터, 배열 인덱스는 0부터입니다. 초기 관측은 동일하며 시간축은 0..horizon의 같은 주기입니다.
+- `variables`에 변수별 이름·단위, `configuration`에 모드·제어기·외란·시드·적분·관측·기간, `provenance`에 출처·초기 벡터·컴파일러·옵션·플랫폼·해시, `core_shutdown_rules`에 선택 구현의 정지 조건을 보존합니다. 내부 50 상태는 코어 전용 초기화 벡터로 동일 단위의 측정값으로 사용하지 않습니다.
+- `comparison[XMEASn]`은 양쪽 min/max, 종료 차이(candidate−baseline), 최대 절대 차이입니다. 실측 오차·잔차·신뢰구간이 아닙니다.
+- `status=completed`는 전체 기준/변경·동일 축·출처가 있어야 합니다. `out_of_domain/failed`는 시계열·비교 수치가 없고 `failure_code/detail`이 있어야 합니다. 누락·NaN·불명 단위·잘못된 입력·정지는 성공으로 표시하지 마세요.
+- TEP는 `hold`, `can_approve=false`, `execution_scope=unconfigured`만 허용합니다. 성공 이유는 `TEP_POLICY_NOT_CONFIGURED`, 실패/미지원은 `SIMULATION_INCOMPLETE`. 기존 온도 80°C 정책과 근거 fixture는 TEP에 적용하지 않습니다. 승인·실행 API는 거절합니다.
+
+실제 실행 결과 예시는 `python -m scripts.run_tep --repeat`로 생성합니다. 생성 파일을 하드코딩된 성공 fixture로 사용하지 마세요. [전체 변수·실행·검증 절차](../docs/TEP_INTEGRATION.md)
 
 ## 어디부터 볼까?
 
@@ -15,7 +32,7 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 ## 공통 규칙
 
 - `schema_version`: `1.0`. 알 수 없는 필드는 거절합니다. 이름·의미·단위를 바꾸기 전에 1번과 합의하세요.
-- 온도는 °C, 속도는 %, 예측 구간과 가상 경과 시간은 s, 관측·계산 시각은 Unix 초입니다. NaN·무한대는 거절합니다. 명령의 `duration_s`는 예측 구간이며 적용 목표값의 자동 만료 시간이 아닙니다.
+- 기존 탱크의 온도는 °C, 펌프 속도는 %입니다. TEP는 반드시 `variables`의 변수별 단위를 사용합니다. 기간·경과 시간은 s, 벽시계 시각은 Unix 초입니다. NaN·무한대는 거절합니다. `duration_s`는 예측/시험 구간이며 목표값의 자동 만료 시간이 아닙니다.
 - `mock`는 필수 boolean입니다. 실제 계산 값/문서로 바뀌었을 때만 false로 설정하세요.
 - 실패를 정상 값 0, 빈 성공 결과, 가짜 출처로 대신하지 않습니다.
 - `limitation`은 필수입니다. 계산 범위, 부족한 근거 또는 실패 이유를 설명합니다.

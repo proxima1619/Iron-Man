@@ -1,0 +1,11 @@
+{
+  "equipment_id": "tep-sim-01",
+  "purpose": "TEP 냉각수 입력 변경 비교",
+  "command": {
+    "type": "set_tep_cooling_water",
+    "variable": "XMV10",
+    "value": 42.0,
+    "duration_s": 600,
+    "sample_period_s": 10
+  }
+}

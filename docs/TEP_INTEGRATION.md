@@ -1,0 +1,186 @@
+# TEP 외부 시뮬레이터 연동 v1
+
+2026-10-09. **실측 데이터는 없다.** 이 작업은 공개 TEP 모델을 실제로 실행하여 생성한 **시뮬레이션 데이터**를 요청·검토 이력에 연결한다. 실측 오차 평가와 실제 설비 적용성 검증은 미완료다.
+
+## 구현 선택과 출처
+
+| 확인한 구현 | 프로그램 연동 수단 | 반복 실행·출력 | 선택 판단 |
+|---|---|---|---|
+| [NIST TESIM](https://github.com/rcandell/tesim/tree/81a7ac9dc04f91bc0898c36f8522372e0e437fc1) | `c/teprob.cpp`의 `teinit`, `set_curr_xmv`, `set_curr_idv`, `tefunc`, `get_curr_xmeas` | 별도 프로세스마다 초기화, 12 XMV와 41 XMEAS 추출 가능 | **선택. 실제 g++ 빌드·입력 변경·시계열·독립 반복 실행 확인** |
+| [pyTEP / SoftwareX 배포 소스](https://github.com/ElsevierSoftwareX/SOFTX-D-21-00069) | Python API → MATLAB Engine → Simulink | `setup/reset`, 입력·외란 변경, simulate, 데이터 저장 지원 | BSD-3-Clause API지만 라이선스가 활성화된 MATLAB/Simulink와 호환 Python이 필요. 현재 환경에서 해당 실행 환경을 확인하지 못해 채택하지 않음 |
+| [Ricker 원본 인터페이스](https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/README_ricker_original.txt) | MATLAB/Simulink S-function | 초기 상태·12 MV·20 외란·41 측정값 | 원형·초기화/샘플 지연 확인에 사용. 현재 실행은 MATLAB 없이 NIST C++ 코어를 사용 |
+
+선정은 OpenModelica나 MATLAB을 먼저 정해 놓고 한 것이 아니다. 실제 입력 설정·실행·시계열 추출이 가능한 공개 코어와 현재 환경의 C++ 컴파일러를 확인한 뒤 결정했다. TEP 실행에 OpenModelica, MATLAB, Simulink, PLC, Beckhoff ADS, Boost, 대형 공개 데이터 다운로드는 필요하지 않다.
+
+출처:
+
+- [NIST의 코드 공개 설명](https://www.nist.gov/publications/computer-code-tennessee-eastman-industrial-wireless-systems-performance-evaluation).
+- 원저 Downs & Vogel (1993), *A plant-wide industrial process control problem*, [DOI](https://doi.org/10.1016/0098-1354(93)80018-I), [논문 사본](https://users.abo.fi/khaggblo/RS/Downs.pdf). 초기 관측값·변수·정규화 입력은 Tables 3–5와 TEINIT 설명을 대조했다. 원래 실제 공정의 구성·반응·조건을 수정한 연구 모델이므로 특정 현장 설비와 동일하다고 가정하지 않는다.
+- 코어 고정 커밋: `81a7ac9dc04f91bc0898c36f8522372e0e437fc1` (2022-08-08). `backend/simulator/tep/source.lock.json`에 파일별 SHA-256을 보존한다.
+- `vendor/teprob.cpp`, `teprob.h`는 **바이트 변경 없이** 포함했다. 원본의 NIST 사용·복제·수정·배포 허가와 보증 부인, 비추천·비보증 안내를 `vendor/LICENSE.md`, `DISCLAIMER.md`로 함께 보존한다. 미국에서는 NIST 직원 저작물이 public domain이며 해외 권리 범위의 허가 문구도 포함되어 있다. 상용 MATLAB 라이선스는 필요 없다. NIST의 제품 보증이나 공식 검증을 뜻하지 않는다.
+
+**전체 NIST TESIM 프로그램을 그대로 실행하는 것은 아니다.** 공정 방정식 코어는 그대로 쓰고 Iron-Man의 `runner.cpp`가 CLI·CSV·적분 루프를 제공한다. NIST `TEPlant`의 다른 초기 상태, `TEController`, 무선 채널, HIL, 비용 모듈은 사용하지 않는다. 따라서 전체 TESIM 제어기 포함 실험이나 Harvard 데이터와 수치가 동일하다는 주장은 하지 않는다.
+
+## 실행 설정과 지원 범위
+
+| 항목 | 현재 값·의미 |
+|---|---|
+| 모델 버전 | `nist-tep-81a7ac9-ironman-v1` |
+| 초기 프로필 | `nist-teinit-base-case-v1`; 원본 `teinit`의 50 내부 상태와 12 초기 XMV |
+| 운전 모드 | 원본 base case (논문의 Mode 1 대응). 다른 모드·사용자 초기 상태 복원은 지원하지 않음 |
+| 제어기 | `none_open_loop_hold`: 자동 제어기 없음. 기준은 초기 12 MV 유지, 변경은 선택한 냉각수 MV 하나만 변경 |
+| 랜덤 시드 | 원본 `teinit`이 설정하는 **1431655765**. 임의 시드 변경 미지원. 각 분기는 새 OS 프로세스에서 다시 초기화 |
+| 외란 | IDV(1)..IDV(20) 모두 0. `degraded_cooling`이나 효율 0.65를 가져오지 않음 |
+| 노이즈·분석기 | 원본 측정 노이즈·샘플 지연 유지. XMEAS(1..22)는 각 모델 호출에서 관측, 23..36은 360초, 37..41은 900초 분석기 샘플/지연 구조를 유지. 출력 간격이 짧아도 새 분석기 측정이 생긴다는 뜻이 아님 |
+| 코어 시간·도함수 | h. 외부 결과와 요청은 s. 래퍼에서 `time_s/3600`과 `dt_s/3600` 변환 |
+| 적분 | 고정 0.1초 forward Euler, 상태 있는 코어를 단계당 한 번 호출. 초기 명령 적용을 위한 t=0 호출도 양쪽에서 동일하게 수행 |
+| 출력 관측 주기 | 1..60초 정수, 기본 10초. 시험 구간은 이 주기의 정수 배수 |
+| 시험 구간 | 1..1800초, 기본 600초. 원본 개루프 공정이 불안정할 수 있어 장시간 정상 운전 보장은 하지 않음 |
+| 명령 시점 | t=0 초기 관측을 먼저 기록하고 직후 입력 변경. t=0 관측·상태는 두 분기 동일 |
+| 프로세스 제한 | 분기별 Linux GNU `timeout` 25초, Python 대기 30초. 관문 기본 90초. 취소 후에도 외부 자식은 25초 이내 제한으로 종료되며 즉시 종료를 보장하지 않음 |
+
+모든 실행은 **기본 초기 상태에서의 오프라인 시험**이다. `/state`의 가상 냉각 탱크 관측이나 현장 센서값을 TEP에 이식하지 않는다. `TEPState.configured_at`은 초기화 프로필을 캡처한 시각이며 계측 시각이 아니다. 내부 50 상태는 조성·재고·에너지·냉각수·액추에이터를 포함한 코어 전용 벡터다. 보고서에 수치·해시·초기화 소스를 보존하되 동일한 단위를 가진 물리 측정 배열로 해석하지 않는다.
+
+### 냉각수 입력
+
+| 1부터 시작하는 번호 | 정의 | 입력 단위·범위 | 기준값 (원본 float 상수 → double) |
+|---|---|---|---|
+| XMV(10), API `XMV10` | 반응기 냉각수 유량 설정 | `percent_full_scale`, 0..100 | 41.105812072753906 |
+| XMV(11), API `XMV11` | 응축기 냉각수 유량 설정 | `percent_full_scale`, 0..100 | 18.113491058349609 |
+
+**펌프 RPM 또는 펌프 속도 %가 아니다.** 코어는 정규화 입력을 자체 범위 계수로 변환하고 5초 액추에이터 응답을 포함한다. 정규화 설정과 실제 액추에이터 상태도 분리한다 (`ACTUAL_XMV10/11`, 내부 상태 48/49). 현재 API는 물리 냉각수 유량이나 펌프 RPM으로 변환하는 매핑을 제공하지 않는다. 예제 42와 19는 연동 확인용 작은 입력 변경이며 운전 권고가 아니다.
+
+원본 `teinit`의 전체 기준 MV:
+
+```text
+[63.052631378173828, 53.979705810546875, 24.643558502197266,
+ 61.301921844482422, 22.209999084472656, 40.063747406005859,
+ 38.100341796875, 46.534156799316406, 47.445735931396484,
+ 41.105812072753906, 18.113491058349609, 50.0]
+```
+
+### 측정값과 단위
+
+사전 원본: [고정 커밋 TENames.cpp](https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp), `teprob.cpp` 계산 및 원저 Tables 4–5. 런타임 사전은 `tep/variables.py`, 보고서의 `variables`에 모든 정의가 들어간다.
+
+| XMEAS 번호 | 측정값 | 단위 |
+|---|---|---|
+| 1 | A 공급 | kscm/h (1000 표준 m³/h) |
+| 2, 3 | D, E 공급 | kg/h |
+| 4, 5, 6 | A+C 공급, 재순환, 반응기 공급 | kscm/h |
+| 7, 13, 16 | 반응기, 분리기, 스트리퍼 압력 | kPa_gauge; 절대압이 아님 |
+| 8, 12, 15 | 반응기, 분리기, 스트리퍼 액위 | percent |
+| 9, 11, 18 | 반응기, 분리기, 스트리퍼 온도 | degC |
+| 10 | 퍼지 유량 | kscm/h |
+| 14, 17 | 분리기, 스트리퍼 액체 배출 | m3/h |
+| 19, 20 | 스팀 유량, 압축기 동력 | kg/h, kW |
+| 21, 22 | 반응기, 응축기 냉각수 출구 온도 | degC |
+| 23..28 | 공급 A..F 조성 | mole_percent |
+| 29..36 | 퍼지 A..H 조성 | mole_percent |
+| 37..41 | 제품 D..H 조성 | mole_percent |
+
+### 코어 정지 조건과 승인 정책은 구분한다
+
+선택 코어가 실제로 검사하는 정지 조건을 결과 `core_shutdown_rules`에 보존한다. 반응기 압력 3000 kPa gauge 초과, 온도 175°C 초과, 반응기 액체 부피 2..24 m³ 밖, 분리기 1..12 m³ 밖, 스트리퍼 1..8 m³ 밖이다. 소스의 엄격한 `<`/`>` 비교이며 소스 내부의 노이즈 추가 전 검사다. 액위 percent와 액체 부피 m³를 혼동하지 않는다.
+
+이 값은 선택 구현의 계산 중단 조건이다. 정상 운전 제한·현장 안전 기준·승인 기준으로 등록하지 않았다. **기존 탱크의 80°C 제한, 60/80% 명령, 0.65 효율, 16개 계수 조합은 TEP 경로에 적용하지 않는다.**
+
+## 재현 가능한 실행
+
+### Windows + 기존 Ubuntu WSL
+
+현재 확인 환경: Windows 11, Python 3.12.14, Ubuntu 24.04.4 WSL, g++ 13.3.0, Linux x86_64. 기존 WSL 배포와 `g++`, GNU `timeout`이 필요하다. WSL 설치/배포 생성은 아래 명령이 자동 수행하지 않는다.
+
+```powershell
+# 저장소 루트; 프로젝트 Python 환경/의존성이 준비되어 있어야 함
+.\.venv\Scripts\python.exe -m backend.simulator.tep.build
+.\.venv\Scripts\python.exe -m scripts.run_tep --variable XMV10 --value 42 --duration 600 --sample 10 --repeat
+.\.venv\Scripts\python.exe -m scripts.run_tep --variable XMV11 --value 19 --duration 600 --sample 10 --repeat --output data/tep-condenser.json
+$env:IRON_MAN_TEST_TEP='1'
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+배포 이름이 다르면 `IRON_MAN_TEP_WSL_DISTRO`로 지정한다. 빌드는 저장소 내부 `.tep-cache/engine/tep-runner`와 `build.json`에 생성된다. HTTP 요청 중 다운로드·설치·컴파일은 하지 않는다. 소스·래퍼·바이너리 해시가 달라지면 실행을 보류하고 명시적으로 다시 빌드한다.
+
+### Linux / CI / Docker
+
+Python >=3.11과 프로젝트 의존성, C++17 지원 GNU g++, GNU coreutils의 `timeout`, 런타임 libstdc++가 필요하다. Ubuntu/Debian에서 `g++` 설치 후:
+
+```bash
+python -m backend.simulator.tep.build
+python -m scripts.run_tep --repeat
+IRON_MAN_TEST_TEP=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+```
+
+Docker API 이미지는 builder에서 컴파일하고 런타임에는 실행 파일·manifest와 libstdc++만 포함한다. `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, 실행 원본은 `/data/tep-runs`에 저장한다. Docker 설정과 CI 시험을 추가했지만 **이 Windows 환경에는 Docker가 없어 컨테이너 빌드·브라우저 HTTPS 시험은 로컬에서 실행하지 않았다.** 로컬 확인은 WSL 외부 모델 + Windows API/테스트 + 프런트 빌드다.
+
+출력 `data/tep-result.json`은 실제 실행 결과다. `--repeat`는 새 프로세스들로 다시 계산하여 전체 결과를 비교한다. `.tep-cache/runs/<uuid>/`에 기준/변경 CSV·stderr·설정을 남긴다. 기준이 성공하고 변경이 실패해도 보고서에는 부분 성공 수치를 넣지 않는다. 성공 보고서는 모든 시계열·변수 사전·차이 지표·50 초기 상태·12 초기 입력·시드·적분/관측 간격·시험 구간·출처 커밋과 해시·빌드 컴파일러/플랫폼/옵션/바이너리 해시를 보존한다. 원본 CSV는 실행 디렉터리를 따로 백업하며 자동 삭제하지 않는다.
+
+## 기존 API와 연결
+
+2·3번이 함께 읽을 구현/변수/지원 시험 사전은 `contracts/tep-model.json`이다. 현재 시험 ID는 `base_case_cooling_step_v1` 하나이며 외란·고장 레지스트리는 비어 있다. 정상 운전 범위와 안전 허용 범위는 null로 보존하고 입력 지원 범위·코어 정지 조건과 구분한다. 팀의 [근거 계약 초안](tep_evidence_contract_draft.md)은 후속 근거/시험 매핑을 위한 것이며 현재 실행에 적용하지 않는다.
+
+UI 기본 요청은 TEP, 기존 합성 탱크는 별도 선택이다. 다음 입력은 기존 `POST /requests`로 접수한다.
+
+```json
+{
+  "equipment_id": "tep-sim-01",
+  "purpose": "TEP 반응기 냉각수 입력 변경 비교",
+  "command": {
+    "type": "set_tep_cooling_water", "variable": "XMV10", "value": 42,
+    "duration_s": 600, "sample_period_s": 10
+  }
+}
+```
+
+`POST /requests/{id}/evaluate`는 기존처럼 202, 별도 작업 실행 후 `GET /requests/{id}`와 `/history`에서 보고서를 읽는다.
+
+- `report.snapshot`은 TEP 초기화 프로필이다. 탱크 온도/부하/센서 품질을 만들지 않는다.
+- `report.tep_simulation`은 `tep-1.0` 계약, `baseline/candidate.points`는 동일 시간축의 12 XMV·41 XMEAS·두 냉각수 액추에이터 상태다. 번호는 1부터, 배열 인덱스는 0부터 시작한다.
+- `comparison`은 변수마다 min/max, 종료 차이(candidate−baseline), 최대 절대 차이. **실측 잔차나 정확도 점수가 아니다.**
+- TEP 보고서의 기존 `simulation`, `assessment`, `evidence`는 null이다. 기존 펌프 규칙과 근거 fixture를 TEP 검토로 재사용하지 않는다.
+- 성공해도 `hold / TEP_POLICY_NOT_CONFIGURED / can_approve=false / execution_scope=unconfigured`. 실패·누락·범위 밖은 `hold / SIMULATION_INCOMPLETE`. 원본 코드·변수 정의 변경은 재검증을 요구한다.
+- 승인과 실행 API는 409로 거절하고 알림을 자동 큐에 넣지 않는다. 재시험은 기존 경로로 가능하다. 승인 가능한 척하는 TEP 보고서는 계약에서도 거절한다.
+- 잘못된 변수 이름·대상 조합·타입·알 수 없는 필드는 HTTP 422로 접수 거절된다. 유한하지만 0..100 밖 값·지원 시험 구간 밖·주기 불일치 등 접수 가능한 미지원 조건은 평가 보류한다. 런타임은 잘못된 CSV 열/개수/시간축/NaN/초기 상태/적용 입력/누락 결과/불명 단위/비정상 종료를 성공으로 처리하지 않는다.
+
+## 현재 검증 결과: 1단계
+
+실제 외부 코어 및 최신 팀원 근거 인계 변경을 포함한 전체 테스트 **290 passed**, 프런트 타입 검사·Vite 빌드 통과 (2026-10-09). 기존 Starlette/httpx 호환 경고 1개. 추가 TEP 시험은 프로토콜·정책·실제 반복 실행·변경 없음·XMV10/XMV11 효과·원본 정지·비동기 HTTP·SQLite 저장·승인 차단을 다룬다. 합성 CSV는 파서 오류 시험에만 사용하고 실행 성공의 근거로 삼지 않았다.
+
+- 600초, XMV10 41.105812072753906 → 42, 관측 10초, 두 번의 독립 기준/변경 실행에서 시계열과 CSV 해시 동일.
+- 종료 시 변경−기준: XMEAS7 약 +22.331547 kPa gauge, XMEAS9 약 −3.9079987°C. 연동 확인 수치이며 안전하거나 바람직한 운전이라는 뜻이 아니다.
+- 변경 값을 원래 기준과 같게 설정하면 두 CSV와 모든 비교 차이가 동일/0.
+- XMV11 변경 시 해당 냉각수 관측이 변화하고 XMV10 유지 확인.
+- XMV10=0, 600초 시험에서 **원본 반응기 압력 정지 코드 1** 발생 → `failed / PROCESS_SHUTDOWN`, 성공 시계열·비교 수치 없음, 원본 부분 CSV는 진단용만 남음.
+- 초깃값 관측 약 120.4°C, 2705 kPa gauge 등은 원저 base case와 대조한다. 이는 모델 입출력 확인이며 현장 검증이 아니다.
+
+현재 재현성은 같은 실행 환경·빌드·설정에서 확인했다. 다른 컴파일러·CPU·libm 간 비트 단위 동일성, 적분 수렴/장시간 오차, 다른 제어기·모드·외란·고장 시나리오, 실제 설비 상태 복원은 검증하지 않았다. 고정 0.1초 Euler와 출력 표본의 최고값을 연속 시간 최댓값 보장으로 해석하지 않는다.
+
+공개 기록 데이터는 이번 최소 통합에 필요 없어 다운로드하지 않았다. [Rieth et al. Harvard Dataverse](https://doi.org/10.7910/DVN/6C3JR1)는 후속 비교 후보일 뿐이며 라이선스·파일·변수·시드·제어기가 확인되기 전 사용/재배포하지 않는다. 사용하게 되더라도 simulation data로 표시하고 실측으로 취급하지 않는다.
+
+## 실측 데이터 수신 후: 2단계 (미완료)
+
+먼저 실제 설비의 공정 구조가 TEP와 대응하는지 판단한다. 단일 탱크·냉각 펌프 데이터만으로 다단 TEP 공정이 현장 설비를 재현한다고 주장하지 않는다. 대응하지 않으면 별도 모델 또는 명시적 부분 모델이 필요하다.
+
+필요한 입력:
+
+| 구분 | 필요한 데이터·메타데이터 |
+|---|---|
+| 출처 | 설비/센서 태그, 수집 일시, 수집기·원본 파일 버전·해시, 사용 권한/라이선스, 센서 교정·품질 플래그 |
+| 시간 | 타임존을 포함한 timestamp, 원래 관측 간격·누락·지연·시계 동기화, 명령 적용/액추에이터 응답 시각. 고속 측정은 현재 비교축 10초에 맞출 수 있는 원본 간격이 필요하며 더 느리면 원래 간격으로 평가 |
+| 제어 입력 | 목표와 실제 밸브 설정/냉각수 유량, 정규화 기준·포화·deadband·속도 제한. 실제 펌프 RPM은 별도 태그와 펌프/밸브/유량 매핑이 필요 |
+| 물리 관측 | 공정 및 냉각수 입·출구 온도 °C, 압력 kPa (gauge/absolute 구분), 액체 부피 m³ 또는 교정된 액위 %, 공급·제품·퍼지 유량 kg/h 또는 표준/실제 m³/h 구분, 조성 mol%/mass% 구분 |
+| 운전 조건 | 제어기 종류·게인·설정값·auto/manual·루프 주기, 운전 모드·제품비율·부하, 공급 조성/온도/압력, 냉각수 조건, 외란·정비·고장 이벤트 |
+| 초기 상태 | 가능한 물질 재고·조성·에너지·액추에이터 상태와 초기화/추정 근거. 측정 41개만으로 내부 50개를 완전히 복원할 수 있다고 가정하지 않음 |
+
+절차:
+
+1. 공정/태그 대응·단위 변환·품질·시간/이벤트 정렬을 승인된 변수 사전으로 검증한다. 분석기 지연을 보존하고 결측값을 실제 계측처럼 채우지 않는다.
+2. 초기 상태 추정·warm-up과 제어기/외란 조건을 정한다. 복원 불가능한 상태·조건은 지원 불가로 기록하고 결과를 보류한다.
+3. 정상·과도·고장 구간을 분리하고 시간 순서의 학습/보정과 **독립 검증 구간**을 둔다. 원본 단위·정렬·해시와 제외 사유를 남긴다.
+4. 변수별 bias, MAE, RMSE, 최대/상위 분위 오차, 시간 지연, 한계 위반 재현·누락, 조건별 오차를 계산한다. 같은 시간축/관측 방식과 단위에서 비교한다.
+5. 설비 담당자가 센서 정확도·위험 분석을 근거로 변수별 허용 오차·지원 운전 범위·초기화 조건을 사전에 정한다. 데이터가 들어왔다는 이유만으로 검증 완료 또는 자동 승인으로 바꾸지 않는다.
+6. 1번의 TEP 전용 위험/재검증/권한 정책, 3번의 공정에 맞는 실제 근거·반례, 4번의 불확실성·검증 범위 표시를 검토한다. 실제 설비 적용에는 별도의 실행 어댑터와 현장 검증이 필요하다.
+
+**이번 완료 범위는 1단계 연동·반복성·계약·보류 확인이다. 2단계 실측 정확도와 실제 설비 적용성은 계속 미완료로 남긴다.**
