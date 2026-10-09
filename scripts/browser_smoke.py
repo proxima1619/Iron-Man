@@ -46,6 +46,9 @@ def run(access, url):
                 expect(page.get_by_role("button", name="가상 명령 승인", exact=True)).to_be_disabled()
         page.get_by_label("데모 토큰").fill(access["approver_token"])
         page.get_by_role("button", name="연결 확인").click()
+        # Reconnecting refreshes report details and resets the confirmation box.
+        # Wait for that operation before checking the human acknowledgement.
+        expect(page.get_by_role("button", name="연결 확인")).to_be_enabled()
         page.get_by_label("판단 이유").fill("합성 시연 보고서와 모델 한계 확인")
         page.get_by_role("checkbox").check()
         page.get_by_role("button", name="가상 명령 승인", exact=True).click()
