@@ -20,6 +20,7 @@ def approved_db(tmp_path, monkeypatch):
     monkeypatch.setenv('IRON_MAN_EVIDENCE_MODE', 'fixture')
     path = tmp_path / 'persistent.sqlite3'
     gateway = Gateway(path)
+    gateway.adapter.update_demo_state(.6, "valid")
     row = gateway.create(NewRequest(command={'target_pct':80}))
     row = gateway.evaluate(row['id'])
     row = gateway.decide(row['id'], DecisionInput(report_digest=row['report']['digest'],

@@ -10,7 +10,7 @@
       "duration_s": 300
     }
   },
-  "status": "awaiting_approval",
+  "status": "blocked",
   "report": {
     "schema_version": "1.0",
     "revision": 2,
@@ -32,10 +32,10 @@
     },
     "snapshot_digest": "d61783bd9c19c9656d221bbef5c095f6dbeb43175a1d6d41f92a6a7b3338056f",
     "model_version": "cooling-demo-v3",
-    "policy_version": "virtual-cooling-policy-v2",
+    "policy_version": "virtual-cooling-policy-v3",
     "execution_scope": "virtual",
     "mock": true,
-    "can_approve": true,
+    "can_approve": false,
     "evidence": {
       "schema_version": "1.0",
       "mock": true,
@@ -83,7 +83,54 @@
           "candidate_peak_c": 65.88300172419115,
           "limit_c": 80.0,
           "exceeded": false,
-          "value_origin": "model_calculation"
+          "value_origin": "model_calculation",
+          "physical_assessment": {
+            "version": "cooling-assessment-v4",
+            "horizon_s": 3600,
+            "baseline": {
+              "peak_c": 60.0,
+              "first_exceeded_s": null,
+              "equilibrium_c": 60.0,
+              "equilibrium_status": "finite",
+              "thermal_time_constant_s": 200.0
+            },
+            "candidate": {
+              "peak_c": 68.74999469432906,
+              "first_exceeded_s": null,
+              "equilibrium_c": 68.75,
+              "equilibrium_status": "finite",
+              "thermal_time_constant_s": 250.0
+            },
+            "parameter_origin": "demo_assumption",
+            "calibration_status": "not_calibrated",
+            "parameter_ranges": {
+              "thermal_capacity_j_per_k": {
+                "minimum": 180000.0,
+                "maximum": 220000.00000000003
+              },
+              "nominal_heat_input_w": {
+                "minimum": 31500.0,
+                "maximum": 38500.0
+              },
+              "full_speed_conductance_w_per_k": {
+                "minimum": 900.0,
+                "maximum": 1100.0
+              },
+              "pump_response_s": {
+                "minimum": 18.0,
+                "maximum": 22.0
+              }
+            },
+            "sensitivity": {
+              "status": "completed",
+              "baseline_worst_peak_c": 67.77777765932247,
+              "candidate_worst_peak_c": 78.47221153652454,
+              "baseline_worst_equilibrium_c": 67.77777777777777,
+              "candidate_worst_equilibrium_c": 78.47222222222223,
+              "evaluated_parameter_sets": 16,
+              "limitation": "열입력·열전달·열용량·펌프 응답 ±10%의 16개 끝점 조합을 시험합니다. 범위는 실측값이 아니며 확률·신뢰구간·범위 내 모든 조합을 보장하지 않습니다. 냉각수 온도·부하·효율은 각 시나리오에서 일정하게 유지합니다."
+            }
+          }
         },
         {
           "kind": "degraded_cooling",
@@ -92,15 +139,62 @@
           "candidate_peak_c": 77.26849515276815,
           "limit_c": 80.0,
           "exceeded": false,
-          "value_origin": "model_calculation"
+          "value_origin": "model_calculation",
+          "physical_assessment": {
+            "version": "cooling-assessment-v4",
+            "horizon_s": 3600,
+            "baseline": {
+              "peak_c": 78.84599753956192,
+              "first_exceeded_s": null,
+              "equilibrium_c": 78.84615384615384,
+              "equilibrium_status": "finite",
+              "thermal_time_constant_s": 307.6923076923077
+            },
+            "candidate": {
+              "peak_c": 92.30486757078457,
+              "first_exceeded_s": 378.0,
+              "equilibrium_c": 92.3076923076923,
+              "equilibrium_status": "finite",
+              "thermal_time_constant_s": 384.61538461538464
+            },
+            "parameter_origin": "demo_assumption",
+            "calibration_status": "not_calibrated",
+            "parameter_ranges": {
+              "thermal_capacity_j_per_k": {
+                "minimum": 180000.0,
+                "maximum": 220000.00000000003
+              },
+              "nominal_heat_input_w": {
+                "minimum": 31500.0,
+                "maximum": 38500.0
+              },
+              "full_speed_conductance_w_per_k": {
+                "minimum": 900.0,
+                "maximum": 1100.0
+              },
+              "pump_response_s": {
+                "minimum": 18.0,
+                "maximum": 22.0
+              }
+            },
+            "sensitivity": {
+              "status": "completed",
+              "baseline_worst_peak_c": 90.81171026309337,
+              "candidate_worst_peak_c": 107.260848637725,
+              "baseline_worst_equilibrium_c": 90.8119658119658,
+              "candidate_worst_equilibrium_c": 107.26495726495726,
+              "evaluated_parameter_sets": 16,
+              "limitation": "열입력·열전달·열용량·펌프 응답 ±10%의 16개 끝점 조합을 시험합니다. 범위는 실측값이 아니며 확률·신뢰구간·범위 내 모든 조합을 보장하지 않습니다. 냉각수 온도·부하·효율은 각 시나리오에서 일정하게 유지합니다."
+            }
+          }
         }
       ],
-      "limitation": "합성 상태·데모 계수의 열수지 모델 v3입니다. 열용량 200000 J/K, 기준 열입력 35000 W, 전속도 열교환계수 1000 W/K, 냉각수 25°C를 가정합니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
+      "limitation": "합성 상태·데모 계수의 열수지 모델 v3입니다. 열용량 200000 J/K, 기준 열입력 35000 W, 전속도 열교환계수 1000 W/K, 냉각수 25°C를 가정합니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. 요청 구간과 별도로 3600초 및 일정 조건의 평형 온도를 검사합니다. 4개 계수 ±10%의 16개 끝점 조합은 데모 민감도 시험이며 신뢰구간·전체 범위 보장이 아닙니다. 계수는 실측 보정 전이며 시계열은 현 v1 API 계약에 포함되지 않습니다."
     },
-    "verdict": "awaiting_approval",
-    "reason_code": "DEMO_PASS",
-    "reason": "가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.",
-    "digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd"
+    "verdict": "blocked",
+    "reason_code": "LIMIT_EXCEEDED",
+    "reason": "요청 구간·3600초 예측·평형 또는 계수 민감도 시험에서 온도 한계 80°C를 초과했습니다.",
+    "digest": "74004f98ad1d8749dec481385cbfd419a9ab121b947140e7fd54525935b3fefe"
   },
   "approval": null,
   "execution": null,
@@ -117,8 +211,8 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "awaiting_approval",
-      "report_digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd",
+      "verdict": "blocked",
+      "report_digest": "74004f98ad1d8749dec481385cbfd419a9ab121b947140e7fd54525935b3fefe",
       "actor": null,
       "reason": null,
       "execution_id": null

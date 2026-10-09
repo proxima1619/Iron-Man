@@ -18,6 +18,7 @@ from backend.simulator.adapter import DemoAdapter
 def gateway(tmp_path, monkeypatch):
     monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
     instance = Gateway(tmp_path / "policy.sqlite3")
+    instance.adapter.update_demo_state(.6, "valid")
     yield instance
     instance.close()
 
@@ -51,7 +52,7 @@ def test_actual_model_human_approval_and_virtual_application(gateway):
     state = gateway.adapter.read_state()
     assert state.target_pump_speed_pct == 80 and state.pump_speed_pct == 100 and state.temperature_c == 60
     moved = gateway.adapter.advance_time(10)
-    assert moved.temperature_c > 60 and 80 < moved.pump_speed_pct < 100
+    assert moved.temperature_c < 60 and 80 < moved.pump_speed_pct < 100
     assert execute(gateway, row) == applied and len(gateway.adapter.executions) == 1
 
 
@@ -100,6 +101,7 @@ def test_calculation_metadata_and_baseline_cannot_bypass_policy(gateway, monkeyp
                 scenario["limit_c"] = 999
         else:
             data["scenarios"][0]["baseline_peak_c"] = 81
+            data["scenarios"][0]["physical_assessment"]["baseline"]["peak_c"] = 81
         return data
     monkeypatch.setattr(simulator, "simulate", modified)
     row = evaluate(gateway)
@@ -210,6 +212,7 @@ def test_async_http_full_flow_uses_real_virtual_policy(tmp_path, monkeypatch):
     monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
     operator, approver = {"X-Iron-Man-Token": "local-operator"}, {"X-Iron-Man-Token": "local-approver"}
     with TestClient(main.app) as client:
+        assert client.post("/demo/state", headers=approver, json={"load_ratio": .6}).status_code == 200
         row = client.post("/requests", headers=operator, json={"command": {"target_pct": 80}}).json()
         path = f'/requests/{row["id"]}'
         assert client.post(path + "/evaluate", headers=operator).status_code == 202

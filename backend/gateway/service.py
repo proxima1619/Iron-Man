@@ -7,7 +7,7 @@ from backend.simulator import service as simulator
 from backend.simulator.adapter import DemoAdapter
 from backend.gateway.storage import SQLiteStore
 
-from backend.gateway.policy import POLICY_VERSION, scope_issue, evidence_issue, simulation_issue, LIMIT_C
+from backend.gateway.policy import POLICY_VERSION, scope_issue, evidence_issue, simulation_issue, physical_risk, coverage_issue, LIMIT_C
 APPROVAL_TTL_S = 300
 SNAPSHOT_TTL_S = 60
 
@@ -152,6 +152,7 @@ class Gateway:
             result = SimulationResult.model_validate(report["simulation"])
             results_valid = (result.status == "completed" and evidence_issue(review) is None
                 and simulation_issue(result) is None
+                and not physical_risk(result) and coverage_issue(result) is None
                 and {s.kind for s in result.scenarios} == {"normal", "degraded_cooling"}
                 and all(s.baseline_peak_c <= LIMIT_C and s.candidate_peak_c <= LIMIT_C for s in result.scenarios))
         except (ValueError, TypeError, KeyError, OSError):

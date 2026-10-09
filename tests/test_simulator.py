@@ -60,6 +60,7 @@ def test_unknown_model_version_rejected():
 def test_real_calculation_waits_for_human_virtual_approval():
     gateway = Gateway()
     try:
+        gateway.adapter.update_demo_state(.6, "valid")
         row = gateway.create(NewRequest(command=Command(target_pct=80)))
         evaluated = gateway.evaluate(row["id"])
         assert evaluated["status"] == "awaiting_approval"

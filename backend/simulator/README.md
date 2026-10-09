@@ -8,6 +8,8 @@
 |---|---|
 | `service.py` | `simulate(command, snapshot, scenarios, model_version=MODEL_VERSION)`로 변경 전·후 온도를 계산 |
 | `model.py` | `cooling-demo-v3`의 열용량·발열·열전달·냉각수 온도·펌프 응답과 공통 계산 커널 |
+| `assessment.py` | `cooling-assessment-v4`: 3600초·평형 온도 및 4개 계수의 16개 민감도 조합 |
+| `calibration.py` | 기준 열용량을 고정한 오프라인 보정 후보 생성·독립 검증; 서버에 자동 적용하지 않음 |
 | `adapter.py` | SQLite에 저장된 가상 설비 상태에 목표값을 적용하고 수동 가상 시간을 진행하는 `DemoAdapter` |
 | `../../contracts/README.md` | 팀 공통 API v1.0의 필드와 상태 정의 |
 | `../../docs/model_card.md` | 계산식, 계수, 입력 범위와 모델 한계 |
@@ -21,7 +23,16 @@
 
 같은 초기 상태와 같은 시나리오 조건에서 **기존 목표 속도 유지**와 **요청 목표 속도 적용**을 각각 계산합니다. 목표값에 아직 도달하지 않은 상태라면 기존 설정 분기도 현재 실제 속도에서 기존 목표를 향해 계속 응답합니다. 과거 스냅샷에 목표 속도가 없으면 실제 속도를 기존 목표로 사용합니다. 현재 모델 버전은 `cooling-demo-v3`입니다. `completed`일 때 시나리오마다 기존·변경 후 최고 온도, 80°C 제한, 초과 여부, `value_origin=model_calculation`을 반환합니다. 센서 불량·입력 범위 밖뿐 아니라 **계산 도중 온도나 유효 펌프 속도가 범위를 벗어나는 경우**에도 `out_of_domain`과 빈 `scenarios`, 사유가 담긴 `limitation`을 반환합니다. 기존 설정과 요청 설정 중 하나라도 지원하지 못하면 전체 시나리오의 성공 수치를 반환하지 않습니다. 시나리오가 없으면 `failed`입니다. 호출자가 지원하지 않는 모델 버전을 지정하면 예외가 발생해 관문 서버에서 보류합니다.
 
-모델은 내부적으로 기본 1초 간격의 RK4 적분으로 온도와 펌프 속도를 함께 계산합니다. **현재 공통 API v1.0은 시계열과 최초 초과 시각 필드를 정의하지 않아 외부 결과에 포함하지 않습니다.** 화면에 그래프가 필요하면 1·2·4번이 계약 필드와 단위를 합의한 뒤 `backend/contracts.py`, 생성된 스키마·타입, 테스트를 함께 갱신해야 합니다.
+모델은 기본 1초 간격의 RK4 적분으로 온도와 펌프 속도를 함께 계산합니다. 요청 구간 결과의 의미는 유지하고 `physical_assessment`에 3600초 최고 온도·최초 초과 표본 시각·평형 온도·열 시정수·계수 민감도를 추가했습니다. 상세 시계열은 공통 API에 포함하지 않습니다. 과거 보고서의 추가 필드는 null이며 새 승인 정책은 평가 누락을 보류합니다.
+
+## 장기 검사와 계수 보정
+
+물리 커널·기본 계수·SQLite 상태는 v3를 유지하고, 추가 평가는 `cooling-assessment-v4`, 승인 정책은 `virtual-cooling-policy-v3`로 구분합니다. 이전 정책의 승인은 새로 평가해야 합니다. [물리 보완 안내](../../docs/PHYSICAL_ASSESSMENT.md)에 계산 가정, 계수 범위, 지원 불가 처리, 데이터 형식과 인계 사항을 정리했습니다.
+
+- 요청 구간 외에 3600초 예측과 일정 조건의 평형 온도를 확인합니다. 60°C·부하 1·현재 100%에서 80% 요청은 효율 저하 조건의 300초 최고값이 약 77.268°C여도 378초에 한계를 넘고 장기 최고값이 약 92.305°C여서 차단됩니다.
+- 열용량·발열·열전달·펌프 응답 각각 ±10%의 16개 끝점 조합을 가정합니다. 실제 측정 범위·통계적 신뢰구간·모든 중간 조합의 보장이 아닙니다. 민감도 계산 일부가 범위를 벗어나면 민감도 성공 수치는 반환하지 않습니다.
+- 실제 계측 기록이 없어 런타임은 `calibration_status=not_calibrated`입니다. `python -m scripts.calibrate_model --input measurements.json --output candidate.json`으로 학습/독립 검증 기록과 기준 열용량을 제공해 오프라인 후보를 만듭니다. 검증 오차·출처 해시를 남기며 기존 모델·DB를 자동 변경하지 않습니다. 합성 예제는 `examples/simulator/`에 있습니다.
+- 시간에 따른 고장과 센서 관측/실제 상태 분리는 후속 과제로 남겨둡니다.
 
 ## v3 계산과 지원 범위
 
@@ -57,7 +68,7 @@ d(actual_speed_pct)/dt = (target_pct − actual_speed_pct) / 20
 
 ## 현재 판정과 검증
 
-현재 계산 결과는 `mock=false`입니다. 관문 서버의 v1.0 정책은 한계 초과를 `blocked`로 처리하고, 한계를 넘지 않아도 비모의 계산 승인 정책이 아직 없어 `hold / LIVE_POLICY_NOT_CONFIGURED`로 처리합니다. 합성 모델 통과를 현실 설비의 안전 승인으로 해석하면 안 됩니다.
+현재 계산 결과는 `mock=false`입니다. 관문은 요청·장기·평형·민감도 시험의 기존/요청 분기에서 한계 위반을 확인하면 `blocked`, 확인된 위반 없이 지원을 완료하지 못하면 `hold`로 처리합니다. 모든 가상 정책 조건을 충족하면 담당자 승인 대기로 전환합니다. 부하 1의 80% 요청은 차단되며, 승인 흐름 예제는 부하 0.6의 80% 요청입니다. 합성 모델 통과를 현실 설비의 안전 승인으로 해석하면 안 됩니다.
 
 저장소 루트에서 개발 의존성을 설치한 가상환경으로 실행합니다.
 
@@ -65,6 +76,7 @@ d(actual_speed_pct)/dt = (target_pct − actual_speed_pct) / 20
 python -m pytest tests/test_simulator.py -q
 python -m pytest tests/test_persistence.py -q
 python -m pytest tests/test_virtual_plant.py -q
+python -m pytest tests/test_physical_assessment.py tests/test_calibration.py -q
 python -m pytest -q
 ```
 

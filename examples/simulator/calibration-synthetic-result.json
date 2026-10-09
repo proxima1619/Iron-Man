@@ -1,0 +1,44 @@
+{
+  "tool_version": "cooling-calibration-v1",
+  "source_id": "synthetic-workflow-example-not-equipment-data",
+  "data_origin": "synthetic",
+  "dataset_sha256": "968739ac016a8d5e185a905cb74cddcec7000179faa7fb2b85451f83945e1e2b",
+  "candidate_model_version": "synthetic-fit-example-v1",
+  "usage": "offline_candidate_only",
+  "activated": false,
+  "anchor": {
+    "thermal_capacity_j_per_k": 200000.0,
+    "capacity_source": "synthetic generator assumption; not measured",
+    "coolant_temperature_c": 25.0,
+    "coolant_source": "synthetic constant; not measured"
+  },
+  "coefficients": {
+    "nominal_heat_input_w": 37958.45387056627,
+    "full_speed_conductance_w_per_k": 1098.7244413123317,
+    "pump_response_s": 27.99997157998116
+  },
+  "training_recording_ids": [
+    "synthetic-train"
+  ],
+  "validation_recording_ids": [
+    "synthetic-validation"
+  ],
+  "training_metrics": {
+    "temperature_rmse_c": 0.0008835203147053676,
+    "temperature_max_error_c": 0.0018002159783918614,
+    "speed_rmse_pct": 7.968645589438495e-06
+  },
+  "validation_metrics": {
+    "temperature_rmse_c": 0.0038087172570492336,
+    "temperature_max_error_c": 0.00565845267862386,
+    "speed_rmse_pct": 7.984439855674841e-06
+  },
+  "validation_thresholds": {
+    "max_temperature_rmse_c": 0.1,
+    "max_temperature_error_c": 0.2,
+    "max_speed_rmse_pct": 0.1
+  },
+  "at_search_boundary": false,
+  "validation_passed": true,
+  "limitation": "입력 출처는 사용자가 선언한 값이며 진위를 인증하지 않습니다. C와 냉각수 온도는 고정합니다. 검증 통과는 해당 기록에 대한 적합도이며 실제 설비 안전·식별 유일성·신뢰구간을 보장하지 않습니다. 출력 계수는 서버에 자동 적용되지 않습니다. 합성 기록은 물리 정확도 검증이 아닙니다."
+}

@@ -16,6 +16,7 @@ def client(monkeypatch, tmp_path):
     monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
     monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
     gateway = Gateway(tmp_path / "test.sqlite3")
+    gateway.adapter.update_demo_state(.6, "valid")  # Explicit safe load for approval lifecycle tests.
     # Existing module/policy tests use the synchronous helper; real async API tests are separate.
     monkeypatch.setattr(gateway, "submit_evaluation", gateway.evaluate)
     monkeypatch.setattr(main, "gateway", gateway)
@@ -52,6 +53,7 @@ def test_execution_without_approval(client):
     assert not main.gateway.adapter.executions
 
 def test_counterexample_blocks_and_cannot_be_approved(client):
+    main.gateway.adapter.update_demo_state(1, "valid")
     row = evaluated(client, 60)
     scenarios = row['report']['simulation']['scenarios']
     assert scenarios[0]['exceeded'] is False

@@ -23,6 +23,12 @@ def run(access, url):
         page.get_by_role("button", name="가상 설비 초기화").click()
         page.get_by_label("데모 인증 토큰").fill(access["operator_token"])
         for speed, verdict in ((60, "차단"), (80, "승인 대기")):
+            if speed == 80:
+                page.get_by_label("데모 인증 토큰").fill(access["approver_token"])
+                with page.expect_response("**/api/demo/state") as changed:
+                    page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
+                assert changed.value.status == 200
+                page.get_by_label("데모 인증 토큰").fill(access["operator_token"])
             page.get_by_label("목표 펌프 속도 (%)").fill(str(speed))
             with page.expect_response(lambda response: response.url.endswith("/evaluate")
                                       and response.request.method == "POST") as submitted:
@@ -46,6 +52,7 @@ def run(access, url):
         assert 80 < advanced.value.json()["pump_speed_pct"] < 100
         # A new approved report cannot be applied after virtual time changes.
         page.get_by_role("button", name="가상 설비 초기화").click()
+        page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
         page.get_by_role("button", name="새 요청 만들고 검토").click()
         expect(page.locator(".badge")).to_have_text("승인 대기", timeout=30000)
         page.get_by_role("button", name="승인", exact=True).click()

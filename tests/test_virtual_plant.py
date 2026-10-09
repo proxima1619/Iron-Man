@@ -215,6 +215,7 @@ def test_clock_advance_invalidates_approval_before_execution(tmp_path, monkeypat
     monkeypatch.setenv("IRON_MAN_EVIDENCE_MODE", "fixture")
     gateway = Gateway(tmp_path / "approval.sqlite3")
     try:
+        gateway.adapter.update_demo_state(.6, "valid")
         row = gateway.create(NewRequest(command=Command(target_pct=80)))
         row = gateway.evaluate(row["id"])
         assert row["status"] == "awaiting_approval"
@@ -235,6 +236,7 @@ def test_paused_observation_stays_stale_until_explicit_sample(tmp_path, monkeypa
     monkeypatch.setattr(adapter_module.time, "time", lambda: 1700000000.0)
     gateway = Gateway(tmp_path / "stale-observation.sqlite3")
     try:
+        gateway.adapter.update_demo_state(.6, "valid")
         row = gateway.create(NewRequest(command=Command(target_pct=80)))
         initial = gateway.adapter.read_state()
         monkeypatch.setattr(adapter_module.time, "time", lambda: 1700000061.0)

@@ -69,12 +69,13 @@ def calculate(context):
                     if actual != expected:
                         raise ValueError("missing or unexpected scenario result")
                     issue = policy.simulation_issue(result)
-                    unsafe = any(s.exceeded or s.baseline_peak_c > policy.LIMIT_C for s in result.scenarios)
                     if issue:
                         report.update(verdict="hold", reason_code="LIVE_POLICY_NOT_CONFIGURED", reason=issue)
-                    elif unsafe:
+                    elif policy.physical_risk(result):
                         report.update(verdict="blocked", reason_code="LIMIT_EXCEEDED",
-                                      reason="시험 결과가 온도 한계를 초과했습니다.")
+                                      reason="요청 구간·3600초 예측·평형 또는 계수 민감도 시험에서 온도 한계 80°C를 초과했습니다.")
+                    elif issue := policy.coverage_issue(result):
+                        report.update(verdict="hold", reason_code="SIMULATION_INCOMPLETE", reason=issue)
                     else:
                         report.update(verdict="awaiting_approval", reason_code="DEMO_PASS",
                                       can_approve=True, reason="가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.")

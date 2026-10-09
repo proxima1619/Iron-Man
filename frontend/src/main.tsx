@@ -163,9 +163,9 @@ function App() {
           />
         </label>
         <p className="muted">
-          초기 합성 상태에서는 60%가 위험 시험에서 차단되고, 80%는 가상 설비
-          전용 정책을 통과해 담당자 승인 대기가 됩니다. 아래 가상 상태가 바뀌면 계산 결과도 달라집니다.
-          예측 구간은 300초이며, 가상 적용한 목표 속도는 다음 명령까지
+          초기 부하 1에서는 80%도 장기 위험으로 차단됩니다. 부하를 0.6으로 설정한
+          80% 요청은 가상 설비 정책을 통과하면 담당자 승인 대기가 됩니다.
+          요청 예측 300초 외에 3600초·평형 온도·계수 민감도를 검사합니다. 가상 적용한 목표 속도는 다음 명령까지
           유지됩니다.
         </p>
         <button
@@ -307,6 +307,14 @@ function App() {
             }
           >
             가상 설비 초기화
+          </button>
+          <button
+            disabled={busy || !plant || plant.domain_status !== "ready"}
+            onClick={() => run(async () => {
+              setPlant(await api("/demo/state", { load_ratio: .6, sensor_quality: "valid" }));
+            })}
+          >
+            데모 부하 0.6으로 변경
           </button>
         </div>
         <p className="muted">

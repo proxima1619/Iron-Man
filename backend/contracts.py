@@ -36,6 +36,67 @@ class Scenario(StrictModel):
     kind: Literal["normal", "degraded_cooling"]
     evidence_id: str | None = None
 
+class ParameterRange(StrictModel):
+    minimum: float
+    maximum: float
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if self.minimum <= 0 or self.maximum < self.minimum:
+            raise ValueError("parameter range must be positive and ordered")
+        return self
+
+class BranchAssessment(StrictModel):
+    peak_c: float
+    first_exceeded_s: float | None = Field(default=None, ge=0)
+    equilibrium_c: float | None = None
+    equilibrium_status: Literal["finite", "unbounded_heating", "no_unique_equilibrium"]
+    thermal_time_constant_s: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def equilibrium_fields(self):
+        if (self.equilibrium_status == "finite") != (self.equilibrium_c is not None and self.thermal_time_constant_s is not None):
+            raise ValueError("finite equilibrium requires temperature and thermal time constant")
+        if self.equilibrium_status != "finite" and (self.equilibrium_c is not None or self.thermal_time_constant_s is not None):
+            raise ValueError("nonfinite equilibrium must not publish finite metrics")
+        return self
+
+class SensitivityAssessment(StrictModel):
+    status: Literal["completed", "out_of_domain"]
+    baseline_worst_peak_c: float | None = None
+    candidate_worst_peak_c: float | None = None
+    baseline_worst_equilibrium_c: float | None = None
+    candidate_worst_equilibrium_c: float | None = None
+    evaluated_parameter_sets: int = Field(ge=0, strict=True)
+    limitation: str
+
+    @model_validator(mode="after")
+    def coverage(self):
+        metrics = (self.baseline_worst_peak_c, self.candidate_worst_peak_c,
+                   self.baseline_worst_equilibrium_c, self.candidate_worst_equilibrium_c)
+        if self.status == "completed" and (self.evaluated_parameter_sets != 16 or any(v is None for v in metrics)):
+            raise ValueError("completed sensitivity requires all 16 parameter sets and metrics")
+        if self.status != "completed" and any(v is not None for v in metrics):
+            raise ValueError("unsupported sensitivity must not publish partial metrics")
+        return self
+
+class PhysicalAssessment(StrictModel):
+    version: Literal["cooling-assessment-v4"] = "cooling-assessment-v4"
+    horizon_s: int = Field(ge=3600, le=3600, strict=True)
+    baseline: BranchAssessment
+    candidate: BranchAssessment
+    parameter_origin: Literal["demo_assumption"] = "demo_assumption"
+    calibration_status: Literal["not_calibrated"] = "not_calibrated"
+    parameter_ranges: dict[str, ParameterRange]
+    sensitivity: SensitivityAssessment
+
+    @model_validator(mode="after")
+    def bounded_crossing_time(self):
+        if any(branch.first_exceeded_s is not None and branch.first_exceeded_s > self.horizon_s
+               for branch in (self.baseline, self.candidate)):
+            raise ValueError("first crossing must be within the assessed horizon")
+        return self
+
 class ScenarioResult(StrictModel):
     kind: Literal["normal", "degraded_cooling"]
     evidence_id: str | None = None
@@ -44,6 +105,8 @@ class ScenarioResult(StrictModel):
     limit_c: float
     exceeded: bool = Field(strict=True)
     value_origin: Literal["hardcoded_demo_fixture", "model_calculation"]
+    # Missing on historical reports; never implies the new assessment passed.
+    physical_assessment: PhysicalAssessment | None = None
 
     @model_validator(mode="after")
     def consistent_threshold(self):
