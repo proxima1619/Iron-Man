@@ -161,8 +161,9 @@ export function EvidencePanel({
             </ul>
           ) : (
             <p className="muted">
-              계산 결과가 저장되지 않아 숫자에 근거한 효과 비교는 할 수
-              없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요.
+              {report.tep_simulation
+                ? "TEP 기준·변경 수치와 시계열은 위 TEP 결과 구역에 표시했습니다. 기존 냉각 탱크 온도 정책은 TEP에 적용하지 않습니다."
+                : "계산 결과가 저장되지 않아 숫자에 근거한 효과 비교는 할 수 없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요."}
             </p>
           )}
           {appliedExecution ? (
@@ -234,6 +235,14 @@ export function EvidencePanel({
             유효성은 적용 전 서버가 다시 검사합니다.
           </p>
         </div>
+      )}
+      {report?.tep_simulation && !review && (
+        <aside className="evidence-hold" role="status">
+          <h3>TEP 전용 근거 결과는 아직 연결되지 않았습니다</h3>
+          <p>
+            현재 API 보고서에는 3번의 TEP 근거·적용 조건 payload가 없습니다. 저장 결과의 AI 피드백을 요청하면 설정된 문헌에 대한 검토 결과와 조건·한계를 별도 표시합니다. 그 검토도 TEP 안전 한계나 승인 기준을 정하지 않습니다.
+          </p>
+        </aside>
       )}
       {review && (
         <p>
