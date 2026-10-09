@@ -120,4 +120,12 @@ JSON Schema/OpenAPI와 TypeScript 생성 파일을 직접 수정하지 마세요
 
 ## 가상 승인 정책
 
+## 4번 검토 화면 확장
+
+선택 보고서 필드 `assessment`는 기존/변경 최고 온도의 절대 차이·설정 기준·분류를 표시합니다. 예측-실측 잔차가 아닙니다. 기존 v3 가상 승인 정책의 제한은 유지하며, 설정 기준 초과는 `MATERIAL_DEVIATION`으로 지정 승인자에게 검토를 요청합니다. 기준 변경 후에는 승인·적용 전에 재검증이 필요합니다.
+
+`NewRequest.requester_contact`는 선택 입력이며 일반 요청 응답에서 제외합니다. `/session`은 인증 역할·편차/알림 설정을 반환합니다. `/requests/{id}/review-contact`, `/requests/{id}/notifications`, 알림 발송 API는 approver 전용입니다. `DecisionInput.decision`에 `request_retest`를 추가했습니다. 이 판단은 실행 전 요청을 보류하고 기존 승인을 제거하며 operator 또는 approver가 요청할 수 있습니다. [상세 API와 처리](../docs/MODULE4.md)
+
+## 기존 가상 승인 정책
+
 보고서의 `execution_scope`는 `virtual` 또는 `unconfigured`입니다. 과거 보고서의 누락 필드는 unconfigured로 해석합니다. `virtual-cooling-policy-v2`를 통과한 요청만 승인 대기로 전환되며 승인·적용 시 현재 상태와 원래 보고서 유효 시간을 다시 검사합니다. `DEMO_POLICY_OUT_OF_SCOPE`는 지정 모델·어댑터·합성 상태·300초 예측 범위 이외의 요청을 보류한 상태입니다. [정책 조건](../docs/VIRTUAL_POLICY.md)을 참고하세요.

@@ -8,6 +8,8 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException
 from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, DemoAdvanceInput, RequestRecord, Snapshot, RequestHistory
 from backend.gateway.service import Gateway
+from backend.gateway import review, notifications
+from backend.contracts import SessionInfo, Notification, ReviewContact
 from backend.config import validate_runtime_config
 
 gateway = None
@@ -89,7 +91,7 @@ def cancel_evaluation(request_id: str, actor=Depends(identity)):
     return gateway.cancel_evaluation(request_id)
 
 @app.post("/requests/{request_id}/decisions", response_model=RequestRecord)
-def decide(request_id: str, body: DecisionInput, actor=Depends(approver)):
+def decide(request_id: str, body: DecisionInput, actor=Depends(identity)):
     return gateway.decide(request_id, body, actor)
 
 @app.post("/requests/{request_id}/execute", response_model=RequestRecord)
@@ -122,3 +124,27 @@ def sample_virtual_state(actor=Depends(approver)):
 def reset_virtual_state(actor=Depends(approver)):
     with gateway.lock:
         return gateway.adapter.reset_state()
+
+
+@app.get("/session", response_model=SessionInfo)
+def session(actor=Depends(identity)):
+    enabled, threshold = review.settings()
+    return {"role": actor, "actor_label": os.getenv("IRON_MAN_APPROVER_LABEL", "local-approver") if actor == "approver" else "local-operator",
+            "synthetic_approval_enabled": True, "negligible_delta_c": threshold,
+            "notification_configured": notifications.config()["configured"]}
+
+@app.get("/requests/{request_id}/review-contact", response_model=ReviewContact)
+def review_contact(request_id: str, actor=Depends(approver)):
+    with gateway.lock:
+        gateway.get(request_id)
+        return {"requester_contact": gateway.store.contact(request_id)}
+
+@app.get("/requests/{request_id}/notifications", response_model=list[Notification])
+def request_notifications(request_id: str, actor=Depends(approver)):
+    with gateway.lock:
+        gateway.get(request_id)
+        return gateway.store.notifications(request_id)
+
+@app.post("/requests/{request_id}/notifications/{notification_id}/send", response_model=Notification)
+def send_notification(request_id: str, notification_id: str, actor=Depends(approver)):
+    return gateway.send_notification(request_id, notification_id)
