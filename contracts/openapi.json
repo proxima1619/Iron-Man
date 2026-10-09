@@ -521,6 +521,154 @@
           }
         }
       }
+    },
+    "/demo/advance": {
+      "post": {
+        "summary": "Advance Virtual Time",
+        "operationId": "advance_virtual_time_demo_advance_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoAdvanceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/demo/sample": {
+      "post": {
+        "summary": "Sample Virtual State",
+        "operationId": "sample_virtual_state_demo_sample_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/demo/reset": {
+      "post": {
+        "summary": "Reset Virtual State",
+        "operationId": "reset_virtual_state_demo_reset_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -894,6 +1042,22 @@
           "digest"
         ],
         "title": "DecisionReport"
+      },
+      "DemoAdvanceInput": {
+        "properties": {
+          "seconds_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Seconds S"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seconds_s"
+        ],
+        "title": "DemoAdvanceInput"
       },
       "DemoStateInput": {
         "properties": {
@@ -1529,6 +1693,66 @@
             "const": "synthetic",
             "title": "Data Origin",
             "default": "synthetic"
+          },
+          "target_pump_speed_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Pump Speed Pct"
+          },
+          "simulation_time_s": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Simulation Time S",
+            "default": 0
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "calculated_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculated At"
+          },
+          "domain_status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "out_of_domain"
+            ],
+            "title": "Domain Status",
+            "default": "ready"
+          },
+          "domain_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Reason"
           }
         },
         "additionalProperties": false,
@@ -1540,7 +1764,13 @@
           "pump_speed_pct",
           "observed_at",
           "sensor_quality",
-          "data_origin"
+          "data_origin",
+          "target_pump_speed_pct",
+          "simulation_time_s",
+          "model_version",
+          "calculated_at",
+          "domain_status",
+          "domain_reason"
         ],
         "title": "Snapshot"
       },

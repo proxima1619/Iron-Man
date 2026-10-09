@@ -745,6 +745,70 @@
           "default": "synthetic",
           "title": "Data Origin",
           "type": "string"
+        },
+        "target_pump_speed_pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Pump Speed Pct"
+        },
+        "simulation_time_s": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Simulation Time S",
+          "type": "number"
+        },
+        "model_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Version"
+        },
+        "calculated_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calculated At"
+        },
+        "domain_status": {
+          "default": "ready",
+          "enum": [
+            "ready",
+            "out_of_domain"
+          ],
+          "title": "Domain Status",
+          "type": "string"
+        },
+        "domain_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Domain Reason"
         }
       },
       "required": [

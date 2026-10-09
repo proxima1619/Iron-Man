@@ -24,6 +24,13 @@ class Snapshot(StrictModel):
     observed_at: float
     sensor_quality: Literal["valid", "invalid"] = "valid"
     data_origin: Literal["synthetic"] = "synthetic"
+    # Nullable additions let historical v1/v2 reports retain their original meaning.
+    target_pump_speed_pct: float | None = None
+    simulation_time_s: float = Field(default=0, ge=0)
+    model_version: str | None = Field(default=None, min_length=1)
+    calculated_at: float | None = None
+    domain_status: Literal["ready", "out_of_domain"] = "ready"
+    domain_reason: str | None = None
 
 class Scenario(StrictModel):
     kind: Literal["normal", "degraded_cooling"]
@@ -184,6 +191,10 @@ class ExecutionInput(StrictModel):
 class DemoStateInput(StrictModel):
     load_ratio: float = Field(ge=0, le=2, allow_inf_nan=False)
     sensor_quality: Literal["valid", "invalid"] = "valid"
+
+
+class DemoAdvanceInput(StrictModel):
+    seconds_s: int = Field(ge=1, le=3600, strict=True)
 
 
 class RequestHistory(StrictModel):

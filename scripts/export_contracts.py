@@ -6,7 +6,7 @@ from backend.gateway.service import Gateway
 from unittest.mock import patch
 from uuid import UUID
 from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord
-from backend.simulator.service import simulate
+from backend.simulator.service import MODEL_VERSION, simulate
 from backend.evidence.service import review_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +19,9 @@ if __name__ == '__main__':
     for model in (SimulationResult, EvidenceReview, RequestRecord):
         write(f'contracts/{model.__name__}.schema.json', model.model_json_schema())
     request = NewRequest(command={'target_pct': 80})
-    snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100, observed_at=1700000000)
+    snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100,
+        target_pump_speed_pct=100, simulation_time_s=0, model_version=MODEL_VERSION,
+        calculated_at=1700000000, observed_at=1700000000)
     review = review_evidence(request, snapshot)
     from backend.contracts import Scenario
     result = simulate(request.command, snapshot, [Scenario(kind='normal'), *review.proposed_tests])

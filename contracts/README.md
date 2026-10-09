@@ -15,13 +15,19 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 ## 공통 규칙
 
 - `schema_version`: `1.0`. 알 수 없는 필드는 거절합니다. 이름·의미·단위를 바꾸기 전에 1번과 합의하세요.
-- 온도는 °C, 속도는 %, 유지 시간은 s, 시각은 Unix 초입니다. NaN·무한대는 거절합니다.
+- 온도는 °C, 속도는 %, 예측 구간과 가상 경과 시간은 s, 관측·계산 시각은 Unix 초입니다. NaN·무한대는 거절합니다. 명령의 `duration_s`는 예측 구간이며 적용 목표값의 자동 만료 시간이 아닙니다.
 - `mock`는 필수 boolean입니다. 실제 계산 값/문서로 바뀌었을 때만 false로 설정하세요.
 - 실패를 정상 값 0, 빈 성공 결과, 가짜 출처로 대신하지 않습니다.
 - `limitation`은 필수입니다. 계산 범위, 부족한 근거 또는 실패 이유를 설명합니다.
 - 요청의 수정은 현재 새 요청 생성으로 처리합니다. 이전 승인을 재사용하지 않습니다.
 
 ## 2번: 계산 결과
+
+### v3 상태 입력
+
+`Snapshot.pump_speed_pct`는 실제 속도이며 `target_pump_speed_pct`는 유지 중인 목표 속도입니다. `simulation_time_s`는 수동으로 진행한 가상 경과 시간, `calculated_at`은 마지막 계산의 벽시계 시각, `observed_at`은 마지막 합성 관측 시각입니다. `model_version`, `domain_status`(`ready` / `out_of_domain`), `domain_reason`으로 모델과 지원 상태를 전달합니다. 현재 모델은 `cooling-demo-v3`입니다.
+
+기존 보고서 파싱을 위해 추가 필드는 기본값을 갖습니다. 목표 속도가 null인 과거 스냅샷은 실제 속도를 기존 목표로 사용합니다. 현재 어댑터는 모든 상태 필드를 저장·반환합니다. 기존 설정 분기는 기존 목표를 유지하며, 요청 분기와 동일한 실제 속도·온도에서 시작합니다. 저장된 이전 모델의 승인은 새 모델로 재검증해야 합니다.
 
 | status | scenarios | 서버 처리 |
 |---|---|---|
@@ -73,7 +79,19 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 
 저장된 요청 목록은 `GET /requests`, 이전 보고서·승인 이력은 `GET /requests/{id}/history`에서 조회합니다. 목록은 현재 데모용 전체 반환이며 페이지네이션은 후속입니다. 재시작으로 검토가 중단되면 `hold`와 report=null, 실행이 중단되면 `execution_unknown`으로 복구됩니다. 이유는 events의 `evaluation_interrupted` 또는 `execution_interrupted`에 기록됩니다.
 
-모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, DB 처리 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
+모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/*`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, DB 처리 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
+
+### 가상 설비 API
+
+| API | 입력 | 동작 |
+|---|---|---|
+| `GET /state` | 없음 | 저장 상태 조회; 시간·관측 시각 유지 |
+| `POST /demo/advance` | `{"seconds_s":10}` (1~3600 정수) | 수동 가상 시간 진행; `Snapshot` 반환 |
+| `POST /demo/sample` | 없음 | 물리 상태를 유지하고 합성 관측 시각 갱신 |
+| `POST /demo/state` | `{"load_ratio":1.2,"sensor_quality":"valid"}` | 부하·센서 품질 변경 |
+| `POST /demo/reset` | 없음 | 초기 합성 상태로 복구; 이력 보존 |
+
+시간 진행 도중 모델 범위를 벗어나면 HTTP 200으로 마지막 유효 상태와 `domain_status=out_of_domain`, 사유를 반환합니다. 요청한 시간 전체를 진행했다는 뜻이 아니며 실제 진행 시간은 `simulation_time_s`로 확인합니다. 지원 불가 상태에서 다시 진행하면 409이며 명시적인 초기화가 필요합니다. 관측 갱신·부하 변경만으로 지원 불가를 해제하지 않습니다. 시간 진행·부하 변경·초기화는 기존 승인과 상태가 달라지므로 실행 시 재검증을 요구합니다. 관측 시각만 갱신한 경우 상태 digest는 유지되지만 승인 만료 검사는 계속 적용됩니다.
 
 승인 버튼은 `status == awaiting_approval`이고 `report.can_approve == true`일 때 활성화합니다. 실행 버튼은 `status == approved`일 때 활성화합니다. `report.verdict`는 검토 당시 판정, `status`는 이후 승인·실행까지 포함하는 현재 상태입니다.
 

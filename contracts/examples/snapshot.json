@@ -5,5 +5,11 @@
   "pump_speed_pct": 100.0,
   "observed_at": 1700000000.0,
   "sensor_quality": "valid",
-  "data_origin": "synthetic"
+  "data_origin": "synthetic",
+  "target_pump_speed_pct": 100.0,
+  "simulation_time_s": 0.0,
+  "model_version": "cooling-demo-v3",
+  "calculated_at": 1700000000.0,
+  "domain_status": "ready",
+  "domain_reason": null
 }

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class CoolingModel:
-    version: str = "cooling-demo-v2"
+    version: str = "cooling-demo-v3"
     thermal_capacity_j_per_k: float = 200_000.0
     nominal_heat_input_w: float = 35_000.0
     full_speed_conductance_w_per_k: float = 1_000.0

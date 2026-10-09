@@ -53,28 +53,42 @@ def _run(snapshot: Snapshot, target_pct: float, duration_s: int,
             "first_exceeded_s": first_exceeded}
 
 
-def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
-             model_version: str = MODEL_VERSION) -> SimulationResult:
-    """Compare unchanged and requested speed under each identical scenario."""
-    if model_version != MODEL_VERSION:
-        raise ValueError(f"Unsupported model version: {model_version}")
+def domain_reasons(snapshot: Snapshot) -> list[str]:
+    """The forecast and virtual plant use the same supported input domain."""
     reasons = []
+    if snapshot.domain_status != "ready":
+        reasons.append(snapshot.domain_reason or "virtual_plant_out_of_domain")
+    if snapshot.model_version is not None and snapshot.model_version != MODEL_VERSION:
+        reasons.append("unsupported_snapshot_model_version")
     if snapshot.sensor_quality != "valid":
         reasons.append("invalid_sensor_quality")
     for name, value, low, high in (
         ("temperature_c", snapshot.temperature_c, MODEL.temperature_min_c, MODEL.temperature_max_c),
         ("load_ratio", snapshot.load_ratio, 0, 1.5),
         ("pump_speed_pct", snapshot.pump_speed_pct, 0, 100),
+        ("target_pump_speed_pct", snapshot.target_pump_speed_pct if snapshot.target_pump_speed_pct is not None
+         else snapshot.pump_speed_pct, 0, 100),
     ):
         if not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
             reasons.append(f"out_of_domain:{name}")
     if not math.isfinite(snapshot.observed_at) or snapshot.observed_at <= 0:
         reasons.append("invalid_observation_time")
-    limitation = (f"합성 상태·데모 계수의 열수지 모델 v2입니다. 열용량 {MODEL.thermal_capacity_j_per_k:g} J/K, "
+    return reasons
+
+
+def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
+             model_version: str = MODEL_VERSION) -> SimulationResult:
+    """Compare keeping the current target with the requested target, from identical actual states."""
+    if model_version != MODEL_VERSION:
+        raise ValueError(f"Unsupported model version: {model_version}")
+    reasons = domain_reasons(snapshot)
+    limitation = (f"합성 상태·데모 계수의 열수지 모델 v3입니다. 열용량 {MODEL.thermal_capacity_j_per_k:g} J/K, "
                   f"기준 열입력 {MODEL.nominal_heat_input_w:g} W, "
                   f"전속도 열교환계수 {MODEL.full_speed_conductance_w_per_k:g} W/K, "
                   f"냉각수 {MODEL.coolant_temperature_c:g}°C를 가정합니다. "
                   "실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. "
+                  "기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. "
+                  "duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. "
                   "시계열은 현 v1 API 계약에 포함되지 않습니다.")
     if reasons:
         return SimulationResult(mock=False, status="out_of_domain",
@@ -87,7 +101,9 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
     for scenario in scenarios:
         efficiency = DEGRADED_EFFICIENCY if scenario.kind == "degraded_cooling" else 1.0
         runs = {}
-        for branch, speed in (("baseline", snapshot.pump_speed_pct), ("candidate", command.target_pct)):
+        baseline_target = (snapshot.target_pump_speed_pct if snapshot.target_pump_speed_pct is not None
+                           else snapshot.pump_speed_pct)
+        for branch, speed in (("baseline", baseline_target), ("candidate", command.target_pct)):
             try:
                 runs[branch] = _run(snapshot, speed, command.duration_s, efficiency)
             except ModelDomainError as exc:

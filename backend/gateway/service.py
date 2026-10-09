@@ -88,7 +88,8 @@ class Gateway:
                 "model_version": simulator.MODEL_VERSION, "policy_version": POLICY_VERSION,
                 "mock": True, "can_approve": False, "evidence": None, "simulation": None}
             try:
-                if snapshot.sensor_quality != "valid" or time.time() - snapshot.observed_at > SNAPSHOT_TTL_S:
+                if (snapshot.domain_status != "ready" or snapshot.sensor_quality != "valid"
+                        or time.time() - snapshot.observed_at > SNAPSHOT_TTL_S):
                     report.update(verdict="hold", reason_code="INVALID_STATE", reason="센서 품질 또는 상태 유효 시간을 확인하세요.")
                 elif body.command.target_pct < 20:
                     report.update(verdict="blocked", reason_code="POLICY_VIOLATION", reason="데모 정책의 최소 속도 20% 미만입니다.")

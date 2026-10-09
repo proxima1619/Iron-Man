@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "mock": false,
   "status": "completed",
-  "model_version": "cooling-demo-v2",
+  "model_version": "cooling-demo-v3",
   "scenarios": [
     {
       "kind": "normal",
@@ -23,5 +23,5 @@
       "value_origin": "model_calculation"
     }
   ],
-  "limitation": "합성 상태·데모 계수의 열수지 모델 v2입니다. 열용량 200000 J/K, 기준 열입력 35000 W, 전속도 열교환계수 1000 W/K, 냉각수 25°C를 가정합니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
+  "limitation": "합성 상태·데모 계수의 열수지 모델 v3입니다. 열용량 200000 J/K, 기준 열입력 35000 W, 전속도 열교환계수 1000 W/K, 냉각수 25°C를 가정합니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
 }

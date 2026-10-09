@@ -10,10 +10,21 @@ import os
 from pathlib import Path
 import sqlite3
 import threading
+import time
+from backend.simulator.model import MODEL
 
 
 def encode(value):
     return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+
+
+def initial_demo_state(revision=1):
+    now = time.time()
+    return {"revision": revision, "temperature_c": 60.0, "load_ratio": 1.0,
+            "pump_speed_pct": 100.0, "target_pump_speed_pct": 100.0,
+            "sensor_quality": "valid", "observed_at": now, "calculated_at": now,
+            "simulation_time_s": 0.0, "model_version": MODEL.version,
+            "domain_status": "ready", "domain_reason": None}
 
 
 class SQLiteStore:
@@ -78,7 +89,7 @@ class SQLiteStore:
 
     def _migrate(self):
         version = self.connection.execute("PRAGMA user_version").fetchone()[0]
-        if version > 1:
+        if version > 2:
             raise RuntimeError("Database schema is newer than this server supports.")
         if version == 0:
             with self.transaction() as db:
@@ -93,10 +104,18 @@ class SQLiteStore:
                     PRIMARY KEY (request_id, report_digest))""")
                 db.execute("CREATE TABLE demo_state (id INTEGER PRIMARY KEY CHECK(id=1), state_json TEXT NOT NULL)")
                 db.execute("CREATE TABLE adapter_executions (id TEXT PRIMARY KEY, result_json TEXT NOT NULL)")
-                db.execute("INSERT INTO demo_state VALUES (1, ?)", (encode({
-                    "revision": 1, "load_ratio": 1.0, "pump_speed_pct": 100.0,
-                    "sensor_quality": "valid"}),))
-                db.execute("PRAGMA user_version=1")
+                db.execute("INSERT INTO demo_state VALUES (1, ?)", (encode(initial_demo_state()),))
+                db.execute("PRAGMA user_version=2")
+        if version == 1:
+            # The old adapter had no dynamic temperature or clock. Seed those
+            # with explicit demo assumptions; never rewrite historical reports.
+            with self.transaction() as db:
+                old = json.loads(db.execute("SELECT state_json FROM demo_state WHERE id=1").fetchone()[0])
+                state = initial_demo_state(old["revision"] + 1)
+                state.update(load_ratio=old["load_ratio"], pump_speed_pct=old["pump_speed_pct"],
+                             target_pump_speed_pct=old["pump_speed_pct"], sensor_quality=old["sensor_quality"])
+                db.execute("UPDATE demo_state SET state_json=? WHERE id=1", (encode(state),))
+                db.execute("PRAGMA user_version=2")
 
     def get(self, request_id):
         with self.lock:

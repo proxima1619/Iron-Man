@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi.responses import JSONResponse
 from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException
-from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, RequestRecord, Snapshot, RequestHistory
+from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, DemoAdvanceInput, RequestRecord, Snapshot, RequestHistory
 from backend.gateway.service import Gateway
 
 gateway = None
@@ -84,3 +84,24 @@ def change_state(body: DemoStateInput, actor=Depends(approver)):
     with gateway.lock:
         gateway.adapter.update_demo_state(body.load_ratio, body.sensor_quality)
         return gateway.adapter.read_state()
+
+
+@app.post("/demo/advance", response_model=Snapshot)
+def advance_virtual_time(body: DemoAdvanceInput, actor=Depends(approver)):
+    with gateway.lock:
+        try:
+            return gateway.adapter.advance_time(body.seconds_s)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+
+
+@app.post("/demo/sample", response_model=Snapshot)
+def sample_virtual_state(actor=Depends(approver)):
+    with gateway.lock:
+        return gateway.adapter.sample_state()
+
+
+@app.post("/demo/reset", response_model=Snapshot)
+def reset_virtual_state(actor=Depends(approver)):
+    with gateway.lock:
+        return gateway.adapter.reset_state()

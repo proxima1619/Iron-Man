@@ -85,6 +85,27 @@ footer {
   font-size: 15px;
   margin-left: 10px;
 }
+.plant-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.plant-stats div {
+  padding: 14px;
+  background: #0b1220;
+  border: 1px solid #28364b;
+  border-radius: 8px;
+}
+.plant-stats dt {
+  color: #a4b4cb;
+  font-size: 14px;
+}
+.plant-stats dd {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -133,5 +154,8 @@ footer {
   }
   table {
     font-size: 12px;
+  }
+  .plant-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

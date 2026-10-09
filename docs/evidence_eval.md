@@ -5,7 +5,7 @@
 
 ## 실행
 
-근거 검토 기본 모드는 `IRON_MAN_EVIDENCE_MODE=fixture`다. 시뮬레이터는 팀원이 올린 v2 물리 계산이다.
+근거 검토 기본 모드는 `IRON_MAN_EVIDENCE_MODE=fixture`다. 시뮬레이터는 v3 물리 계산과 수동 가상 상태를 사용한다. 자세한 상태·계산 의미는 `backend/simulator/README.md`를 참조한다.
 실제 LLM 검토는 백엔드 PowerShell에서 다음 환경변수를 설정하고 서버를 실행한다.
 `.env` 파일은 자동으로 읽지 않는다.
 
