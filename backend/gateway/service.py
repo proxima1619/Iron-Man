@@ -6,6 +6,7 @@ from backend.contracts import NewRequest, DecisionReport, Snapshot, EvidenceRevi
 from backend.simulator import service as simulator
 from backend.simulator.adapter import DemoAdapter
 from backend.gateway.storage import SQLiteStore
+from backend.gateway import review as review_policy, notifications
 
 from backend.gateway.policy import POLICY_VERSION, scope_issue, evidence_issue, simulation_issue, physical_risk, coverage_issue, LIMIT_C
 APPROVAL_TTL_S = 300
@@ -45,6 +46,14 @@ class Gateway:
                 self.event(row, "execution_interrupted", reason="서버 재시작: 자동 재실행하지 않습니다.")
                 self.store.save(row)
 
+        for note in self.store.notifications():
+            if note["status"] == "sending":
+                note.update(status="unknown", detail="발송 중 서버 종료: 수신 여부를 확인하세요. 자동 재발송하지 않습니다.")
+                row = self.get(note["request_id"])
+                self.event(row, "notification_unknown", reason=note["detail"])
+                self.store.save(row, notification=note)
+
+
     def get(self, request_id):
         row = self.store.get(request_id)
         if row is None:
@@ -67,7 +76,7 @@ class Gateway:
                    "status": "draft", "report": None, "approval": None,
                    "execution": None, "evaluation": None, "events": []}
             self.event(row, "created")
-            self.store.save(row)
+            self.store.save(row, contact=body.requester_contact)
             return row
 
     def _prepare_evaluation(self, request_id, task=None):
@@ -89,6 +98,7 @@ class Gateway:
                 "request": body.model_dump(), "snapshot": snapshot.model_dump(),
                 "model_version": simulator.MODEL_VERSION, "policy_version": POLICY_VERSION,
                 "execution_scope": "virtual" if type(self.adapter) is DemoAdapter else "unconfigured",
+                "review_settings": review_policy.settings(),
                 "task_id": task["id"] if task else None}
 
     def _finish_evaluation(self, context, report, task_status="completed"):
@@ -117,6 +127,7 @@ class Gateway:
                         and not invalid_input_hold)
                     or simulator.MODEL_VERSION != context["model_version"]
                     or POLICY_VERSION != context["policy_version"]
+                    or review_policy.settings() != tuple(context.get("review_settings", review_policy.settings()))
                     or type(self.adapter) is not DemoAdapter):
                     report = failure_report(context, "EVALUATION_CONTEXT_CHANGED",
                         "검토 중 설비 상태·버전 또는 상태 유효 시간이 달라졌습니다. 다시 검증하세요.")
@@ -131,7 +142,11 @@ class Gateway:
             if task_status != "completed":
                 self.event(row, "evaluation_failed", reason=report["reason"])
             self.event(row, "evaluated", verdict=row["status"], report_digest=report["digest"])
-            self.store.save(row)
+            note = None
+            if row["status"] == "awaiting_approval":
+                note = notifications.queued(row["id"], report["digest"])
+                self.event(row, "notification_queued", reason=note["detail"])
+            self.store.save(row, notification=note)
             return row
 
     def evaluate(self, request_id):
@@ -159,6 +174,7 @@ class Gateway:
             return False
         return (type(self.adapter) is DemoAdapter
             and results_valid
+            and (report.get("assessment") or {}).get("threshold_c") == review_policy.settings()[1]
             and report.get("execution_scope") == "virtual"
             and report.get("can_approve") is True and report["verdict"] == "awaiting_approval"
             and report["revision"] == row["revision"]
@@ -172,11 +188,18 @@ class Gateway:
             and scope_issue(body, current, report["model_version"], report["execution_scope"]) is None)
 
     def decide(self, request_id, body, actor):
-        if actor != "approver":
+        if actor not in {"operator", "approver"} or (body.decision != "request_retest" and actor != "approver"):
             raise HTTPException(403, "승인 담당자만 판단할 수 있습니다.")
         with self.lock:
             row = self.get(request_id)
             report = row["report"]
+            if body.decision == "request_retest":
+                if not report or body.report_digest != report["digest"] or row["status"] in {"evaluating", "executing", "completed", "execution_unknown"}:
+                    raise HTTPException(409, "현재 보고서의 재시험을 요청할 수 없습니다.")
+                row.update(status="hold", approval=None)
+                self.event(row, "request_retest", actor=actor, reason=body.reason)
+                self.store.save(row)
+                return row
             if not report or row["status"] != "awaiting_approval" or body.report_digest != report["digest"]:
                 raise HTTPException(409, "승인 가능한 최신 보고서가 아닙니다.")
             if body.decision == "reject":
@@ -234,3 +257,32 @@ class Gateway:
                 self.event(row, "execution_unknown", execution_id=execution_id)
             self.store.save(row)
             return row
+
+
+    def send_notification(self, request_id, notification_id):
+        with self.lock:
+            row = self.get(request_id)
+            note = next((n for n in self.store.notifications(request_id) if n["id"] == notification_id), None)
+            if note is None:
+                raise HTTPException(404, "알림을 찾을 수 없습니다.")
+            if note["status"] == "sent":
+                return note
+            if note["status"] != "queued" or row["status"] != "awaiting_approval" or row["report"]["digest"] != note["report_digest"]:
+                raise HTTPException(409, "현재 보고서의 대기 중 알림만 발송할 수 있습니다.")
+            if not self._approval_context_valid(row, row["report"], self.adapter.read_state()):
+                raise HTTPException(409, "오래되었거나 변경된 보고서입니다. 재검증 후 알림을 발송하세요.")
+            cfg = notifications.config()
+            if not cfg["configured"] or cfg["recipient"] != note["recipient"]:
+                raise HTTPException(409, "SMTP 설정을 확인하고 재검증하세요.")
+            note.update(status="sending", attempts=note["attempts"] + 1, detail="발송 중")
+            self.event(row, "notification_sending")
+            self.store.save(row, notification=note)
+            try:
+                notifications.send(note, row, self.store.contact(request_id))
+                note.update(status="sent", sent_at=time.time(), detail="SMTP 서버가 알림을 접수했습니다. 수신·확인·승인 완료를 뜻하지 않습니다.")
+                self.event(row, "notification_sent")
+            except Exception:
+                note.update(status="unknown", detail="발송 결과를 확인하지 못했습니다. 수신 여부를 확인하세요. 자동 재발송하지 않습니다.")
+                self.event(row, "notification_unknown", reason=note["detail"])
+            self.store.save(row, notification=note)
+            return note

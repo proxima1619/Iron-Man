@@ -15,6 +15,8 @@ class NewRequest(StrictModel):
     equipment_id: Literal["cooling-demo-01"] = "cooling-demo-01"
     purpose: str = Field(default="냉각 펌프 속도 변경 검토", min_length=1, max_length=500)
     command: Command
+    requester_contact: str | None = Field(default=None, exclude=True, max_length=254,
+        pattern=r"^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$")
 
 class Snapshot(StrictModel):
     revision: int
@@ -201,11 +203,12 @@ class DecisionReport(StrictModel):
     reason_code: Literal[
         "INVALID_STATE", "POLICY_VIOLATION", "LIMIT_EXCEEDED", "DEMO_PASS",
         "EVIDENCE_INCOMPLETE", "SIMULATION_INCOMPLETE", "MODULE_FAILURE",
-        "LIVE_POLICY_NOT_CONFIGURED", "DEMO_POLICY_OUT_OF_SCOPE", "EVALUATION_CONTEXT_CHANGED",
+        "MATERIAL_DEVIATION", "LIVE_POLICY_NOT_CONFIGURED", "DEMO_POLICY_OUT_OF_SCOPE", "EVALUATION_CONTEXT_CHANGED",
         "EVALUATION_TIMEOUT", "EVALUATION_CANCELLED", "WORKER_FAILURE",
     ]
     reason: str
     digest: str
+    assessment: "ReviewAssessment | None" = None
 
 class Approval(StrictModel):
     actor: str
@@ -216,7 +219,8 @@ class Approval(StrictModel):
 class AuditEvent(StrictModel):
     kind: Literal["created", "evaluation_failed", "evaluated", "approve", "reject",
                   "execution_denied", "execution_reserved", "executed", "execution_unknown",
-                  "evaluation_interrupted", "execution_interrupted", "evaluation_started"]
+                  "evaluation_interrupted", "execution_interrupted", "evaluation_started", "request_retest",
+                  "notification_queued", "notification_sending", "notification_sent", "notification_unknown"]
     at: float
     verdict: RequestStatus | None = None
     report_digest: str | None = None
@@ -256,7 +260,7 @@ class RequestRecord(StrictModel):
 
 class DecisionInput(StrictModel):
     report_digest: str
-    decision: Literal["approve", "reject"]
+    decision: Literal["approve", "reject", "request_retest"]
     reason: str = Field(min_length=1, max_length=500)
 
 class ExecutionInput(StrictModel):
@@ -274,3 +278,53 @@ class DemoAdvanceInput(StrictModel):
 class RequestHistory(StrictModel):
     reports: list[DecisionReport]
     approvals: list[Approval]
+
+
+class DeviationMetric(StrictModel):
+    kind: Literal["normal", "degraded_cooling"]
+    baseline_peak_c: float
+    candidate_peak_c: float
+    absolute_delta_c: float
+    material: bool | None
+
+
+class ReviewAssessment(StrictModel):
+    comparison: Literal["baseline_candidate_peak"] = "baseline_candidate_peak"
+    origin: Literal["synthetic_model"] = "synthetic_model"
+    threshold_c: float | None
+    status: Literal["threshold_not_configured", "within_tolerance", "material_deviation"]
+    metrics: list[DeviationMetric]
+    limitation: str
+
+
+class ReviewContact(StrictModel):
+    requester_contact: str | None
+    verified: Literal[False] = False
+
+
+class Notification(StrictModel):
+    id: str
+    request_id: str
+    report_digest: str
+    recipient: str | None
+    status: Literal["not_configured", "queued", "sending", "sent", "unknown"]
+    created_at: float
+    sent_at: float | None = None
+    attempts: int = 0
+    detail: str
+
+
+class SessionInfo(StrictModel):
+    role: Literal["operator", "approver"]
+    actor_label: str
+    authentication: Literal["demo_token"] = "demo_token"
+    storage: Literal["sqlite"] = "sqlite"
+    synthetic_approval_enabled: bool
+    negligible_delta_c: float | None
+    notification_configured: bool
+    virtual_only: Literal[True] = True
+
+
+DecisionReport.model_rebuild()
+RequestRecord.model_rebuild()
+RequestHistory.model_rebuild()

@@ -17,53 +17,63 @@ def run(access, url):
         })
         page = context.new_page()
         page.goto(url)
-        expect(page.get_by_role("heading", name="설비 변경 요청 안전 관문")).to_be_visible()
-        page.get_by_label("데모 인증 토큰").fill(access["approver_token"])
+        expect(page.get_by_role("heading", name="변경 전에, 결과를 확인합니다.")).to_be_visible()
+        page.get_by_label("데모 토큰").fill(access["approver_token"])
+        page.get_by_role("button", name="연결 확인").click()
         expect(page.get_by_role("button", name="가상 설비 초기화")).to_be_enabled()
         page.get_by_role("button", name="가상 설비 초기화").click()
-        page.get_by_label("데모 인증 토큰").fill(access["operator_token"])
+        page.get_by_label("데모 토큰").fill(access["operator_token"])
+        page.get_by_role("button", name="연결 확인").click()
         for speed, verdict in ((60, "차단"), (80, "승인 대기")):
             if speed == 80:
-                page.get_by_label("데모 인증 토큰").fill(access["approver_token"])
+                page.get_by_label("데모 토큰").fill(access["approver_token"])
+                page.get_by_role("button", name="연결 확인").click()
                 with page.expect_response("**/api/demo/state") as changed:
                     page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
                 assert changed.value.status == 200
-                page.get_by_label("데모 인증 토큰").fill(access["operator_token"])
-            page.get_by_label("목표 펌프 속도 (%)").fill(str(speed))
+                page.get_by_label("데모 토큰").fill(access["operator_token"])
+                page.get_by_role("button", name="연결 확인").click()
+            page.get_by_label("목표 속도 (%)").fill(str(speed))
             with page.expect_response(lambda response: response.url.endswith("/evaluate")
                                       and response.request.method == "POST") as submitted:
-                page.get_by_role("button", name="새 요청 만들고 검토").click()
+                page.get_by_role("button", name="요청 생성 · 가상 검토").click()
             assert submitted.value.status == 202
-            expect(page.locator(".badge")).to_have_text(verdict, timeout=30000)
+            expect(page.locator(".review > section:first-child .badge")).to_have_text(verdict, timeout=30000)
             expect(page.get_by_role("alert")).to_have_count(0)
             if speed == 60:
-                expect(page.get_by_role("button", name="승인", exact=True)).to_be_disabled()
-        page.get_by_label("데모 인증 토큰").fill(access["approver_token"])
-        page.get_by_role("button", name="승인", exact=True).click()
-        expect(page.locator(".badge")).to_have_text("승인 완료")
+                expect(page.get_by_role("button", name="가상 명령 승인", exact=True)).to_be_disabled()
+        page.get_by_label("데모 토큰").fill(access["approver_token"])
+        page.get_by_role("button", name="연결 확인").click()
+        page.get_by_label("판단 이유").fill("합성 시연 보고서와 모델 한계 확인")
+        page.get_by_role("checkbox").check()
+        page.get_by_role("button", name="가상 명령 승인", exact=True).click()
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("승인 완료")
         with page.expect_response(lambda response: response.url.endswith("/execute")) as applied:
-            page.get_by_role("button", name="가상 설비에 적용").click()
+            page.get_by_role("button", name="승인한 가상 명령 적용").click()
         receipt = applied.value.json()
         assert receipt["execution"]["virtual"] is True
         assert receipt["execution"]["state"]["target_pump_speed_pct"] == 80
-        expect(page.locator(".badge")).to_have_text("가상 적용 완료")
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("가상 적용 완료")
         with page.expect_response("**/api/demo/advance") as advanced:
             page.get_by_role("button", name="가상 시간 10초 진행").click()
         assert 80 < advanced.value.json()["pump_speed_pct"] < 100
         # A new approved report cannot be applied after virtual time changes.
         page.get_by_role("button", name="가상 설비 초기화").click()
-        page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
-        page.get_by_role("button", name="새 요청 만들고 검토").click()
-        expect(page.locator(".badge")).to_have_text("승인 대기", timeout=30000)
-        page.get_by_role("button", name="승인", exact=True).click()
-        expect(page.locator(".badge")).to_have_text("승인 완료")
+        with page.expect_response("**/api/demo/state") as changed:
+            page.get_by_role("button", name="데모 부하 0.6으로 변경").click()
+        assert changed.value.status == 200
+        page.get_by_role("button", name="요청 생성 · 가상 검토").click()
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("승인 대기", timeout=30000)
+        page.get_by_role("checkbox").check()
+        page.get_by_role("button", name="가상 명령 승인", exact=True).click()
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("승인 완료")
         page.get_by_role("button", name="가상 시간 10초 진행").click()
         with page.expect_response(lambda response: response.url.endswith("/execute")) as denied:
-            page.get_by_role("button", name="가상 설비에 적용").click()
+            page.get_by_role("button", name="승인한 가상 명령 적용").click()
         assert denied.value.status == 409
-        expect(page.locator(".badge")).to_have_text("재검증 필요")
-        page.get_by_role("button", name="저장된 요청 불러오기").click()
-        expect(page.locator("ul button").first).to_be_visible()
+        expect(page.locator(".review > section:first-child .badge")).to_have_text("재검증 필요")
+        page.get_by_role("button", name="새로고침", exact=True).click()
+        expect(page.locator(".request-list button").first).to_be_visible()
         context.close()
         browser.close()
     print("PASS: Chromium login, blocked request, human approval, virtual application, stale approval denial, records")

@@ -226,6 +226,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session */
+        get: operations["session_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requests/{request_id}/review-contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Contact */
+        get: operations["review_contact_requests__request_id__review_contact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requests/{request_id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request Notifications */
+        get: operations["request_notifications_requests__request_id__notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requests/{request_id}/notifications/{notification_id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Notification */
+        post: operations["send_notification_requests__request_id__notifications__notification_id__send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -264,7 +332,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown" | "evaluation_interrupted" | "execution_interrupted" | "evaluation_started";
+            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown" | "evaluation_interrupted" | "execution_interrupted" | "evaluation_started" | "request_retest" | "notification_queued" | "notification_sending" | "notification_sent" | "notification_unknown";
             /** At */
             at: number;
             /** Verdict */
@@ -334,7 +402,7 @@ export interface components {
              * Decision
              * @enum {string}
              */
-            decision: "approve" | "reject";
+            decision: "approve" | "reject" | "request_retest";
             /** Reason */
             reason: string;
         };
@@ -378,11 +446,12 @@ export interface components {
              * Reason Code
              * @enum {string}
              */
-            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "LIVE_POLICY_NOT_CONFIGURED" | "DEMO_POLICY_OUT_OF_SCOPE" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
+            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "MATERIAL_DEVIATION" | "LIVE_POLICY_NOT_CONFIGURED" | "DEMO_POLICY_OUT_OF_SCOPE" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
             /** Reason */
             reason: string;
             /** Digest */
             digest: string;
+            assessment: components["schemas"]["ReviewAssessment"] | null;
         };
         /** DemoAdvanceInput */
         DemoAdvanceInput: {
@@ -399,6 +468,22 @@ export interface components {
              * @enum {string}
              */
             sensor_quality: "valid" | "invalid";
+        };
+        /** DeviationMetric */
+        DeviationMetric: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "normal" | "degraded_cooling";
+            /** Baseline Peak C */
+            baseline_peak_c: number;
+            /** Candidate Peak C */
+            candidate_peak_c: number;
+            /** Absolute Delta C */
+            absolute_delta_c: number;
+            /** Material */
+            material: boolean | null;
         };
         /** EvaluationTask */
         EvaluationTask: {
@@ -512,6 +597,8 @@ export interface components {
              */
             purpose: string;
             command: components["schemas"]["Command-Input"];
+            /** Requester Contact */
+            requester_contact?: string | null;
         };
         /** NewRequest */
         "NewRequest-Output": {
@@ -527,6 +614,33 @@ export interface components {
              */
             purpose: string;
             command: components["schemas"]["Command-Output"];
+        };
+        /** Notification */
+        Notification: {
+            /** Id */
+            id: string;
+            /** Request Id */
+            request_id: string;
+            /** Report Digest */
+            report_digest: string;
+            /** Recipient */
+            recipient: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_configured" | "queued" | "sending" | "sent" | "unknown";
+            /** Created At */
+            created_at: number;
+            /** Sent At */
+            sent_at: number | null;
+            /**
+             * Attempts
+             * @default 0
+             */
+            attempts: number;
+            /** Detail */
+            detail: string;
         };
         /** ParameterRange */
         ParameterRange: {
@@ -592,6 +706,43 @@ export interface components {
             events: components["schemas"]["AuditEvent"][];
             evaluation: components["schemas"]["EvaluationTask"] | null;
         };
+        /** ReviewAssessment */
+        ReviewAssessment: {
+            /**
+             * Comparison
+             * @default baseline_candidate_peak
+             * @constant
+             */
+            comparison: "baseline_candidate_peak";
+            /**
+             * Origin
+             * @default synthetic_model
+             * @constant
+             */
+            origin: "synthetic_model";
+            /** Threshold C */
+            threshold_c: number | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "threshold_not_configured" | "within_tolerance" | "material_deviation";
+            /** Metrics */
+            metrics: components["schemas"]["DeviationMetric"][];
+            /** Limitation */
+            limitation: string;
+        };
+        /** ReviewContact */
+        ReviewContact: {
+            /** Requester Contact */
+            requester_contact: string | null;
+            /**
+             * Verified
+             * @default false
+             * @constant
+             */
+            verified: false;
+        };
         /** Scenario */
         Scenario: {
             /**
@@ -645,6 +796,40 @@ export interface components {
             evaluated_parameter_sets: number;
             /** Limitation */
             limitation: string;
+        };
+        /** SessionInfo */
+        SessionInfo: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "operator" | "approver";
+            /** Actor Label */
+            actor_label: string;
+            /**
+             * Authentication
+             * @default demo_token
+             * @constant
+             */
+            authentication: "demo_token";
+            /**
+             * Storage
+             * @default sqlite
+             * @constant
+             */
+            storage: "sqlite";
+            /** Synthetic Approval Enabled */
+            synthetic_approval_enabled: boolean;
+            /** Negligible Delta C */
+            negligible_delta_c: number | null;
+            /** Notification Configured */
+            notification_configured: boolean;
+            /**
+             * Virtual Only
+             * @default true
+             * @constant
+             */
+            virtual_only: true;
         };
         /** SimulationResult */
         SimulationResult: {
@@ -1199,6 +1384,141 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Snapshot"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    session_session_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_contact_requests__request_id__review_contact_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewContact"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_notifications_requests__request_id__notifications_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_notification_requests__request_id__notifications__notification_id__send_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path: {
+                request_id: string;
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
                 };
             };
             /** @description Validation Error */

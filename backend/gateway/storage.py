@@ -89,7 +89,7 @@ class SQLiteStore:
 
     def _migrate(self):
         version = self.connection.execute("PRAGMA user_version").fetchone()[0]
-        if version > 2:
+        if version > 3:
             raise RuntimeError("Database schema is newer than this server supports.")
         if version == 0:
             with self.transaction() as db:
@@ -106,6 +106,7 @@ class SQLiteStore:
                 db.execute("CREATE TABLE adapter_executions (id TEXT PRIMARY KEY, result_json TEXT NOT NULL)")
                 db.execute("INSERT INTO demo_state VALUES (1, ?)", (encode(initial_demo_state()),))
                 db.execute("PRAGMA user_version=2")
+            version = 2
         if version == 1:
             # The old adapter had no dynamic temperature or clock. Seed those
             # with explicit demo assumptions; never rewrite historical reports.
@@ -116,6 +117,16 @@ class SQLiteStore:
                              target_pump_speed_pct=old["pump_speed_pct"], sensor_quality=old["sensor_quality"])
                 db.execute("UPDATE demo_state SET state_json=? WHERE id=1", (encode(state),))
                 db.execute("PRAGMA user_version=2")
+            version = 2
+
+        if version == 2:
+            with self.transaction() as db:
+                db.execute("CREATE TABLE request_contacts (request_id TEXT PRIMARY KEY REFERENCES requests(id), contact TEXT NOT NULL)")
+                db.execute("""CREATE TABLE notifications (
+                    id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+                    report_digest TEXT NOT NULL, notification_json TEXT NOT NULL,
+                    UNIQUE(request_id, report_digest))""")
+                db.execute("PRAGMA user_version=3")
 
     def get(self, request_id):
         with self.lock:
@@ -126,7 +137,7 @@ class SQLiteStore:
         with self.lock:
             return [json.loads(row[0]) for row in self.connection.execute("SELECT record_json FROM requests ORDER BY rowid DESC")]
 
-    def save(self, record):
+    def save(self, record, contact=None, notification=None):
         with self.transaction() as db:
             db.execute("""INSERT INTO requests VALUES (?, ?)
                 ON CONFLICT(id) DO UPDATE SET record_json=excluded.record_json""",
@@ -137,6 +148,14 @@ class SQLiteStore:
             if record["approval"]:
                 db.execute("INSERT OR IGNORE INTO approvals VALUES (?, ?, ?)",
                     (record["id"], record["approval"]["report_digest"], encode(record["approval"])))
+            if contact is not None:
+                db.execute("INSERT INTO request_contacts VALUES (?, ?) ON CONFLICT(request_id) DO UPDATE SET contact=excluded.contact",
+                    (record["id"], contact))
+            if notification is not None:
+                db.execute("""INSERT INTO notifications VALUES (?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET notification_json=excluded.notification_json""",
+                    (notification["id"], record["id"], notification["report_digest"], encode(notification)))
+
 
     def history(self, request_id):
         with self.lock:
@@ -158,3 +177,17 @@ class SQLiteStore:
     def list_executions(self):
         with self.lock:
             return {row[0]: json.loads(row[1]) for row in self.connection.execute("SELECT id, result_json FROM adapter_executions")}
+
+    def contact(self, request_id):
+        with self.lock:
+            row = self.connection.execute("SELECT contact FROM request_contacts WHERE request_id=?", (request_id,)).fetchone()
+            return row[0] if row else None
+
+
+    def notifications(self, request_id=None):
+        with self.lock:
+            if request_id is None:
+                cursor = self.connection.execute("SELECT notification_json FROM notifications ORDER BY rowid")
+            else:
+                cursor = self.connection.execute("SELECT notification_json FROM notifications WHERE request_id=? ORDER BY rowid", (request_id,))
+            return [json.loads(row[0]) for row in cursor]
