@@ -1,0 +1,63 @@
+{
+  "example_only": true,
+  "llm_executed": false,
+  "input_origin": "isolated_in_memory_virtual_plant",
+  "request": {
+    "equipment_id": "cooling-demo-01",
+    "purpose": "냉각 펌프 속도 변경 검토",
+    "command": {
+      "type": "set_pump_speed",
+      "target_pct": 80.0,
+      "duration_s": 300
+    }
+  },
+  "snapshot": {
+    "revision": 3,
+    "temperature_c": 60.97200057806551,
+    "load_ratio": 1.0,
+    "pump_speed_pct": 68.92520713290413,
+    "observed_at": 1791517933.3848803,
+    "sensor_quality": "valid",
+    "data_origin": "synthetic",
+    "target_pump_speed_pct": 60.0,
+    "simulation_time_s": 30.0,
+    "model_version": "cooling-demo-v3",
+    "calculated_at": 1791517933.3848803,
+    "domain_status": "ready",
+    "domain_reason": null
+  },
+  "evidence": {
+    "schema_version": "1.0",
+    "mock": true,
+    "status": "demo_fixture",
+    "cards": [
+      {
+        "evidence_id": "demo-evidence-01",
+        "source_id": "team-demo-note",
+        "title": "팀 작성 모의 운전 조건",
+        "stance": "limitation",
+        "claim": "냉각 효율 저하 조건을 추가 확인하는 흐름을 시연합니다.",
+        "applicability": "unknown",
+        "locator": "fixtures/demo-source.md",
+        "source_url": null,
+        "source_type": "team_authored_fixture",
+        "excerpt": null,
+        "publisher": null,
+        "version": null,
+        "published_at": null,
+        "usage": null,
+        "proposed_test": null,
+        "parameter_origin": null,
+        "matched_conditions": [],
+        "missing_conditions": []
+      }
+    ],
+    "proposed_tests": [
+      {
+        "kind": "degraded_cooling",
+        "evidence_id": "demo-evidence-01"
+      }
+    ],
+    "limitation": "실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다. 검토 입력: 현재 온도 60.972°C, 실제 속도 68.9252%, 기존 목표 60%, 요청 목표 80%, 부하 1, 가상 시각 30s, 예측 구간 300s, 모델 cooling-demo-v3. 기존 목표 출처: snapshot."
+  }
+}

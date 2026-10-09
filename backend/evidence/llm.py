@@ -13,6 +13,13 @@ INSTRUCTIONS = """당신은 가상 냉각 설비의 근거 및 역근거 검토�
 matched_conditions와 missing_conditions에 이유를 적어라.
 안전 판단에 필요한 미확인 조건은 최상위 missing_conditions에도 적어라.
 반례 시험은 applicable/partial인 counter/limitation 카드에서 degraded_cooling만 제안하라.
+review_context의 현재 온도, 실제 속도, 기존 목표 속도, 요청 목표 속도를 각각 비교하라.
+실제 속도와 기존 목표는 펌프 응답 지연으로 다를 수 있다. 기존 목표 유지가 기준 시험이다.
+duration_s는 예측 구간이며 목표 속도가 자동으로 만료되는 시간이 아니다.
+supported_tests에 있는 시험만 제안하라. 효율값은 simulator 담당의 demo_assumption이며 논문값이 아니다.
+새 고장 종류나 새 효율 수치가 필요하면 시험을 만들지 말고 missing_conditions에 2번 계약 합의 필요를 적어라.
+논문에서 다른 유체·설비·온도·rpm·유량을 다룬다면 우리 모델의 %와 직접 환산하지 마라.
+matched_conditions와 missing_conditions에 현재 온도·실제/기존 목표/요청 목표 속도와 문서 조건을 비교한 이유를 적어라.
 관련 근거가 없으면 cards를 비우고 부족한 조건을 적어라. 한국어로 응답하라."""
 
 

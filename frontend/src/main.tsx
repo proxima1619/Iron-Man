@@ -352,9 +352,91 @@ function App() {
                 />
               </label>
               <p className="muted">
-                연락처는 승인 담당자에게만 표시됩니다. 주소 소유 여부는 검증하지
-                않습니다.
+                실행 범위: {row.report.execution_scope === "virtual" ? "가상 설비 전용" : "미설정"}
+                {" · "}모델: {row.report.model_version}{" · "}정책: {row.report.policy_version}
+                {" · "}실제 설비 안전 승인이 아닙니다.
               </p>
+            )}
+            {row.report?.simulation && (
+              <>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>시험 조건</th>
+                      <th>변경 전 최고 °C</th>
+                      <th>변경 후 최고 °C</th>
+                      <th>결과</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {row.report.simulation.scenarios.map((s) => (
+                      <tr key={s.kind}>
+                        <td>{s.kind}</td>
+                        <td>{s.baseline_peak_c}</td>
+                        <td>{s.candidate_peak_c}</td>
+                        <td>{s.exceeded ? "한계 초과" : "계산상 한계 이내"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="muted">{row.report.simulation.limitation}</p>
+              </>
+            )}
+            {row.report?.evidence && (
+              <p>
+                근거 검토:{" "}
+                {row.report.evidence.mock
+                  ? "모의 응답"
+                  : "LLM 검토 경로 · 출처 수집 방식은 아래 설명 참조"}{" "}
+                · {row.report.evidence.status}
+              </p>
+            )}
+            {row.report?.evidence?.cards.map((c) => (
+              <article key={c.title}>
+                <h3>{c.title}</h3>
+                {c.source_url && <a href={c.source_url} target="_blank" rel="noopener noreferrer">논문·출처 원문 열기</a>}
+                <p>{c.claim}</p>
+                <small>
+                  원본 위치: {c.locator} · {c.stance} · 적용 조건:{" "}
+                  {c.applicability || "unknown"}
+                </small>
+                {c.excerpt && <blockquote>{c.excerpt}</blockquote>}
+                {!!c.matched_conditions?.length && (
+                  <p>일치 조건: {c.matched_conditions.join(" / ")}</p>
+                )}
+                {!!c.missing_conditions?.length && (
+                  <p>미확인 조건: {c.missing_conditions.join(" / ")}</p>
+                )}
+              </article>
+            ))}
+            <p className="muted">{row.report?.evidence?.limitation}</p>
+          </section>
+          <section>
+            <h2>3. 담당자 판단과 가상 실행</h2>
+            <label>
+              판단 이유{" "}
+              <input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </label>
+            <div className="actions">
+              <button
+                disabled={
+                  busy ||
+                  row.status !== "awaiting_approval" ||
+                  !row.report?.can_approve
+                }
+                onClick={() =>
+                  post("decisions", {
+                    decision: "approve",
+                    report_digest: row.report?.digest,
+                    reason,
+                  })
+                }
+              >
+                승인
+              </button>
               <button
                 className="primary full"
                 type="submit"
