@@ -4,6 +4,7 @@ import type { components } from "./api.generated";
 import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
 import { TepResults } from "./TepResults";
+import { TepReferenceData } from "./TepReferenceData";
 import { Home } from "./Home";
 import { DemoPage } from "./DemoPage";
 import { EvidencePanel } from "./EvidencePanel";
@@ -919,6 +920,7 @@ function App() {
               </section>
             </>
           )}
+          {model === "tep" && <TepReferenceData token={token} enabled={!!session} />}
         </div>
       </div>
       <footer>

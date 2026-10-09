@@ -3,10 +3,21 @@ import type { components } from "./api.generated";
 import { EvidencePanel } from "./EvidencePanel";
 import { EvidenceCatalog } from "./EvidenceCatalog";
 import { RecordFeedback } from "./RecordFeedback";
+import { TepReferenceData } from "./TepReferenceData";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
 type Snapshot = components["schemas"]["Snapshot"];
+type CoolingRow = Omit<Row, "request" | "report"> & {
+  request: Omit<Row["request"], "command"> & { command: Extract<Row["request"]["command"], { type: "set_pump_speed" }> };
+  report: (Omit<NonNullable<Row["report"]>, "snapshot" | "tep_simulation"> & {
+    snapshot: Snapshot; tep_simulation: null;
+  }) | null;
+};
+function isCoolingRow(value: Row): value is CoolingRow {
+  return value.request.command.type === "set_pump_speed" &&
+    (!value.report || ("observed_at" in value.report.snapshot && !value.report.tep_simulation));
+}
 const statusLabels: Record<string, string> = {
   draft: "접수",
   evaluating: "가상 검토 중",
@@ -25,8 +36,8 @@ export function DemoExperience() {
   const [approver, setApprover] = useState("local-approver");
   const [speed, setSpeed] = useState(80);
   const [load, setLoad] = useState(0.6);
-  const [row, setRow] = useState<Row | null>(null);
-  const [savedRows, setSavedRows] = useState<Row[]>([]);
+  const [row, setRow] = useState<CoolingRow | null>(null);
+  const [savedRows, setSavedRows] = useState<CoolingRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [fromDatabase, setFromDatabase] = useState(false);
   const [plant, setPlant] = useState<Snapshot | null>(null);
@@ -76,6 +87,11 @@ export function DemoExperience() {
       signal?.removeEventListener("abort", abort);
     }
   }
+  async function coolingRow(path: string, role: "operator" | "approver", body?: unknown, signal?: AbortSignal) {
+    const value = await api<Row>(path, role, body, signal);
+    if (!isCoolingRow(value)) throw new Error("TEP 기록은 검토 콘솔에서 확인하세요.");
+    return value;
+  }
   async function demoOnly() {
     const health = await api<{
       mode: string;
@@ -98,7 +114,7 @@ export function DemoExperience() {
       setError(e instanceof Error ? e.message : "처리 실패");
       if (row) {
         try {
-          setRow(await api<Row>(`/requests/${row.id}`, "operator"));
+          setRow(await coolingRow(`/requests/${row.id}`, "operator"));
         } catch {
           /* Keep the known request and ask for reconciliation. */
         }
@@ -118,7 +134,7 @@ export function DemoExperience() {
     let timer = 0;
     async function poll() {
       try {
-        const next = await api<Row>(
+        const next = await coolingRow(
           `/requests/${id}`,
           "operator",
           undefined,
@@ -166,6 +182,7 @@ export function DemoExperience() {
         </div>
         <span className="badge">가상 설비 체험 · AI API는 별도 연결</span>
       </div>
+      <TepReferenceData token={operator} enabled={Boolean(operator)} />
       <div className="demo-layout">
         <div className="demo-controls">
           <div className="demo-database">
@@ -173,13 +190,14 @@ export function DemoExperience() {
             <p className="muted">
               이전에 요청한 펌프 속도와 계산 결과를 불러옵니다. 실제 설비
               측정값이 아닌 합성 시연 기록입니다.
+              TEP 냉각수 기록은 <a href="#review">검토 콘솔</a>에서 확인하세요.
             </p>
             <button
               className="full"
               disabled={locked}
               onClick={() =>
                 void run(async () => {
-                  setSavedRows(await api<Row[]>("/requests", "operator"));
+                  setSavedRows((await api<Row[]>("/requests", "operator")).filter(isCoolingRow));
                   setLoaded(true);
                 })
               }
@@ -196,7 +214,7 @@ export function DemoExperience() {
                     const id = e.target.value;
                     if (id)
                       void run(async () => {
-                        const stored = await api<Row>(
+                        const stored = await coolingRow(
                           `/requests/${id}`,
                           "operator",
                         );
@@ -323,7 +341,7 @@ export function DemoExperience() {
                 void run(async () => {
                   await demoOnly();
                   await api<Session>("/session", "operator");
-                  const created = await api<Row>("/requests", "operator", {
+                  const created = await coolingRow("/requests", "operator", {
                     purpose: `홈페이지 체험: 냉각 펌프 ${speed}% 변경 검토`,
                     command: { target_pct: speed, duration_s: 300 },
                   });
@@ -331,7 +349,7 @@ export function DemoExperience() {
                   setFromDatabase(false);
                   setConfirmed(false);
                   setRow(
-                    await api<Row>(
+                    await coolingRow(
                       `/requests/${created.id}/evaluate`,
                       "operator",
                       {},
@@ -457,7 +475,7 @@ export function DemoExperience() {
                 disabled={busy}
                 onClick={() =>
                   void run(async () => {
-                    setRow(await api<Row>(`/requests/${row.id}`, "operator"));
+                    setRow(await coolingRow(`/requests/${row.id}`, "operator"));
                   })
                 }
               >
@@ -470,7 +488,7 @@ export function DemoExperience() {
                     void run(async () => {
                       await demoOnly();
                       setRow(
-                        await api<Row>(
+                        await coolingRow(
                           `/requests/${row.id}/evaluate`,
                           "operator",
                           {},
@@ -580,7 +598,7 @@ export function DemoExperience() {
                       void run(async () => {
                         await demoOnly();
                         setRow(
-                          await api<Row>(
+                          await coolingRow(
                             `/requests/${row!.id}/decisions`,
                             "approver",
                             {
@@ -600,7 +618,7 @@ export function DemoExperience() {
                     onClick={() =>
                       void run(async () => {
                         await demoOnly();
-                        const next = await api<Row>(
+                        const next = await coolingRow(
                           `/requests/${row!.id}/execute`,
                           "approver",
                           { report_digest: report.digest },

@@ -115,24 +115,24 @@ python -m scripts.run_tep --repeat
 IRON_MAN_TEST_TEP=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
 ```
 
-Docker API 이미지는 builder에서 컴파일하고 런타임에는 실행 파일·manifest와 libstdc++만 포함하도록 준비했다. `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, 실행 원본은 `/data/tep-runs`에 저장한다. **이번 2번 작업에서는 TEP 엔진을 포함한 컨테이너 빌드·브라우저 HTTPS 시험을 실행하지 않았다.** 확인은 WSL 외부 모델 + Windows API/테스트 + 프런트 빌드다.
+Docker API 이미지는 builder에서 컴파일하고 런타임에는 실행 파일·manifest와 libstdc++만 포함한다. `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, 실행 원본은 `/data/tep-runs`에 저장한다. 최초 2번 인계의 확인 범위는 WSL 외부 모델 + Windows API/테스트 + 프런트 빌드였다. 이후 **1번이 Docker·CI·실제 HTTP 평가·저장·재시작·공개 HTTPS 브라우저 검증 완료를 기록했다.** 해당 실행 버전과 확인 범위는 [공개 TEP 배포 검증](codex-log/tep-public-deployment-validation.md)을 따른다. 이번 로컬 `archive/TEP_data` 참조 탐색 기능은 그 배포 뒤 추가한 선택 기능이며 서버 데이터 마운트·재배포는 아직 확인하지 않았다.
 
-### 1번 관문·배포 담당에게 인계 (배포 미완료)
+### 1번 관문·배포 담당에게 인계와 현재 상태
 
-2번 완료 범위는 엔진 소스 고정·입출력 계약·빌드/실행 인터페이스·로컬 반복 검증이다. **`deploy/Dockerfile.api`, Compose와 CI의 최종 검토·통합·배포 판정은 1번이 담당한다.** 이번 Dockerfile/CI 변경은 시제품 검증을 위한 준비로 보존하며 배포 완료로 확정하지 않는다.
+2번 완료 범위는 엔진 소스 고정·변수/지원 시험 사전·입출력 계약·빌드/실행 인터페이스·로컬 반복 검증이다. **`deploy/Dockerfile.api`, Compose와 CI의 최종 검토·통합·배포 판정은 1번이 담당하며 기존 TEP 코어의 배포 검증은 완료됐다.** 현재 1번에 남은 것은 TEP 전용 위험·승인·재검증 기준 결정이다. 계산 성공도 전부 보류하는 경계는 유지한다.
 
 | 인계 항목 | 준비 내용 / 1번이 확인할 것 |
 |---|---|
 | builder 패키지 | GNU g++ (C++17), coreutils `timeout`; Python 표준 라이브러리로 `python -m backend.simulator.tep.build --output /opt/tep`. 소스·라이선스·래퍼·lock이 COPY되어야 함 |
 | runtime 패키지 | libstdc++6·libgcc/libm·GNU coreutils `timeout`. g++·MATLAB·OpenModelica는 런타임에 필요 없음 |
-| 아티팩트 | `/opt/tep/tep-runner`, `build.json`; wheel에 `runner.cpp`, `source.lock.json`, `vendor/*` 포함. 런타임에서 소스/래퍼/바이너리 SHA 검증 |
+| 아티팩트 | `/opt/tep/tep-runner`, `build.json`; wheel에 `runner.cpp`, `source.lock.json`, `reference.lock.json`, `vendor/*` 포함. 런타임에서 소스/래퍼/바이너리 SHA 검증. 참조 원본 `.dat`·Fortran 코드·README는 wheel에 미포함 |
 | 환경변수 | `IRON_MAN_TEP_ENGINE_DIR=/opt/tep`, `IRON_MAN_TEP_RUN_DIR=/data/tep-runs`; 기존 evaluation 기본 2 workers/90s. Linux에서는 WSL 변수 사용 안 함 |
 | 볼륨·권한 | 기존 `gateway-data:/data`에 SQLite와 TEP 원본 CSV/진단 파일이 함께 남음. 비root UID 10001의 생성/읽기·백업·용량/보존 정책 확인 |
 | CI | backend job에 명시적 엔진 빌드와 `IRON_MAN_TEST_TEP=1` 추가. 브라우저 smoke는 기존 탱크를 명시 선택하고 마지막에 TEP 완료 결과·보류·승인 비활성화를 확인하도록 준비 |
-| 확인된 결과 | Windows→WSL 실제 외부 실행·재현, 전체 290 테스트, 프런트 타입/빌드 통과. 실제 코어 정지·누락/단위/입력 오류·승인/실행 거절 확인 |
-| 남은 배포 확인 | 변경된 API 이미지의 실제 Docker build, libstdc++ 동적 로딩, 비root 실행, 실제 TEP HTTP→worker→CSV→SQLite 결과, volume 재시작 보존, Compose/HTTPS/브라우저 smoke, 배포 대상 OS/CPU·빌드 해시, 리소스/종료/로그 관리 |
+| 확인된 결과 | 2번: Windows→WSL 실제 외부 실행·재현, 이번 참조 통합 포함 전체 307 테스트와 프런트 타입/빌드 통과. 1번: 배포한 `4de39be` 버전의 Docker·CI·Linux 런타임·HTTP 평가·보류/승인 거절·SQLite 재시작 보존·공개 HTTPS와 Chrome 검증 기록 |
+| 새 선택 기능 배포 | 이번 참조 API/화면을 배포할 경우 원본 자료와 고지를 읽기 전용 마운트하고 `IRON_MAN_TEP_REFERENCE_DIR` 지정. 출처/라이선스 적용 범위 확인과 해당 마운트의 API/UI 검증은 별도 필요 |
 
-팀의 [기존 Docker 로컬 검증 기록](codex-log/docker-local-validation.md)은 해당 기록 시점의 기존 배포 흐름에 대한 확인이다. 이번 TEP 엔진이 포함된 이미지·CI·HTTPS 배포의 완료 근거로 자동 승계하지 않는다. 배포 검증 결과는 1번이 추가해야 한다. 실측 오차·현장 적용성 미완료 상태도 유지한다.
+최신 [TEP Docker 검증 기록](codex-log/tep-docker-update-validation.md)과 [공개 배포 기록](codex-log/tep-public-deployment-validation.md)에 배포 버전·실행 결과를 남겼다. 이번 참조 파일 탐색은 **코어 실행 데모에 필수가 아닌 선택 기능**이며 시뮬레이션 참조 자료다. 실측 또는 현재 개루프 모델의 독립 정확도 검증 자료로 처리하지 않는다. 다음으로 2·3번의 근거→반례/추가 시험 매핑 확정, 3번 TEP 근거 연동, 4번 해당 근거/불확실성 표시가 남았다. 실측 오차·현장 적용성 검증도 계속 미완료다.
 
 출력 `data/tep-result.json`은 실제 실행 결과다. `--repeat`는 새 프로세스들로 다시 계산하여 전체 결과를 비교한다. `.tep-cache/runs/<uuid>/`에 기준/변경 CSV·stderr·설정을 남긴다. 기준이 성공하고 변경이 실패해도 보고서에는 부분 성공 수치를 넣지 않는다. 성공 보고서는 모든 시계열·변수 사전·차이 지표·50 초기 상태·12 초기 입력·시드·적분/관측 간격·시험 구간·출처 커밋과 해시·빌드 컴파일러/플랫폼/옵션/바이너리 해시를 보존한다. 원본 CSV는 실행 디렉터리를 따로 백업하며 자동 삭제하지 않는다.
 

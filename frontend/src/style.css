@@ -186,6 +186,32 @@ aside {
   gap: 24px;
   margin-top: 26px;
 }
+.reference-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.reference-controls select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.reference-chart {
+  width: 100%;
+}
+.reference-chart text {
+  fill: currentColor;
+}
+.reference-table {
+  max-height: 400px;
+  overflow: auto;
+}
 .sidebar section {
   padding: 22px;
 }
