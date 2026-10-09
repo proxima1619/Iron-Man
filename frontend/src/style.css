@@ -5,6 +5,20 @@
   line-height: 1.6;
   font-size: 14px;
 }
+.evidence-hold {
+  border-left: 3px solid #e6c276;
+  background: #302b20;
+  padding: 18px;
+  margin: 20px 0;
+}
+.evidence-hold h3 {
+  color: #f3d798;
+}
+.evidence h4 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  color: #b1c5bc;
+}
 * {
   box-sizing: border-box;
 }

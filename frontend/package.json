@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check:evidence": "node scripts/check-evidence.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "generate:api": "openapi-typescript ../contracts/openapi.json -o src/api.generated.ts"
