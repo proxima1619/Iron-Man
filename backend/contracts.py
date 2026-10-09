@@ -314,6 +314,23 @@ class Notification(StrictModel):
     detail: str
 
 
+class RecordFeedback(StrictModel):
+    request_id: str
+    record_revision: int
+    record_digest: str
+    report_digest: str | None
+    generated_at: float
+    model: str
+    status: Literal["completed", "insufficient"]
+    advisory_only: Literal[True] = True
+    summary: str
+    result_interpretation: str
+    model_limitations: list[str]
+    missing_conditions: list[str]
+    recommended_checks: list[str]
+    evidence: EvidenceReview
+
+
 class EvidenceSourceSummary(StrictModel):
     source_id: str
     title: str

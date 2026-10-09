@@ -49,54 +49,53 @@ export function EvidenceCatalog({ token }: { token: string }) {
   }, [token, revision]);
 
   return (
-    <section
-      className="evidence-catalog"
-      aria-label="논문 목록과 검토 연결 상태"
-    >
+    <section className="evidence-catalog" aria-label="AI 설명 준비 상태 상태">
       <div className="section-head">
-        <h3>논문 목록과 검토 연결</h3>
+        <h3>AI 설명 준비 상태</h3>
         <button
           disabled={busy || !token}
           onClick={() => setRevision((v) => v + 1)}
         >
-          {busy ? "확인 중…" : "설정 새로고침"}
+          {busy ? "확인 중…" : "연결 설정 확인"}
         </button>
       </div>
       <p className="muted">
-        DB 기록 조회에는 API 키가 필요하지 않습니다. 키와 모델은 서버의 새 논문
-        검토에 사용하며 브라우저에 전달하지 않습니다.
+        기록을 선택한 뒤 오른쪽의 AI 피드백 받기를 누르세요.
       </p>
       {!token && <p>담당자 토큰을 입력하면 검토 설정을 확인할 수 있습니다.</p>}
       {error && <p role="status">{error}</p>}
       {catalog && (
         <>
-          <dl>
-            <dt>검토 모드</dt>
-            <dd>
-              {catalog.mode === "live"
-                ? "실제 LLM 검토"
-                : catalog.mode === "fixture"
-                  ? "모의 응답"
-                  : "설정 오류"}
-            </dd>
-            <dt>API 키 · 모델</dt>
-            <dd>
-              {catalog.api_key_configured ? "키 설정됨" : "키 없음"} ·{" "}
-              {catalog.model_configured ? "모델 설정됨" : "모델 없음"}
-            </dd>
-            <dt>문헌 수집</dt>
-            <dd>
-              {catalog.source_mode === "local"
-                ? `사전 수집 ${catalog.sources.length}건`
-                : catalog.source_mode === "europepmc"
-                  ? "검토 시 Europe PMC 실시간 검색"
-                  : "설정 오류"}
-            </dd>
-          </dl>
+          <details>
+            <summary>연결 설정 자세히 보기</summary>
+            <dl>
+              <dt>검토 모드</dt>
+              <dd>
+                {catalog.mode === "live"
+                  ? "실제 LLM 검토"
+                  : catalog.mode === "fixture"
+                    ? "모의 응답"
+                    : "설정 오류"}
+              </dd>
+              <dt>API 키 · 모델</dt>
+              <dd>
+                {catalog.api_key_configured ? "키 설정됨" : "키 없음"} ·{" "}
+                {catalog.model_configured ? "모델 설정됨" : "모델 없음"}
+              </dd>
+              <dt>문헌 수집</dt>
+              <dd>
+                {catalog.source_mode === "local"
+                  ? `사전 수집 ${catalog.sources.length}건`
+                  : catalog.source_mode === "europepmc"
+                    ? "검토 시 Europe PMC 실시간 검색"
+                    : "설정 오류"}
+              </dd>
+            </dl>
+          </details>
           <p>
             {catalog.ready
-              ? "검토 설정이 준비됐습니다. 실제 호출 성공 여부는 새 요청의 검토 결과에서 확인하세요."
-              : "실제 논문 검토 설정을 확인하세요."}
+              ? "키와 모델이 설정됐습니다. AI 피드백을 요청할 수 있습니다."
+              : "AI 설명을 받으려면 아래 설정을 확인하세요."}
           </p>
           {!!catalog.issues.length && (
             <ul>
@@ -107,7 +106,7 @@ export function EvidenceCatalog({ token }: { token: string }) {
           )}
           {!!catalog.sources.length && (
             <details>
-              <summary>검토 입력 문서 {catalog.sources.length}건 보기</summary>
+              <summary>참고 논문·문서 {catalog.sources.length}건 보기</summary>
               <ul>
                 {catalog.sources.map((source) => {
                   let url: string | null = null;
@@ -141,11 +140,9 @@ export function EvidenceCatalog({ token }: { token: string }) {
             </details>
           )}
           <p className="annotation">
-            목록은 검토 입력입니다. 관련 논문·반례 분류는 현재 명령과 상태를
-            비교한 결과에서 확인하세요. 설정 변경은 기존 DB 보고서를 수정하지
-            않습니다. 초기 상태를 준비하고 새 요청을 검토하면 새 결과가
-            저장됩니다. 외부 논문의 적용 조건과 서버 승인 정책이 확인되지 않으면
-            보류됩니다.
+            AI 설명에는 API 사용량이 발생합니다. 키 설정 표시는 호출 성공을
+            보장하지 않으며, 실패하면 피드백 영역에 이유가 표시됩니다. 가상 설비
+            체험은 실제 설비 연결이 필요하지 않습니다.
           </p>
         </>
       )}

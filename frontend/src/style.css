@@ -602,3 +602,13 @@ footer {
     transition: none;
   }
 }
+
+/* Saved results and live explanations are separate surfaces. */
+.record-feedback { margin-block: 24px; padding: 24px; background: var(--lavender-soft); border: 1px solid var(--border); border-radius: 12px; }
+.record-feedback h3, .record-feedback h4 { margin-top: 20px; }
+.record-feedback p, .record-feedback li, .evidence-catalog p { line-height: 1.7; overflow-wrap: anywhere; word-break: keep-all; }
+.feedback-text { white-space: pre-wrap; }
+.record-feedback ul { padding-left: 22px; }
+.evidence-catalog { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--border); }
+.evidence-catalog details { margin-block: 12px; }
+.new-demo summary { padding-block: 16px; font-weight: 700; cursor: pointer; }

@@ -352,6 +352,77 @@
         }
       }
     },
+    "/requests/{request_id}/feedback": {
+      "post": {
+        "summary": "Record Feedback",
+        "operationId": "record_feedback_requests__request_id__feedback_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordFeedback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/requests/{request_id}": {
       "get": {
         "summary": "Read",
@@ -2489,6 +2560,106 @@
           "sensitivity"
         ],
         "title": "PhysicalAssessment"
+      },
+      "RecordFeedback": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "record_revision": {
+            "type": "integer",
+            "title": "Record Revision"
+          },
+          "record_digest": {
+            "type": "string",
+            "title": "Record Digest"
+          },
+          "report_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Digest"
+          },
+          "generated_at": {
+            "type": "number",
+            "title": "Generated At"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "insufficient"
+            ],
+            "title": "Status"
+          },
+          "advisory_only": {
+            "type": "boolean",
+            "const": true,
+            "title": "Advisory Only",
+            "default": true
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "result_interpretation": {
+            "type": "string",
+            "title": "Result Interpretation"
+          },
+          "model_limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Model Limitations"
+          },
+          "missing_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Conditions"
+          },
+          "recommended_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recommended Checks"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceReview"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "record_revision",
+          "record_digest",
+          "report_digest",
+          "generated_at",
+          "model",
+          "status",
+          "advisory_only",
+          "summary",
+          "result_interpretation",
+          "model_limitations",
+          "missing_conditions",
+          "recommended_checks",
+          "evidence"
+        ],
+        "title": "RecordFeedback"
       },
       "RequestHistory": {
         "properties": {

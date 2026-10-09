@@ -90,6 +90,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requests/{request_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Feedback */
+        post: operations["record_feedback_requests__request_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requests/{request_id}": {
         parameters: {
             query?: never;
@@ -736,6 +753,43 @@ export interface components {
             };
             sensitivity: components["schemas"]["SensitivityAssessment"];
         };
+        /** RecordFeedback */
+        RecordFeedback: {
+            /** Request Id */
+            request_id: string;
+            /** Record Revision */
+            record_revision: number;
+            /** Record Digest */
+            record_digest: string;
+            /** Report Digest */
+            report_digest: string | null;
+            /** Generated At */
+            generated_at: number;
+            /** Model */
+            model: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "insufficient";
+            /**
+             * Advisory Only
+             * @default true
+             * @constant
+             */
+            advisory_only: true;
+            /** Summary */
+            summary: string;
+            /** Result Interpretation */
+            result_interpretation: string;
+            /** Model Limitations */
+            model_limitations: string[];
+            /** Missing Conditions */
+            missing_conditions: string[];
+            /** Recommended Checks */
+            recommended_checks: string[];
+            evidence: components["schemas"]["EvidenceReview"];
+        };
         /** RequestHistory */
         RequestHistory: {
             /** Reports */
@@ -1159,6 +1213,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RequestHistory"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_feedback_requests__request_id__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordFeedback"];
                 };
             };
             /** @description Validation Error */

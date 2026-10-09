@@ -30,3 +30,10 @@ class Claim(ReviewText):
 class Analysis(ReviewText):
     cards: list[Claim] = Field(max_length=12)
     missing_conditions: list[str] = Field(max_length=10)
+
+
+class RecordAnalysis(Analysis):
+    summary: str = Field(min_length=1, max_length=1500)
+    result_interpretation: str = Field(min_length=1, max_length=2500)
+    model_limitations: list[str] = Field(min_length=1, max_length=10)
+    recommended_checks: list[str] = Field(min_length=1, max_length=10)

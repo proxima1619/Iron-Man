@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { components } from "./api.generated";
 import { EvidencePanel } from "./EvidencePanel";
 import { EvidenceCatalog } from "./EvidenceCatalog";
+import { RecordFeedback } from "./RecordFeedback";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -152,21 +153,21 @@ export function DemoExperience() {
       <div className="demo-heading">
         <div>
           <p className="home-kicker">INTERACTIVE DEMO</p>
-          <h2 id="demo-title">지금, 변경 요청을 검토해 보세요.</h2>
+          <h2 id="demo-title">저장된 결과를 읽고, AI 설명을 받아보세요.</h2>
           <p>
-            합성 냉각 설비에서 요청·검토·담당자 승인·가상 적용을 직접
-            체험합니다.
+            기록을 선택하면 당시 명령과 결과를 볼 수 있습니다. AI 피드백을
+            누르면 논문을 바탕으로 결과와 한계를 설명합니다.
           </p>
         </div>
-        <span className="badge">실제 설비 미연결</span>
+        <span className="badge">가상 설비 체험 · AI API는 별도 연결</span>
       </div>
       <div className="demo-layout">
         <div className="demo-controls">
           <div className="demo-database">
-            <h3>저장된 데이터로 확인</h3>
+            <h3>1. 저장된 기록 선택</h3>
             <p className="muted">
-              SQLite에 저장된 요청·스냅샷·계산 결과를 선택합니다. 저장 데이터는
-              합성 시연 기록입니다.
+              이전에 요청한 펌프 속도와 계산 결과를 불러옵니다. 실제 설비
+              측정값이 아닌 합성 시연 기록입니다.
             </p>
             <button
               className="full"
@@ -178,7 +179,7 @@ export function DemoExperience() {
                 })
               }
             >
-              데이터베이스 기록 불러오기
+              저장된 기록 보기
             </button>
             {loaded && (
               <label>
@@ -225,96 +226,117 @@ export function DemoExperience() {
             )}
           </div>
           <EvidenceCatalog token={operator} />
-          <h3>1. 시연 조건 선택</h3>
-          <label>
-            준비할 부하 비율
-            <select
-              value={load}
-              disabled={locked}
-              onChange={(e) => setLoad(Number(e.target.value))}
-            >
-              <option value={1}>1.0 · 장기 위험 검토</option>
-              <option value={0.6}>0.6 · 가상 승인 흐름 검토</option>
-            </select>
-          </label>
-          <div className="demo-options">
+          <details className="new-demo">
+            <summary>새 가상 검토도 해보기</summary>
+            <h3>새 시연 조건</h3>
+            <label>
+              설비 부하 선택
+              <select
+                value={load}
+                disabled={locked}
+                onChange={(e) => setLoad(Number(e.target.value))}
+              >
+                <option value={1}>높은 부하 · 냉각 위험 확인</option>
+                <option value={0.6}>낮은 부하 · 승인 흐름 체험</option>
+              </select>
+            </label>
+            <div className="demo-options">
+              <button
+                className={speed === 60 ? "selected" : ""}
+                aria-pressed={speed === 60}
+                disabled={locked}
+                onClick={() => setSpeed(60)}
+              >
+                <strong>60%</strong>
+                <span>위험 조건 차단 사례</span>
+              </button>
+              <button
+                className={speed === 80 ? "selected" : ""}
+                aria-pressed={speed === 80}
+                disabled={locked}
+                onClick={() => setSpeed(80)}
+              >
+                <strong>80%</strong>
+                <span>부하에 따른 결과 비교</span>
+              </button>
+            </div>
+            <p className="muted">
+              처음에는 설비 준비를 누르세요. 준비 후 60초가 지나면 상태 다시
+              읽기를 누르세요. 높은 부하에서는 80% 속도도 장기 냉각 위험으로
+              차단될 수 있습니다.
+            </p>
             <button
-              className={speed === 60 ? "selected" : ""}
-              aria-pressed={speed === 60}
+              className="full"
               disabled={locked}
-              onClick={() => setSpeed(60)}
+              onClick={() =>
+                void run(async () => {
+                  await demoOnly();
+                  const session = await api<Session>("/session", "approver");
+                  if (session.role !== "approver")
+                    throw new Error("승인 담당자 토큰이 필요합니다.");
+                  await api<Snapshot>("/demo/reset", "approver", {});
+                  setPlant(
+                    await api<Snapshot>("/demo/state", "approver", {
+                      load_ratio: load,
+                      sensor_quality: "valid",
+                    }),
+                  );
+                  setRow(null);
+                  setFromDatabase(false);
+                  setConfirmed(false);
+                })
+              }
             >
-              <strong>60%</strong>
-              <span>위험 조건 차단 사례</span>
+              선택한 부하로 설비 준비
             </button>
+            <p className="muted">
+              가상 설비만 초기화합니다. 기록은 유지되며 이전 승인은 재검증이
+              필요할 수 있습니다.
+            </p>
             <button
-              className={speed === 80 ? "selected" : ""}
-              aria-pressed={speed === 80}
+              className="full"
               disabled={locked}
-              onClick={() => setSpeed(80)}
+              onClick={() =>
+                void run(async () => {
+                  await demoOnly();
+                  setPlant(await api<Snapshot>("/demo/sample", "approver", {}));
+                  setConfirmed(false);
+                })
+              }
             >
-              <strong>80%</strong>
-              <span>장기 위험·승인 검토</span>
+              가상 상태 다시 읽기
             </button>
-          </div>
-          <p className="muted">
-            먼저 초기 상태로 준비하세요. 최신 정책은 300초·3600초·평형·계수
-            민감도를 확인합니다. 부하 1에서는 80%도 차단될 수 있습니다.
-          </p>
-          <button
-            className="full"
-            disabled={locked}
-            onClick={() =>
-              void run(async () => {
-                await demoOnly();
-                const session = await api<Session>("/session", "approver");
-                if (session.role !== "approver")
-                  throw new Error("승인 담당자 토큰이 필요합니다.");
-                await api<Snapshot>("/demo/reset", "approver", {});
-                setPlant(
-                  await api<Snapshot>("/demo/state", "approver", {
-                    load_ratio: load,
-                    sensor_quality: "valid",
-                  }),
-                );
-                setRow(null);
-                setFromDatabase(false);
-                setConfirmed(false);
-              })
-            }
-          >
-            초기 상태로 준비
-          </button>
-          <p className="muted">
-            가상 설비만 초기화합니다. 기록은 유지되며 이전 승인은 재검증이
-            필요할 수 있습니다.
-          </p>
-          <button
-            className="primary full"
-            disabled={locked}
-            onClick={() =>
-              void run(async () => {
-                await demoOnly();
-                await api<Session>("/session", "operator");
-                const created = await api<Row>("/requests", "operator", {
-                  purpose: `홈페이지 체험: 냉각 펌프 ${speed}% 변경 검토`,
-                  command: { target_pct: speed, duration_s: 300 },
-                });
-                setRow(created);
-                setFromDatabase(false);
-                setConfirmed(false);
-                setRow(
-                  await api<Row>(
-                    `/requests/${created.id}/evaluate`,
-                    "operator",
-                    {},
-                  ),
-                );
-              })
-            }
-          >
-            {locked ? "처리 중…" : `${speed}% 요청 가상 검토`}
-          </button>
+            <p className="muted">
+              가상 센서의 관측 시각을 갱신합니다. 저장된 과거 결과를 수정하거나
+              설비를 초기화하지 않습니다.
+            </p>
+            <button
+              className="primary full"
+              disabled={locked}
+              onClick={() =>
+                void run(async () => {
+                  await demoOnly();
+                  await api<Session>("/session", "operator");
+                  const created = await api<Row>("/requests", "operator", {
+                    purpose: `홈페이지 체험: 냉각 펌프 ${speed}% 변경 검토`,
+                    command: { target_pct: speed, duration_s: 300 },
+                  });
+                  setRow(created);
+                  setFromDatabase(false);
+                  setConfirmed(false);
+                  setRow(
+                    await api<Row>(
+                      `/requests/${created.id}/evaluate`,
+                      "operator",
+                      {},
+                    ),
+                  );
+                })
+              }
+            >
+              {locked ? "처리 중…" : `${speed}%로 새 가상 검토 시작`}
+            </button>
+          </details>
           <details>
             <summary>데모 연결 설정</summary>
             <label>
@@ -359,7 +381,7 @@ export function DemoExperience() {
         </div>
         <div className="demo-result" aria-live="polite">
           <div className="section-head">
-            <h3>2. 검토 결과</h3>
+            <h3>2. 저장 결과와 AI 피드백</h3>
             <span className={`badge ${row?.status || ""}`}>
               {row ? statusLabels[row.status] || row.status : "체험 대기"}
             </span>
@@ -380,17 +402,48 @@ export function DemoExperience() {
                     ? `저장된 관측 시각: ${new Date(report.snapshot.observed_at * 1000).toLocaleString("ko-KR")}`
                     : "아직 저장된 검토 보고서가 없습니다."}
                   <br />
-                  현재 설비를 새로 계산한 결과와 구분합니다.
+                  당시 저장된 결과입니다. 아래 AI 피드백으로 설명을 받을 수
+                  있습니다.
                 </p>
               )}
               <p className="verdict">
-                {report?.reason || "검토 결과를 기다리고 있습니다."}
+                {report?.reason ||
+                  (row.status === "evaluating"
+                    ? "검토가 진행 중입니다."
+                    : "저장된 검토 보고서가 없습니다. AI 피드백으로 현재 기록에 대한 설명을 받을 수 있습니다.")}
               </p>
               <p className="muted">
                 요청 {row.id.slice(0, 8)} · 목표{" "}
                 {row.request.command.target_pct}% ·{" "}
                 {report?.reason_code || "검토 전"}
               </p>
+              <dl>
+                <dt>저장된 명령</dt>
+                <dd>
+                  펌프 목표 속도 {row.request.command.target_pct}% · 예측 구간{" "}
+                  {row.request.command.duration_s}초
+                </dd>
+                <dt>가상 적용 기록</dt>
+                <dd>
+                  {row.execution?.status === "applied"
+                    ? `가상 목표 속도 ${row.execution.command.target_pct}% 적용됨`
+                    : row.execution?.status === "unknown"
+                      ? "적용 결과 불명 · 다시 실행하지 마세요"
+                      : "적용 기록 없음 · 계산 결과와 구분"}
+                </dd>
+                {row.execution?.status === "applied" && (
+                  <>
+                    <dt>적용 당시 상태</dt>
+                    <dd>
+                      온도 {row.execution.state.temperature_c}°C · 실제 가상
+                      속도 {row.execution.state.pump_speed_pct}% · 목표 속도{" "}
+                      {row.execution.state.target_pump_speed_pct ??
+                        row.execution.command.target_pct}
+                      %
+                    </dd>
+                  </>
+                )}
+              </dl>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -455,6 +508,23 @@ export function DemoExperience() {
               </table>
               <p className="muted">{report.simulation.limitation}</p>
             </div>
+          )}
+          {row && <RecordFeedback record={row} token={operator} />}
+          {report?.reason_code === "INVALID_STATE" && (
+            <aside className="evidence-hold">
+              <h3>왜 검토가 멈췄나요?</h3>
+              <p>
+                {report.snapshot.sensor_quality !== "valid"
+                  ? "당시 센서 품질이 불량했습니다."
+                  : report.snapshot.domain_status !== "ready"
+                    ? "당시 상태가 모델이 지원하는 범위를 벗어났습니다."
+                    : "센서와 모델 범위는 유효합니다. 당시 관측 시각이 60초 유효 시간을 벗어났거나 서버 시각보다 미래였기 때문에 검토가 시작되지 않았습니다."}
+              </p>
+              <p>
+                이 기록은 AI 피드백으로 설명받을 수 있습니다. 새 계산이 필요하면
+                왼쪽에서 가상 상태를 다시 읽고 새 요청을 시작하세요.
+              </p>
+            </aside>
           )}
           {report && (
             <>

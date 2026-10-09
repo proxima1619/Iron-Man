@@ -7,6 +7,7 @@ import { Home } from "./Home";
 import { DemoPage } from "./DemoPage";
 import { EvidencePanel } from "./EvidencePanel";
 import { EvidenceCatalog } from "./EvidenceCatalog";
+import { RecordFeedback } from "./RecordFeedback";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -630,6 +631,7 @@ function App() {
                   </p>
                 </div>
               </section>
+              {row && <RecordFeedback record={row} token={token} />}
               <EvidencePanel report={report} record={row} />
               <section>
                 <h2>모델 범위와 불확실성</h2>

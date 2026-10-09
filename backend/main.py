@@ -1,6 +1,7 @@
 import os
 import secrets
 import sqlite3
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi.responses import JSONResponse
@@ -13,8 +14,11 @@ from backend.contracts import SessionInfo, Notification, ReviewContact
 from backend.config import validate_runtime_config
 from backend.contracts import EvidenceCatalog
 from backend.evidence.service import evidence_catalog
+from backend.evidence.feedback import review_record
+from backend.contracts import RecordFeedback
 
 gateway = None
+feedback_slots = threading.BoundedSemaphore(2)
 
 @asynccontextmanager
 async def lifespan(app):
@@ -82,6 +86,19 @@ def list_requests(actor=Depends(identity)):
 @app.get("/requests/{request_id}/history", response_model=RequestHistory)
 def history(request_id: str, actor=Depends(identity)):
     return gateway.history(request_id)
+
+@app.post("/requests/{request_id}/feedback", response_model=RecordFeedback)
+def record_feedback(request_id: str, actor=Depends(identity)):
+    if not feedback_slots.acquire(blocking=False):
+        raise HTTPException(429, "다른 기록을 분석 중입니다. 잠시 후 다시 요청하세요.")
+    try:
+        with gateway.lock:
+            record = RequestRecord.model_validate(gateway.get(request_id))
+        if record.status in {"evaluating", "executing"}:
+            raise HTTPException(409, "진행 중인 검토 또는 적용이 끝난 뒤 AI 피드백을 요청하세요.")
+        return review_record(record)
+    finally:
+        feedback_slots.release()
 
 @app.get("/requests/{request_id}", response_model=RequestRecord)
 def read(request_id: str, actor=Depends(identity)):

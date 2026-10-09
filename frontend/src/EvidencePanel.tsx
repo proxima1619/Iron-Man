@@ -74,11 +74,13 @@ const statuses: Record<string, string> = {
 export function EvidencePanel({
   report,
   record,
+  evidence,
 }: {
   report: Report | null | undefined;
   record?: components["schemas"]["RequestRecord"] | null;
+  evidence?: Review;
 }) {
-  const review = report?.evidence;
+  const review = evidence || report?.evidence;
   const origin = review ? evidenceOrigin(review) : null;
   const orderedCards = [...(review?.cards || [])].sort(
     (a, b) =>
