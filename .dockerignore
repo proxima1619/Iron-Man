@@ -2,6 +2,7 @@
 .github
 .env
 .env.*
+.deploy-private
 .venv
 **/__pycache__
 **/.pytest_cache

@@ -48,3 +48,23 @@
 - UI 자동 조회·취소는 타입 검사·빌드로 확인했으며 브라우저 클릭 시험은 미실행.
 
 - 컨테이너용 근거 문서 경로와 런타임 설정 전달을 연결. 실제 외부 LLM API 호출은 미실행; 기본 fixture로 통합 시험.
+
+## v3 가상 설비와 최신 main 통합 검증
+
+2026-10-09, Windows / Python 3.12.14 / Node 24.19.0.
+
+- 최신 비동기 관문·역할 인증과 통합 후 전체 **141 tests passed**. 기존 TestClient deprecation 경고 1건.
+- 목표 속도와 실제 속도 분리, 공통 열수지 커널의 연속 계산, 수동 시계, 재시작 시 상태·관측 시각 유지, 영수증 재시도, SQLite v1→v2 이관과 이력 보존 확인.
+- 모델 범위 이탈 시 마지막 유효 상태 보존과 지원 불가 유지, 명시적 초기화, 승인 뒤 시간 진행 시 실행 거절 확인.
+- 실제 spawn 평가 중 가상 시간을 진행하면 이전 상태의 결과는 `EVALUATION_CONTEXT_CHANGED`로 보류. 비모의 계산의 승인 정책 미설정 보류 유지.
+- 브라우저에서 부하 1.2·10초 진행 시 60.00→60.34°C 변화, 관측만 갱신할 때 물리 상태 유지, 비동기 검토 중→차단 자동 조회 확인. 최신 `X-Iron-Man-Token` 인증으로 상태 조회·부하 변경·시간 진행도 확인.
+- OpenAPI/공유 예시/TypeScript 타입 재생성, TypeScript 검사와 Vite production build, `git diff --check` 통과.
+- Windows에서는 NTFS ACL을 POSIX mode 비트로 검증하지 않는다. 배포 테스트의 POSIX 파일 모드 검사는 Linux에서 유지하며 Windows에서는 자격값 생성·중복 방지·덮어쓰기 거절을 검사한다. 실제 외부 배포·공인 인증서·LLM 호출·현장 정확도는 이번 검증 범위에 포함하지 않는다.
+
+## 외부 배포 구성 준비
+
+- 로컬 백엔드 120 tests passed, 프런트 타입 검사·빌드 통과.
+- 공개 모드에서 기본/빈/동일 역할 토큰으로 시작 거절, Basic 인증과 별도 역할 헤더 처리, 비밀값 생성·파일 권한·기존 파일 보존을 확인.
+- AWS CloudFormation validate-template 통과. 서울 리전 공식 Ubuntu 24.04 AMI 파라미터 존재 확인. 자원 생성은 미실행.
+- 공개 Compose에는 Caddy 80/443만 노출. HTTPS·두 단계 인증·실제 브라우저 흐름 검사는 GitHub Actions https job에 추가. 실행 결과는 커밋별 Actions 참조.
+- 로컬 Docker 엔진은 API 500으로 실행 불가. 실서버 DNS·공인 인증서·외부 접속·다른 기기 검증·외부 LLM 호출은 미실행.

@@ -689,6 +689,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -720,6 +721,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -751,6 +753,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -786,6 +789,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -819,6 +823,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -852,6 +857,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -885,6 +891,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -918,6 +925,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -955,6 +963,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path: {
                 request_id: string;
@@ -992,6 +1001,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1027,6 +1037,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1062,6 +1073,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1093,6 +1105,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-iron-man-token"?: string | null;
             };
             path?: never;
             cookie?: never;

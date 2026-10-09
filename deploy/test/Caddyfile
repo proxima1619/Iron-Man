@@ -1,0 +1,5 @@
+# CI-only CA. The deployed Caddyfile itself is imported unchanged.
+{
+    local_certs
+}
+import /etc/caddy/Caddyfile

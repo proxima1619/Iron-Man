@@ -1,4 +1,5 @@
 import os
+import secrets
 import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,12 +8,14 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException
 from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, DemoAdvanceInput, RequestRecord, Snapshot, RequestHistory
 from backend.gateway.service import Gateway
+from backend.config import validate_runtime_config
 
 gateway = None
 
 @asynccontextmanager
 async def lifespan(app):
     global gateway
+    validate_runtime_config()
     default_path = Path(__file__).resolve().parents[1] / "data" / "ironman.sqlite3"
     gateway = Gateway(os.getenv("IRON_MAN_DB_PATH", str(default_path)),
         max_evaluations=int(os.getenv("IRON_MAN_EVALUATION_WORKERS", "2")),
@@ -29,11 +32,19 @@ app = FastAPI(title="Iron Man — demo scaffold", version="0.1.0", lifespan=life
 async def storage_error(request, exc):
     return JSONResponse(status_code=503, content={"detail": "저장소 오류: 처리 결과를 확인한 뒤 다시 시도하세요."})
 
-def identity(authorization: Annotated[str | None, Header()] = None):
-    token = (authorization or "").removeprefix("Bearer ")
-    if token == os.getenv("IRON_MAN_APPROVER_TOKEN", "local-approver"):
+def identity(authorization: Annotated[str | None, Header()] = None,
+             x_iron_man_token: Annotated[str | None, Header()] = None):
+    # Browser Basic authentication belongs to the HTTPS edge. A separate role
+    # header lets same-origin fetch retain the browser's Basic credentials.
+    bearer = authorization[7:] if authorization and authorization.startswith("Bearer ") else None
+    if bearer is not None and x_iron_man_token is not None and bearer != x_iron_man_token:
+        raise HTTPException(401, "서로 다른 인증 토큰이 전달됐습니다.")
+    token = x_iron_man_token if x_iron_man_token is not None else bearer
+    if not token or not token.isascii():
+        raise HTTPException(401, "데모 토큰이 필요합니다.")
+    if secrets.compare_digest(token, os.getenv("IRON_MAN_APPROVER_TOKEN", "local-approver")):
         return "approver"
-    if token == os.getenv("IRON_MAN_OPERATOR_TOKEN", "local-operator"):
+    if secrets.compare_digest(token, os.getenv("IRON_MAN_OPERATOR_TOKEN", "local-operator")):
         return "operator"
     raise HTTPException(401, "데모 토큰이 필요합니다.")
 
