@@ -1,0 +1,17 @@
+{
+  "schema_version": "tep-evidence-1.0",
+  "model_version": "nist-tep-81a7ac9-ironman-v1",
+  "initial_profile": "nist-teinit-base-case-v1",
+  "data_origin": "simulation",
+  "field_validation": "not_performed_no_measured_data",
+  "mock": false,
+  "status": "failed",
+  "cards": [],
+  "proposed_tests": [],
+  "unsupported_tests": [],
+  "missing_conditions": [
+    "REVIEW_FAILED:llm_review"
+  ],
+  "source_bundle_sha256": null,
+  "limitation": "자동 계약 검증 예시 · 실제 LLM 미호출. TEP 문헌 적용성 검토와 실제 설비 검증은 별개입니다. 현장 실측 없음·시뮬레이션 기반·실제 설비 검증 미수행. 시험 제안은 실행 명령이 아닙니다. 안전 범위·승인·재검사는 서버가 관리합니다. 검토 실패 단계: llm_review."
+}

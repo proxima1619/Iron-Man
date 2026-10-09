@@ -6,7 +6,7 @@ from backend.gateway.service import Gateway
 from backend.gateway.evaluation import failure_report
 from unittest.mock import patch
 from uuid import UUID
-from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord, TEPResult
+from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord, TEPResult, TEPEvidenceReview
 from backend.simulator.service import MODEL_VERSION, simulate
 from backend.evidence.service import review_evidence
 from backend.simulator.tep import service as tep
@@ -22,7 +22,7 @@ def write(relative, value):
 if __name__ == '__main__':
     write('contracts/openapi.json', app.openapi())
     for model in (SimulationResult, EvidenceReview, RequestRecord, TEPResult, ReferenceCatalog, ReferenceSeries,
-                  TEPActuatorCalibrationDataset, TEPActuatorCalibrationResult):
+                  TEPEvidenceReview, TEPActuatorCalibrationDataset, TEPActuatorCalibrationResult):
         write(f'contracts/{model.__name__}.schema.json', model.model_json_schema())
     request = NewRequest(command={'target_pct': 80})
     snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100,
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             'initial_profile':'nist-teinit-base-case-v1','parameter_origin':'upstream_model_default',
             'horizon_range_s':[1,1800],'sample_period_range_s':[1,60],
             'constraint':'horizon must be an integer multiple of sample period',
-            'supported_faults':[], 'limitation':'Only base-case open-loop MV step; evidence-to-fault mapping is not implemented.'}],
+            'supported_faults':[], 'limitation':'Only base-case open-loop MV step; evidence proposals may reference this test, never introduce faults or execute it.'}],
     })
     write('contracts/examples/snapshot.json', snapshot.model_dump())
     write('contracts/examples/evidence-demo.json', review.model_dump())

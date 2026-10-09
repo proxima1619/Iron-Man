@@ -1913,6 +1913,16 @@
               }
             ]
           },
+          "tep_evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TEPEvidenceReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "verdict": {
             "type": "string",
             "enum": [
@@ -1978,6 +1988,7 @@
           "evidence",
           "simulation",
           "tep_simulation",
+          "tep_evidence",
           "verdict",
           "reason_code",
           "reason",
@@ -4023,6 +4034,319 @@
         ],
         "title": "TEPConfiguration"
       },
+      "TEPEvidenceCard": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Evidence Id"
+          },
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Id"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title"
+          },
+          "stance": {
+            "type": "string",
+            "enum": [
+              "support",
+              "counter",
+              "limitation"
+            ],
+            "title": "Stance"
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Claim"
+          },
+          "applicability": {
+            "type": "string",
+            "enum": [
+              "applicable",
+              "partial",
+              "mismatch",
+              "unknown"
+            ],
+            "title": "Applicability"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Locator"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "model_source",
+              "paper",
+              "simulation_record"
+            ],
+            "title": "Source Type"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          },
+          "proposed_test": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "base_case_cooling_step_v1"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Test"
+          },
+          "parameter_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "upstream_model_default"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameter Origin"
+          },
+          "matched_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Conditions"
+          },
+          "missing_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Conditions"
+          },
+          "evidence_purpose": {
+            "type": "string",
+            "enum": [
+              "model_definition",
+              "physical_mechanism",
+              "simulation_observation",
+              "safety_basis"
+            ],
+            "title": "Evidence Purpose"
+          },
+          "variable_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Variable Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "source_id",
+          "title",
+          "stance",
+          "claim",
+          "applicability",
+          "locator",
+          "source_url",
+          "source_type",
+          "excerpt",
+          "publisher",
+          "version",
+          "published_at",
+          "usage",
+          "proposed_test",
+          "parameter_origin",
+          "matched_conditions",
+          "missing_conditions",
+          "evidence_purpose",
+          "variable_ids"
+        ],
+        "title": "TEPEvidenceCard"
+      },
+      "TEPEvidenceReview": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "tep-evidence-1.0",
+            "title": "Schema Version",
+            "default": "tep-evidence-1.0"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "initial_profile": {
+            "type": "string",
+            "const": "nist-teinit-base-case-v1",
+            "title": "Initial Profile"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "field_validation": {
+            "type": "string",
+            "const": "not_performed_no_measured_data",
+            "title": "Field Validation",
+            "default": "not_performed_no_measured_data"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "insufficient",
+              "failed",
+              "demo_fixture"
+            ],
+            "title": "Status"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/TEPEvidenceCard"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Cards"
+          },
+          "proposed_tests": {
+            "items": {
+              "$ref": "#/components/schemas/TEPTestProposal"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Proposed Tests"
+          },
+          "unsupported_tests": {
+            "items": {
+              "$ref": "#/components/schemas/TEPUnsupportedTest"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Unsupported Tests"
+          },
+          "missing_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Conditions"
+          },
+          "source_bundle_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Bundle Sha256"
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "model_version",
+          "initial_profile",
+          "data_origin",
+          "field_validation",
+          "mock",
+          "status",
+          "cards",
+          "proposed_tests",
+          "unsupported_tests",
+          "missing_conditions",
+          "source_bundle_sha256",
+          "limitation"
+        ],
+        "title": "TEPEvidenceReview"
+      },
       "TEPMetric": {
         "properties": {
           "baseline_min": {
@@ -4420,6 +4744,69 @@
           "variables_sha256"
         ],
         "title": "TEPState"
+      },
+      "TEPTestProposal": {
+        "properties": {
+          "test_id": {
+            "type": "string",
+            "const": "base_case_cooling_step_v1",
+            "title": "Test Id"
+          },
+          "evidence_id": {
+            "type": "string",
+            "title": "Evidence Id"
+          },
+          "variable": {
+            "type": "string",
+            "enum": [
+              "XMV10",
+              "XMV11"
+            ],
+            "title": "Variable"
+          },
+          "initial_profile": {
+            "type": "string",
+            "const": "nist-teinit-base-case-v1",
+            "title": "Initial Profile"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/TEPConfiguration"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "test_id",
+          "evidence_id",
+          "variable",
+          "initial_profile",
+          "configuration"
+        ],
+        "title": "TEPTestProposal"
+      },
+      "TEPUnsupportedTest": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "title": "Evidence Id"
+          },
+          "requested_test": {
+            "type": "string",
+            "title": "Requested Test"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "requested_test",
+          "reason"
+        ],
+        "title": "TEPUnsupportedTest"
       },
       "TEPVariable": {
         "properties": {

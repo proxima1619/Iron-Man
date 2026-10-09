@@ -80,15 +80,12 @@ export function EvidencePanel({
   record?: components["schemas"]["RequestRecord"] | null;
   evidence?: Review;
 }) {
-  if (report && !("temperature_c" in report.snapshot)) {
-    return <section aria-label="TEP 근거 검토 상태">
-      <h2>TEP 위험·근거 정책 미설정</h2>
-      <p>{report.reason}</p>
-      <p>초기화 프로필 {report.snapshot.profile}. 현장 계측값과 근거 검증은 없으며 승인·실행을 보류합니다.</p>
-    </section>;
-  }
-  const coolingSnapshot = report && "temperature_c" in report.snapshot ? report.snapshot : null;
   const review = evidence || report?.evidence;
+  const coolingSnapshot = report && "observed_at" in report.snapshot ? report.snapshot : null;
+  const pumpCommand = record?.request.command.type === "set_pump_speed" ? record.request.command : null;
+  const appliedExecution = record?.execution?.status === "applied" && record.execution.command.type === "set_pump_speed"
+    ? record.execution
+    : null;
   const origin = review ? evidenceOrigin(review) : null;
   const orderedCards = [...(review?.cards || [])].sort(
     (a, b) =>
@@ -156,15 +153,16 @@ export function EvidencePanel({
             </ul>
           ) : (
             <p className="muted">
-              계산 결과가 저장되지 않아 숫자에 근거한 효과 비교는 할 수
-              없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요.
+              {report.tep_simulation
+                ? "TEP 기준·변경 수치와 시계열은 위 TEP 결과 구역에 표시했습니다. 기존 냉각 탱크 온도 정책은 TEP에 적용하지 않습니다."
+                : "계산 결과가 저장되지 않아 숫자에 근거한 효과 비교는 할 수 없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요."}
             </p>
           )}
-          {record?.execution?.status === "applied" ? (
+          {appliedExecution ? (
             <p>
               <strong>가상 적용 기록:</strong> 목표 속도{" "}
-              {record.execution.command.target_pct}% 접수 · 접수 당시 실제 속도{" "}
-              {record.execution.state.pump_speed_pct.toFixed(2)}%. 적용 접수는
+              {appliedExecution.command.target_pct}% 접수 · 접수 당시 실제 속도{" "}
+              {appliedExecution.state.pump_speed_pct.toFixed(2)}%. 적용 접수는
               예측 온도와 실측 결과가 일치했다는 검증이 아닙니다.
             </p>
           ) : record?.execution?.status === "unknown" ? (
@@ -182,7 +180,7 @@ export function EvidencePanel({
           )}
           <h3>이 판단에 사용한 조건</h3>
           <dl>
-            <dt>초기 온도·부하</dt>
+            <dt>{coolingSnapshot ? "초기 온도·부하" : "초기 상태"}</dt>
             <dd>
               {coolingSnapshot.temperature_c.toFixed(2)}°C · 부하{" "}
               {coolingSnapshot.load_ratio}
@@ -197,8 +195,9 @@ export function EvidencePanel({
               <>
                 <dt>변경 요청</dt>
                 <dd>
-                  {record.request.command.target_pct}% · 예측 구간{" "}
-                  {record.request.command.duration_s}초
+                  {pumpCommand
+                    ? `${pumpCommand.target_pct}% · 예측 구간 ${pumpCommand.duration_s}초`
+                    : "명령 정보 없음"}
                 </dd>
               </>
             )}
@@ -215,7 +214,7 @@ export function EvidencePanel({
             </dd>
             <dt>데이터·실행 범위</dt>
             <dd>
-              합성 상태 ·{" "}
+              {report.tep_simulation ? "공개 TEP 시뮬레이션 · 현장 실측 아님" : "합성 상태 · "}{" "}
               {report.execution_scope === "virtual"
                 ? "가상 설비 전용"
                 : "미설정"}
@@ -226,6 +225,14 @@ export function EvidencePanel({
             유효성은 적용 전 서버가 다시 검사합니다.
           </p>
         </div>
+      )}
+      {report?.tep_simulation && !review && (
+        <aside className="evidence-hold" role="status">
+          <h3>TEP 전용 근거 결과는 아직 연결되지 않았습니다</h3>
+          <p>
+            현재 API 보고서에는 3번의 TEP 근거·적용 조건 payload가 없습니다. 저장 결과의 AI 피드백을 요청하면 설정된 문헌에 대한 검토 결과와 조건·한계를 별도 표시합니다. 그 검토도 TEP 안전 한계나 승인 기준을 정하지 않습니다.
+          </p>
+        </aside>
       )}
       {review && (
         <p>

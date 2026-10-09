@@ -703,7 +703,7 @@
       ],
       "constraint": "horizon must be an integer multiple of sample period",
       "supported_faults": [],
-      "limitation": "Only base-case open-loop MV step; evidence-to-fault mapping is not implemented."
+      "limitation": "Only base-case open-loop MV step; evidence proposals may reference this test, never introduce faults or execute it."
     }
   ]
 }
