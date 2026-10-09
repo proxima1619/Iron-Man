@@ -74,7 +74,14 @@ class EvidenceCard(StrictModel):
     applicability: Literal["applicable", "partial", "mismatch", "unknown"]
     locator: str = Field(min_length=1)
     source_url: str | None = None
-    source_type: Literal["team_authored_fixture", "paper", "manual", "field_record"]
+    source_type: Literal["team_authored_fixture", "team_authored_demo", "paper", "manual", "field_record"]
+    excerpt: str | None = None
+    publisher: str | None = None
+    version: str | None = None
+    published_at: str | None = None
+    usage: str | None = None
+    proposed_test: Literal["degraded_cooling"] | None = None
+    parameter_origin: Literal["demo_assumption"] | None = None
     matched_conditions: list[str] = Field(default_factory=list)
     missing_conditions: list[str] = Field(default_factory=list)
 

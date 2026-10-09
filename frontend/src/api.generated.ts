@@ -333,7 +333,21 @@ export interface components {
              * Source Type
              * @enum {string}
              */
-            source_type: "team_authored_fixture" | "paper" | "manual" | "field_record";
+            source_type: "team_authored_fixture" | "team_authored_demo" | "paper" | "manual" | "field_record";
+            /** Excerpt */
+            excerpt: string | null;
+            /** Publisher */
+            publisher: string | null;
+            /** Version */
+            version: string | null;
+            /** Published At */
+            published_at: string | null;
+            /** Usage */
+            usage: string | null;
+            /** Proposed Test */
+            proposed_test: "degraded_cooling" | null;
+            /** Parameter Origin */
+            parameter_origin: "demo_assumption" | null;
             /** Matched Conditions */
             matched_conditions: string[];
             /** Missing Conditions */

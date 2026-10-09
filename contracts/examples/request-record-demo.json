@@ -44,6 +44,13 @@
           "locator": "fixtures/demo-source.md",
           "source_url": null,
           "source_type": "team_authored_fixture",
+          "excerpt": null,
+          "publisher": null,
+          "version": null,
+          "published_at": null,
+          "usage": null,
+          "proposed_test": null,
+          "parameter_origin": null,
           "matched_conditions": [],
           "missing_conditions": []
         }
@@ -86,7 +93,7 @@
     "verdict": "hold",
     "reason_code": "LIVE_POLICY_NOT_CONFIGURED",
     "reason": "실제 모듈 승인 정책이 아직 구성되지 않았습니다.",
-    "digest": "fe3569a7e2535205a144c4e0381d4b526b07cd3ea0f190ba6b524db5d85649ed"
+    "digest": "ec9e8f9d16edb90335b731ebf82c14d8218e80d6bdba171408d6604527771a5e"
   },
   "approval": null,
   "execution": null,
@@ -104,7 +111,7 @@
       "kind": "evaluated",
       "at": 1700000000.0,
       "verdict": "hold",
-      "report_digest": "fe3569a7e2535205a144c4e0381d4b526b07cd3ea0f190ba6b524db5d85649ed",
+      "report_digest": "ec9e8f9d16edb90335b731ebf82c14d8218e80d6bdba171408d6604527771a5e",
       "actor": null,
       "reason": null,
       "execution_id": null
