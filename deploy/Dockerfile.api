@@ -13,6 +13,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     IRON_MAN_DB_PATH=/data/ironman.sqlite3 \
     IRON_MAN_TEP_ENGINE_DIR=/opt/tep \
     IRON_MAN_TEP_RUN_DIR=/data/tep-runs \
+    IRON_MAN_TEP_CONTRACT_PATH=/app/contracts/tep-model.json \
+    IRON_MAN_TEP_EVIDENCE_SOURCE_PATH=/app/data/sources/paper-sources.json \
     IRON_MAN_EVIDENCE_SOURCE_PATH=/app/data/sources/cooling-demo.json
 RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 coreutils \
     && rm -rf /var/lib/apt/lists/* \
@@ -26,6 +28,7 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels iron-man-gateway 
     && rm -rf /wheels
 COPY fixtures/ ./fixtures/
 COPY data/sources/ /app/data/sources/
+COPY contracts/tep-model.json /app/contracts/tep-model.json
 ENV IRON_MAN_EVIDENCE_SOURCE_PATH=/app/data/sources/cooling-demo.json
 USER app
 EXPOSE 8000

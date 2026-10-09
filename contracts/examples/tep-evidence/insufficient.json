@@ -1,0 +1,47 @@
+{
+  "schema_version": "tep-evidence-1.0",
+  "model_version": "nist-tep-81a7ac9-ironman-v1",
+  "initial_profile": "nist-teinit-base-case-v1",
+  "data_origin": "simulation",
+  "field_validation": "not_performed_no_measured_data",
+  "mock": false,
+  "status": "insufficient",
+  "cards": [
+    {
+      "evidence_id": "tep-evidence-c14c435d796e3adf",
+      "source_id": "paper-PMC10587106",
+      "title": "Estimation and sensitivity analysis of fouling resistance in phosphoric acid/steam heat exchanger using artificial neural networks and regression methods",
+      "stance": "support",
+      "claim": "인산·증기 연구와 TEP 공정의 유체·운전 조건 대응을 확인하지 못했다.",
+      "applicability": "partial",
+      "locator": "Europe PMC fullTextXML PMC10587106: abstract/p[1]; abstract/p[2]; body/p[2]; body/p[3]; body/p[4]; body/p[5]",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10587106/",
+      "source_type": "paper",
+      "excerpt": "One of the most frequent problem in phosphoric acid concentration plant is the heat exchanger build-up. This problem causes a reduction of the performance of this equipment and an increase of energy losses which lead to damage the apparatus. In this study, estimation of fouling resistance in a cross-flow heat exchanger was solved using a linear [Partial Least Squares (PLS)] and non linear [Artific",
+      "publisher": "Scientific Reports | Rania Jradi, Christophe Marvillet, Mohamed Razak Jeday",
+      "version": "PMCID=PMC10587106; DOI=10.1038/s41598-023-44516-6; XML-SHA256=731b2acbe05e140e944e6bdc7339a402ac5fd08d1f5e640640f60c2da592c053",
+      "published_at": "2023-10-19",
+      "usage": "https://creativecommons.org/licenses/by/4.0/; authors attributed; whitespace normalized; selected paragraphs only; no figures",
+      "proposed_test": null,
+      "parameter_origin": null,
+      "matched_conditions": [
+        "XMV10 percent_full_scale, 기본 초기화와 외란 없는 입력 변경"
+      ],
+      "missing_conditions": [
+        "TEP 운전 모드·유체·변수 적용 범위 미확인"
+      ],
+      "evidence_purpose": "physical_mechanism",
+      "variable_ids": [
+        "XMV10"
+      ]
+    }
+  ],
+  "proposed_tests": [],
+  "unsupported_tests": [],
+  "missing_conditions": [
+    "TEP 운전 모드·유체·변수 적용 범위 미확인",
+    "TEP 적용 가능한 논문 counter 근거 부족"
+  ],
+  "source_bundle_sha256": "17920e27e1439f6217d75e399c7110921c902cab0b7e113d79e72ed07530c990",
+  "limitation": "자동 계약 검증 예시 · 실제 LLM 미호출. TEP 문헌 적용성 검토와 실제 설비 검증은 별개입니다. 현장 실측 없음·시뮬레이션 기반·실제 설비 검증 미수행. 시험 제안은 실행 명령이 아닙니다. 안전 범위·승인·재검사는 서버가 관리합니다."
+}

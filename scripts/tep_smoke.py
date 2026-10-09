@@ -44,6 +44,12 @@ def run(request, operator, approver):
         assert result["field_validation"] == "not_performed_no_measured_data"
         assert result["configuration"]["variable"] == variable
         assert result["configuration"]["candidate_value"] == value
+        evidence = report["tep_evidence"]
+        assert evidence["model_version"] == result["model_version"]
+        assert evidence["initial_profile"] == report["snapshot"]["profile"]
+        assert evidence["data_origin"] == "simulation" and evidence["field_validation"] == "not_performed_no_measured_data"
+        if expected != "completed":
+            assert evidence["status"] == "insufficient" and not evidence["proposed_tests"]
         assert result["variables"][variable]["unit"] == "percent_full_scale"
         if expected == "completed":
             assert report["reason_code"] == "TEP_POLICY_NOT_CONFIGURED"

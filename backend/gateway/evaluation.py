@@ -7,6 +7,7 @@ from backend.evidence import service as evidence
 from backend.simulator import service as simulator
 from backend.gateway import policy, review as review_policy
 from backend.simulator.tep import service as tep
+from backend.evidence import tep as tep_evidence
 
 SNAPSHOT_TTL_S = 60
 
@@ -26,6 +27,8 @@ def calculate_tep(context, body):
     if result.model_version != context["model_version"]:
         raise ValueError("TEP model version mismatch")
     report.update(mock=False, tep_simulation=result.model_dump())
+    snapshot = TEPState.model_validate(context["snapshot"])
+    report["tep_evidence"] = tep_evidence.review_evidence(body, snapshot, result).model_dump()
     if result.status == "completed":
         report["reason"] = ("TEP 기준·변경 비교 완료. TEP 전용 위험·근거·승인 정책이 미설정되어 보류합니다. "
                             "실측 오차 및 실제 설비 적용성 검증은 미완료입니다.")

@@ -507,6 +507,7 @@ export interface components {
             evidence: components["schemas"]["EvidenceReview"] | null;
             simulation: components["schemas"]["SimulationResult"] | null;
             tep_simulation: components["schemas"]["TEPResult"] | null;
+            tep_evidence: components["schemas"]["TEPEvidenceReview"] | null;
             /**
              * Verdict
              * @enum {string}
@@ -1328,6 +1329,108 @@ export interface components {
             /** Disturbances */
             disturbances: number[];
         };
+        /** TEPEvidenceCard */
+        TEPEvidenceCard: {
+            /** Evidence Id */
+            evidence_id: string;
+            /** Source Id */
+            source_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Stance
+             * @enum {string}
+             */
+            stance: "support" | "counter" | "limitation";
+            /** Claim */
+            claim: string;
+            /**
+             * Applicability
+             * @enum {string}
+             */
+            applicability: "applicable" | "partial" | "mismatch" | "unknown";
+            /** Locator */
+            locator: string;
+            /** Source Url */
+            source_url: string | null;
+            /**
+             * Source Type
+             * @enum {string}
+             */
+            source_type: "model_source" | "paper" | "simulation_record";
+            /** Excerpt */
+            excerpt: string | null;
+            /** Publisher */
+            publisher: string | null;
+            /** Version */
+            version: string | null;
+            /** Published At */
+            published_at: string | null;
+            /** Usage */
+            usage: string | null;
+            /** Proposed Test */
+            proposed_test: "base_case_cooling_step_v1" | null;
+            /** Parameter Origin */
+            parameter_origin: "upstream_model_default" | null;
+            /** Matched Conditions */
+            matched_conditions: string[];
+            /** Missing Conditions */
+            missing_conditions: string[];
+            /**
+             * Evidence Purpose
+             * @enum {string}
+             */
+            evidence_purpose: "model_definition" | "physical_mechanism" | "simulation_observation" | "safety_basis";
+            /** Variable Ids */
+            variable_ids: string[];
+        };
+        /** TEPEvidenceReview */
+        TEPEvidenceReview: {
+            /**
+             * Schema Version
+             * @default tep-evidence-1.0
+             * @constant
+             */
+            schema_version: "tep-evidence-1.0";
+            /** Model Version */
+            model_version: string;
+            /**
+             * Initial Profile
+             * @constant
+             */
+            initial_profile: "nist-teinit-base-case-v1";
+            /**
+             * Data Origin
+             * @default simulation
+             * @constant
+             */
+            data_origin: "simulation";
+            /**
+             * Field Validation
+             * @default not_performed_no_measured_data
+             * @constant
+             */
+            field_validation: "not_performed_no_measured_data";
+            /** Mock */
+            mock: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "insufficient" | "failed" | "demo_fixture";
+            /** Cards */
+            cards: components["schemas"]["TEPEvidenceCard"][];
+            /** Proposed Tests */
+            proposed_tests: components["schemas"]["TEPTestProposal"][];
+            /** Unsupported Tests */
+            unsupported_tests: components["schemas"]["TEPUnsupportedTest"][];
+            /** Missing Conditions */
+            missing_conditions: string[];
+            /** Source Bundle Sha256 */
+            source_bundle_sha256: string | null;
+            /** Limitation */
+            limitation: string;
+        };
         /** TEPMetric */
         TEPMetric: {
             /** Baseline Min */
@@ -1476,6 +1579,36 @@ export interface components {
             wrapper_sha256: string;
             /** Variables Sha256 */
             variables_sha256: string;
+        };
+        /** TEPTestProposal */
+        TEPTestProposal: {
+            /**
+             * Test Id
+             * @constant
+             */
+            test_id: "base_case_cooling_step_v1";
+            /** Evidence Id */
+            evidence_id: string;
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "XMV10" | "XMV11";
+            /**
+             * Initial Profile
+             * @constant
+             */
+            initial_profile: "nist-teinit-base-case-v1";
+            configuration: components["schemas"]["TEPConfiguration"];
+        };
+        /** TEPUnsupportedTest */
+        TEPUnsupportedTest: {
+            /** Evidence Id */
+            evidence_id: string;
+            /** Requested Test */
+            requested_test: string;
+            /** Reason */
+            reason: string;
         };
         /** TEPVariable */
         TEPVariable: {

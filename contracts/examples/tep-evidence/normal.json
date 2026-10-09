@@ -1,0 +1,111 @@
+{
+  "schema_version": "tep-evidence-1.0",
+  "model_version": "nist-tep-81a7ac9-ironman-v1",
+  "initial_profile": "nist-teinit-base-case-v1",
+  "data_origin": "simulation",
+  "field_validation": "not_performed_no_measured_data",
+  "mock": false,
+  "status": "insufficient",
+  "cards": [
+    {
+      "evidence_id": "tep-evidence-8736b93d5e7d2bd0",
+      "source_id": "tep-variable-contract",
+      "title": "2번 TEP 변수·지원 시험 사전",
+      "stance": "support",
+      "claim": "TEP 변수·지원 시험 정의를 확인한다.",
+      "applicability": "applicable",
+      "locator": "contracts/tep-model.json: selected definitions and supported_tests",
+      "source_url": null,
+      "source_type": "model_source",
+      "excerpt": "\"model_version\": \"nist-tep-81a7ac9-ironman-v1\"",
+      "publisher": "Iron-Man / pinned NIST TEP integration",
+      "version": "nist-tep-81a7ac9-ironman-v1; source_commit=81a7ac9dc04f91bc0898c36f8522372e0e437fc1; text_sha256=4b2dc4ff0a2cc15377d285528dd8908726e9a33dfe4792874fc45351ab33adb2",
+      "published_at": "not_recorded",
+      "usage": "Model definition only; not field measurements or safety certification",
+      "proposed_test": null,
+      "parameter_origin": null,
+      "matched_conditions": [
+        "XMV10 percent_full_scale, 기본 초기화와 외란 없는 입력 변경"
+      ],
+      "missing_conditions": [],
+      "evidence_purpose": "model_definition",
+      "variable_ids": [
+        "XMV10"
+      ]
+    },
+    {
+      "evidence_id": "tep-evidence-768fc07a5a869830",
+      "source_id": "tep-wrapper",
+      "title": "TEP 기준/변경 실행 래퍼",
+      "stance": "counter",
+      "claim": "고장 시험으로 간주하지 않고 기준 유지와 변경 입력을 비교한다.",
+      "applicability": "applicable",
+      "locator": "backend/simulator/tep/runner.cpp",
+      "source_url": null,
+      "source_type": "model_source",
+      "excerpt": "inputs[index - 1] = value;",
+      "publisher": "Iron-Man / pinned NIST TEP integration",
+      "version": "nist-tep-81a7ac9-ironman-v1; source_commit=81a7ac9dc04f91bc0898c36f8522372e0e437fc1; text_sha256=7f0959562e69333848907bae9415376cde4c2d4600da28d917cfaf50d6a7b3c5",
+      "published_at": "not_recorded",
+      "usage": "Model definition only; not field measurements or safety certification",
+      "proposed_test": "base_case_cooling_step_v1",
+      "parameter_origin": "upstream_model_default",
+      "matched_conditions": [
+        "XMV10 percent_full_scale, 기본 초기화와 외란 없는 입력 변경"
+      ],
+      "missing_conditions": [],
+      "evidence_purpose": "model_definition",
+      "variable_ids": [
+        "XMV10"
+      ]
+    }
+  ],
+  "proposed_tests": [
+    {
+      "test_id": "base_case_cooling_step_v1",
+      "evidence_id": "tep-evidence-768fc07a5a869830",
+      "variable": "XMV10",
+      "initial_profile": "nist-teinit-base-case-v1",
+      "configuration": {
+        "variable": "XMV10",
+        "candidate_value": 42.0,
+        "horizon_s": 600,
+        "sample_period_s": 10,
+        "integration_step_s": 0.1,
+        "integrator": "forward_euler",
+        "controller": "none_open_loop_hold",
+        "operating_mode": "original_teinit_base_case",
+        "random_seed": 1431655765,
+        "disturbances": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "unsupported_tests": [],
+  "missing_conditions": [
+    "TEP 적용 가능한 논문 support 근거 부족",
+    "TEP 적용 가능한 논문 counter 근거 부족"
+  ],
+  "source_bundle_sha256": "85a6ece30d8087eac549231fc3b5cceb04b62a7db173c2fb6a1cee6467439e00",
+  "limitation": "자동 계약 검증 예시 · 실제 LLM 미호출. TEP 문헌 적용성 검토와 실제 설비 검증은 별개입니다. 현장 실측 없음·시뮬레이션 기반·실제 설비 검증 미수행. 시험 제안은 실행 명령이 아닙니다. 안전 범위·승인·재검사는 서버가 관리합니다."
+}
