@@ -1,0 +1,444 @@
+{
+  "$defs": {
+    "TEPConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "variable": {
+          "enum": [
+            "XMV10",
+            "XMV11"
+          ],
+          "title": "Variable",
+          "type": "string"
+        },
+        "candidate_value": {
+          "title": "Candidate Value",
+          "type": "number"
+        },
+        "horizon_s": {
+          "maximum": 3600,
+          "minimum": 1,
+          "title": "Horizon S",
+          "type": "integer"
+        },
+        "sample_period_s": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Sample Period S",
+          "type": "integer"
+        },
+        "integration_step_s": {
+          "const": 0.1,
+          "default": 0.1,
+          "title": "Integration Step S",
+          "type": "number"
+        },
+        "integrator": {
+          "const": "forward_euler",
+          "default": "forward_euler",
+          "title": "Integrator",
+          "type": "string"
+        },
+        "controller": {
+          "const": "none_open_loop_hold",
+          "default": "none_open_loop_hold",
+          "title": "Controller",
+          "type": "string"
+        },
+        "operating_mode": {
+          "const": "original_teinit_base_case",
+          "default": "original_teinit_base_case",
+          "title": "Operating Mode",
+          "type": "string"
+        },
+        "random_seed": {
+          "const": 1431655765,
+          "default": 1431655765,
+          "title": "Random Seed",
+          "type": "integer"
+        },
+        "disturbances": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 20,
+          "minItems": 20,
+          "title": "Disturbances",
+          "type": "array"
+        }
+      },
+      "required": [
+        "variable",
+        "candidate_value",
+        "horizon_s",
+        "sample_period_s"
+      ],
+      "title": "TEPConfiguration",
+      "type": "object"
+    },
+    "TEPEvidenceCard": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "stance": {
+          "enum": [
+            "support",
+            "counter",
+            "limitation"
+          ],
+          "title": "Stance",
+          "type": "string"
+        },
+        "claim": {
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "partial",
+            "mismatch",
+            "unknown"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "source_type": {
+          "enum": [
+            "model_source",
+            "paper",
+            "simulation_record"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Excerpt"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Published At"
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usage"
+        },
+        "proposed_test": {
+          "anyOf": [
+            {
+              "const": "base_case_cooling_step_v1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proposed Test"
+        },
+        "parameter_origin": {
+          "anyOf": [
+            {
+              "const": "upstream_model_default",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parameter Origin"
+        },
+        "matched_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Conditions",
+          "type": "array"
+        },
+        "missing_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Conditions",
+          "type": "array"
+        },
+        "evidence_purpose": {
+          "enum": [
+            "model_definition",
+            "physical_mechanism",
+            "simulation_observation",
+            "safety_basis"
+          ],
+          "title": "Evidence Purpose",
+          "type": "string"
+        },
+        "variable_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Variable Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "title",
+        "stance",
+        "claim",
+        "applicability",
+        "locator",
+        "source_type",
+        "evidence_purpose"
+      ],
+      "title": "TEPEvidenceCard",
+      "type": "object"
+    },
+    "TEPTestProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "test_id": {
+          "const": "base_case_cooling_step_v1",
+          "title": "Test Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "variable": {
+          "enum": [
+            "XMV10",
+            "XMV11"
+          ],
+          "title": "Variable",
+          "type": "string"
+        },
+        "initial_profile": {
+          "const": "nist-teinit-base-case-v1",
+          "title": "Initial Profile",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/TEPConfiguration"
+        }
+      },
+      "required": [
+        "test_id",
+        "evidence_id",
+        "variable",
+        "initial_profile",
+        "configuration"
+      ],
+      "title": "TEPTestProposal",
+      "type": "object"
+    },
+    "TEPUnsupportedTest": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "requested_test": {
+          "title": "Requested Test",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "requested_test",
+        "reason"
+      ],
+      "title": "TEPUnsupportedTest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "tep-evidence-1.0",
+      "default": "tep-evidence-1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "model_version": {
+      "title": "Model Version",
+      "type": "string"
+    },
+    "initial_profile": {
+      "const": "nist-teinit-base-case-v1",
+      "title": "Initial Profile",
+      "type": "string"
+    },
+    "data_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "field_validation": {
+      "const": "not_performed_no_measured_data",
+      "default": "not_performed_no_measured_data",
+      "title": "Field Validation",
+      "type": "string"
+    },
+    "mock": {
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "insufficient",
+        "failed",
+        "demo_fixture"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "cards": {
+      "items": {
+        "$ref": "#/$defs/TEPEvidenceCard"
+      },
+      "maxItems": 12,
+      "title": "Cards",
+      "type": "array"
+    },
+    "proposed_tests": {
+      "items": {
+        "$ref": "#/$defs/TEPTestProposal"
+      },
+      "maxItems": 3,
+      "title": "Proposed Tests",
+      "type": "array"
+    },
+    "unsupported_tests": {
+      "items": {
+        "$ref": "#/$defs/TEPUnsupportedTest"
+      },
+      "maxItems": 12,
+      "title": "Unsupported Tests",
+      "type": "array"
+    },
+    "missing_conditions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Conditions",
+      "type": "array"
+    },
+    "source_bundle_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Bundle Sha256"
+    },
+    "limitation": {
+      "title": "Limitation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "model_version",
+    "initial_profile",
+    "mock",
+    "status",
+    "limitation"
+  ],
+  "title": "TEPEvidenceReview",
+  "type": "object"
+}

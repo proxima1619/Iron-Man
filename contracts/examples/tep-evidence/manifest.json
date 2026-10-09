@@ -1,0 +1,17 @@
+{
+  "example_only": true,
+  "llm_executed": false,
+  "simulation_executed": false,
+  "request": {
+    "equipment_id": "tep-sim-01",
+    "purpose": "냉각 펌프 속도 변경 검토",
+    "command": {
+      "type": "set_tep_cooling_water",
+      "variable": "XMV10",
+      "value": 42.0,
+      "duration_s": 600,
+      "sample_period_s": 10
+    }
+  },
+  "meaning": "normal is model-definition mapping validation, not paper applicability or safety proof"
+}

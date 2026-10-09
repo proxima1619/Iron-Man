@@ -80,14 +80,6 @@ export function EvidencePanel({
   record?: components["schemas"]["RequestRecord"] | null;
   evidence?: Review;
 }) {
-  if (report && !("temperature_c" in report.snapshot)) {
-    return <section aria-label="TEP 근거 검토 상태">
-      <h2>TEP 위험·근거 정책 미설정</h2>
-      <p>{report.reason}</p>
-      <p>초기화 프로필 {report.snapshot.profile}. 현장 계측값과 근거 검증은 없으며 승인·실행을 보류합니다.</p>
-    </section>;
-  }
-  const coolingSnapshot = report && "temperature_c" in report.snapshot ? report.snapshot : null;
   const review = evidence || report?.evidence;
   const coolingSnapshot = report && "observed_at" in report.snapshot ? report.snapshot : null;
   const pumpCommand = record?.request.command.type === "set_pump_speed" ? record.request.command : null;
@@ -205,9 +197,7 @@ export function EvidencePanel({
                 <dd>
                   {pumpCommand
                     ? `${pumpCommand.target_pct}% · 예측 구간 ${pumpCommand.duration_s}초`
-                    : record.request.command.type === "set_tep_cooling_water"
-                      ? `${record.request.command.variable} ${record.request.command.value} percent_full_scale · ${record.request.command.duration_s}초`
-                      : "명령 정보 없음"}
+                    : "명령 정보 없음"}
                 </dd>
               </>
             )}

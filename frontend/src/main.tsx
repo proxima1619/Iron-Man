@@ -5,6 +5,7 @@ import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
 import { TepResults } from "./TepResults";
 import { TepReferenceData } from "./TepReferenceData";
+import { TepEvidencePanel } from "./TepEvidencePanel";
 import { Home } from "./Home";
 import { DemoPage } from "./DemoPage";
 import { EvidencePanel } from "./EvidencePanel";
@@ -519,7 +520,7 @@ function App() {
                   {report?.reason_code || "—"}
                 </p>
               </section>
-              {report?.tep_simulation && <TepResults result={report.tep_simulation} />}
+              {report?.tep_simulation && <><TepResults result={report.tep_simulation} /><TepEvidencePanel review={report.tep_evidence} /></>}
               <section>
                 <div className="section-head">
                   <h2>예상 효과와 위험 조건</h2>

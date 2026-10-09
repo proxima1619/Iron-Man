@@ -37,3 +37,11 @@ class RecordAnalysis(Analysis):
     result_interpretation: str = Field(min_length=1, max_length=2500)
     model_limitations: list[str] = Field(min_length=1, max_length=10)
     recommended_checks: list[str] = Field(min_length=1, max_length=10)
+
+class TEPClaim(Claim):
+    evidence_purpose: Literal["model_definition", "physical_mechanism", "simulation_observation", "safety_basis"]
+    variable_ids: list[str] = Field(max_length=10)
+
+class TEPAnalysis(ReviewText):
+    cards: list[TEPClaim] = Field(max_length=12)
+    missing_conditions: list[str] = Field(max_length=10)
