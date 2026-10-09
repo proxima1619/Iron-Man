@@ -452,7 +452,8 @@ export interface components {
             revision: number;
             /** Command Digest */
             command_digest: string;
-            snapshot: components["schemas"]["Snapshot"];
+            /** Snapshot */
+            snapshot: components["schemas"]["Snapshot"] | components["schemas"]["TEPState"];
             /** Snapshot Digest */
             snapshot_digest: string;
             /** Model Version */
@@ -471,6 +472,7 @@ export interface components {
             can_approve: boolean;
             evidence: components["schemas"]["EvidenceReview"] | null;
             simulation: components["schemas"]["SimulationResult"] | null;
+            tep_simulation: components["schemas"]["TEPResult"] | null;
             /**
              * Verdict
              * @enum {string}
@@ -480,7 +482,7 @@ export interface components {
              * Reason Code
              * @enum {string}
              */
-            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "MATERIAL_DEVIATION" | "LIVE_POLICY_NOT_CONFIGURED" | "DEMO_POLICY_OUT_OF_SCOPE" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE";
+            reason_code: "INVALID_STATE" | "POLICY_VIOLATION" | "LIMIT_EXCEEDED" | "DEMO_PASS" | "EVIDENCE_INCOMPLETE" | "SIMULATION_INCOMPLETE" | "MODULE_FAILURE" | "MATERIAL_DEVIATION" | "LIVE_POLICY_NOT_CONFIGURED" | "DEMO_POLICY_OUT_OF_SCOPE" | "EVALUATION_CONTEXT_CHANGED" | "EVALUATION_TIMEOUT" | "EVALUATION_CANCELLED" | "WORKER_FAILURE" | "TEP_POLICY_NOT_CONFIGURED";
             /** Reason */
             reason: string;
             /** Digest */
@@ -662,15 +664,16 @@ export interface components {
             /**
              * Equipment Id
              * @default cooling-demo-01
-             * @constant
+             * @enum {string}
              */
-            equipment_id: "cooling-demo-01";
+            equipment_id: "cooling-demo-01" | "tep-sim-01";
             /**
              * Purpose
              * @default 냉각 펌프 속도 변경 검토
              */
             purpose: string;
-            command: components["schemas"]["Command-Input"];
+            /** Command */
+            command: components["schemas"]["Command-Input"] | components["schemas"]["TEPCommand-Input"];
             /** Requester Contact */
             requester_contact?: string | null;
         };
@@ -679,15 +682,16 @@ export interface components {
             /**
              * Equipment Id
              * @default cooling-demo-01
-             * @constant
+             * @enum {string}
              */
-            equipment_id: "cooling-demo-01";
+            equipment_id: "cooling-demo-01" | "tep-sim-01";
             /**
              * Purpose
              * @default 냉각 펌프 속도 변경 검토
              */
             purpose: string;
-            command: components["schemas"]["Command-Output"];
+            /** Command */
+            command: components["schemas"]["Command-Output"] | components["schemas"]["TEPCommand-Output"];
         };
         /** Notification */
         Notification: {
@@ -1007,6 +1011,268 @@ export interface components {
             domain_status: "ready" | "out_of_domain";
             /** Domain Reason */
             domain_reason: string | null;
+        };
+        /** TEPBranch */
+        TEPBranch: {
+            /** Points */
+            points: components["schemas"]["TEPPoint"][];
+            /** Csv Sha256 */
+            csv_sha256: string;
+        };
+        /** TEPCommand */
+        "TEPCommand-Input": {
+            /**
+             * Type
+             * @constant
+             */
+            type: "set_tep_cooling_water";
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "XMV10" | "XMV11";
+            /** Value */
+            value: number;
+            /**
+             * Duration S
+             * @default 600
+             */
+            duration_s: number;
+            /**
+             * Sample Period S
+             * @default 10
+             */
+            sample_period_s: number;
+        };
+        /** TEPCommand */
+        "TEPCommand-Output": {
+            /**
+             * Type
+             * @constant
+             */
+            type: "set_tep_cooling_water";
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "XMV10" | "XMV11";
+            /** Value */
+            value: number;
+            /**
+             * Duration S
+             * @default 600
+             */
+            duration_s: number;
+            /**
+             * Sample Period S
+             * @default 10
+             */
+            sample_period_s: number;
+        };
+        /** TEPConfiguration */
+        TEPConfiguration: {
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "XMV10" | "XMV11";
+            /** Candidate Value */
+            candidate_value: number;
+            /** Horizon S */
+            horizon_s: number;
+            /** Sample Period S */
+            sample_period_s: number;
+            /**
+             * Integration Step S
+             * @default 0.1
+             * @constant
+             */
+            integration_step_s: 0.1;
+            /**
+             * Integrator
+             * @default forward_euler
+             * @constant
+             */
+            integrator: "forward_euler";
+            /**
+             * Controller
+             * @default none_open_loop_hold
+             * @constant
+             */
+            controller: "none_open_loop_hold";
+            /**
+             * Operating Mode
+             * @default original_teinit_base_case
+             * @constant
+             */
+            operating_mode: "original_teinit_base_case";
+            /**
+             * Random Seed
+             * @default 1431655765
+             * @constant
+             */
+            random_seed: 1431655765;
+            /** Disturbances */
+            disturbances: number[];
+        };
+        /** TEPMetric */
+        TEPMetric: {
+            /** Baseline Min */
+            baseline_min: number;
+            /** Baseline Max */
+            baseline_max: number;
+            /** Candidate Min */
+            candidate_min: number;
+            /** Candidate Max */
+            candidate_max: number;
+            /** Final Delta */
+            final_delta: number;
+            /** Max Abs Delta */
+            max_abs_delta: number;
+        };
+        /** TEPPoint */
+        TEPPoint: {
+            /** Time S */
+            time_s: number;
+            /** Xmv */
+            xmv: number[];
+            /** Xmeas */
+            xmeas: number[];
+            /** Actual Cooling Setting */
+            actual_cooling_setting: number[];
+        };
+        /** TEPProvenance */
+        TEPProvenance: {
+            /** Source Url */
+            source_url: string;
+            /** Source Commit */
+            source_commit: string;
+            /** Source Files Sha256 */
+            source_files_sha256: {
+                [key: string]: string;
+            };
+            /** Wrapper Sha256 */
+            wrapper_sha256: string;
+            /** Binary Sha256 */
+            binary_sha256: string;
+            /** Compiler */
+            compiler: string;
+            /** Compiler Flags */
+            compiler_flags: string[];
+            /** Platform */
+            platform: string;
+            /** Initial State */
+            initial_state: number[];
+            /** Initial Xmv */
+            initial_xmv: number[];
+            /** Initial State Sha256 */
+            initial_state_sha256: string;
+            /** License */
+            license: string;
+        };
+        /** TEPResult */
+        TEPResult: {
+            /**
+             * Schema Version
+             * @default tep-1.0
+             * @constant
+             */
+            schema_version: "tep-1.0";
+            /**
+             * Data Origin
+             * @default simulation
+             * @constant
+             */
+            data_origin: "simulation";
+            /**
+             * Mock
+             * @default false
+             * @constant
+             */
+            mock: false;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "out_of_domain" | "failed";
+            /** Model Version */
+            model_version: string;
+            configuration: components["schemas"]["TEPConfiguration"];
+            /** Variables */
+            variables: {
+                [key: string]: components["schemas"]["TEPVariable"];
+            };
+            /** Core Shutdown Rules */
+            core_shutdown_rules: components["schemas"]["TEPShutdownRule"][];
+            provenance: components["schemas"]["TEPProvenance"] | null;
+            baseline: components["schemas"]["TEPBranch"] | null;
+            candidate: components["schemas"]["TEPBranch"] | null;
+            /** Comparison */
+            comparison: {
+                [key: string]: components["schemas"]["TEPMetric"];
+            };
+            /** Failure Code */
+            failure_code: string | null;
+            /** Detail */
+            detail: string;
+            /**
+             * Field Validation
+             * @default not_performed_no_measured_data
+             * @constant
+             */
+            field_validation: "not_performed_no_measured_data";
+        };
+        /** TEPShutdownRule */
+        TEPShutdownRule: {
+            /** Quantity */
+            quantity: string;
+            /** Unit */
+            unit: string;
+            /** Minimum */
+            minimum: number | null;
+            /** Maximum */
+            maximum: number | null;
+            /**
+             * Source
+             * @default nist_tefunc_internal_shutdown
+             * @constant
+             */
+            source: "nist_tefunc_internal_shutdown";
+        };
+        /** TEPState */
+        TEPState: {
+            /**
+             * Profile
+             * @default nist-teinit-base-case-v1
+             * @constant
+             */
+            profile: "nist-teinit-base-case-v1";
+            /**
+             * Data Origin
+             * @default simulation
+             * @constant
+             */
+            data_origin: "simulation";
+            /** Configured At */
+            configured_at: number;
+            /** Model Version */
+            model_version: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Wrapper Sha256 */
+            wrapper_sha256: string;
+            /** Variables Sha256 */
+            variables_sha256: string;
+        };
+        /** TEPVariable */
+        TEPVariable: {
+            /** Name */
+            name: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "percent_full_scale" | "kscm/h" | "kg/h" | "kPa_gauge" | "percent" | "degC" | "m3/h" | "kW" | "mole_percent";
         };
         /** UnknownExecution */
         UnknownExecution: {

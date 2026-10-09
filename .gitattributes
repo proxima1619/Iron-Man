@@ -1,1 +1,2 @@
-data/tep/raw/*.RData filter=lfs diff=lfs merge=lfs -text
+backend/simulator/tep/vendor/* -text -whitespace
+backend/simulator/tep/runner.cpp text eol=lf

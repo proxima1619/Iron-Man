@@ -6,9 +6,11 @@ from backend.gateway.service import Gateway
 from backend.gateway.evaluation import failure_report
 from unittest.mock import patch
 from uuid import UUID
-from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord
+from backend.contracts import NewRequest, Snapshot, SimulationResult, EvidenceReview, RequestRecord, TEPResult
 from backend.simulator.service import MODEL_VERSION, simulate
 from backend.evidence.service import review_evidence
+from backend.simulator.tep import service as tep
+from backend.simulator.tep.build import source_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,7 +19,7 @@ def write(relative, value):
 
 if __name__ == '__main__':
     write('contracts/openapi.json', app.openapi())
-    for model in (SimulationResult, EvidenceReview, RequestRecord):
+    for model in (SimulationResult, EvidenceReview, RequestRecord, TEPResult):
         write(f'contracts/{model.__name__}.schema.json', model.model_json_schema())
     request = NewRequest(command={'target_pct': 80})
     snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100,
@@ -27,6 +29,33 @@ if __name__ == '__main__':
     from backend.contracts import Scenario
     result = simulate(request.command, snapshot, [Scenario(kind='normal'), *review.proposed_tests])
     write('contracts/examples/request.json', request.model_dump())
+    write('contracts/examples/request-tep.json', NewRequest(equipment_id='tep-sim-01',
+        purpose='TEP 냉각수 입력 변경 비교', command={'type':'set_tep_cooling_water',
+        'variable':'XMV10', 'value':42, 'duration_s':600, 'sample_period_s':10}).model_dump())
+    lock = source_lock()
+    write('contracts/tep-model.json', {
+        'schema_version':'tep-model-1.0', 'model_version':tep.MODEL_VERSION,
+        'source_url':lock['repository'], 'source_commit':lock['commit'],
+        'source_files_sha256':lock['files'], 'data_origin':'simulation',
+        'field_validation':'not_performed_no_measured_data',
+        'variable_number_base':1, 'array_index_base':0,
+        'variables': {key:{**definition.model_dump(),
+            'role': 'manipulated' if key.startswith('XMV') else 'measured' if key.startswith('XMEAS') else 'actuator_state',
+            'request_writable': key in {'XMV10','XMV11'},
+            'model_input_range': {'minimum':0,'maximum':100,'unit':'percent_full_scale'} if key.startswith('XMV') else None,
+            'normal_operating_range':None, 'safety_allowed_range':None,
+            'definition_source':f"{lock['repository']}/blob/{lock['commit']}/c/" + ('teprob.cpp' if key.startswith('ACTUAL') else 'TENames.cpp')}
+            for key,definition in tep.VARIABLES.items()},
+        'core_shutdown_rules':[rule.model_dump() for rule in tep.SHUTDOWN_RULES],
+        'supported_tests':[{'test_id':'base_case_cooling_step_v1',
+            'command_type':'set_tep_cooling_water','variables':['XMV10','XMV11'],
+            'configuration':tep.configuration(NewRequest(equipment_id='tep-sim-01',command={
+                'type':'set_tep_cooling_water','variable':'XMV10','value':42,'duration_s':600,'sample_period_s':10}).command).model_dump(),
+            'initial_profile':'nist-teinit-base-case-v1','parameter_origin':'upstream_model_default',
+            'horizon_range_s':[1,1800],'sample_period_range_s':[1,60],
+            'constraint':'horizon must be an integer multiple of sample period',
+            'supported_faults':[], 'limitation':'Only base-case open-loop MV step; evidence-to-fault mapping is not implemented.'}],
+    })
     write('contracts/examples/snapshot.json', snapshot.model_dump())
     write('contracts/examples/evidence-demo.json', review.model_dump())
     write('contracts/examples/simulation-demo.json', result.model_dump())

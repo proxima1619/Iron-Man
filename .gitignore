@@ -11,6 +11,8 @@ pytest-cache-files-*/
 node_modules/
 dist/
 *.log
+.tep-cache/
+.tools/
 
 *.egg-info/
 

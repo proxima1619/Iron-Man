@@ -1,0 +1,709 @@
+{
+  "schema_version": "tep-model-1.0",
+  "model_version": "nist-tep-81a7ac9-ironman-v1",
+  "source_url": "https://github.com/rcandell/tesim",
+  "source_commit": "81a7ac9dc04f91bc0898c36f8522372e0e437fc1",
+  "source_files_sha256": {
+    "teprob.cpp": "f7cb799747192aafc9593705f909364e431d1d8f9c15772d988c4fe80f35e1d1",
+    "teprob.h": "8210968e0288fb9e1f202a4e66c91b77963733b2b44143c052fd9d2e31e2bd29",
+    "LICENSE.md": "2b48e300fe3d28ee4fc748c3572ac857ada60bbb2ed18a20241b1f2c8667e307",
+    "DISCLAIMER.md": "848df0feee2af9b94ea93c5f84863a5b4c3dd02e8ec660f04055ee3d9136a28a"
+  },
+  "data_origin": "simulation",
+  "field_validation": "not_performed_no_measured_data",
+  "variable_number_base": 1,
+  "array_index_base": 0,
+  "variables": {
+    "XMV1": {
+      "name": "D feed",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV2": {
+      "name": "E feed",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV3": {
+      "name": "A feed",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV4": {
+      "name": "A+C feed",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV5": {
+      "name": "Recycle valve",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV6": {
+      "name": "Purge valve",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV7": {
+      "name": "Separator underflow",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV8": {
+      "name": "Stripper underflow",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV9": {
+      "name": "Stripper steam valve",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV10": {
+      "name": "Reactor cooling water flow setting",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": true,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV11": {
+      "name": "Condenser cooling water flow setting",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": true,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMV12": {
+      "name": "Agitator setting",
+      "unit": "percent_full_scale",
+      "role": "manipulated",
+      "request_writable": false,
+      "model_input_range": {
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "percent_full_scale"
+      },
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS1": {
+      "name": "A feed",
+      "unit": "kscm/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS2": {
+      "name": "D feed",
+      "unit": "kg/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS3": {
+      "name": "E feed",
+      "unit": "kg/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS4": {
+      "name": "A+C feed",
+      "unit": "kscm/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS5": {
+      "name": "Recycle flow",
+      "unit": "kscm/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS6": {
+      "name": "Reactor feed",
+      "unit": "kscm/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS7": {
+      "name": "Reactor pressure",
+      "unit": "kPa_gauge",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS8": {
+      "name": "Reactor level",
+      "unit": "percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS9": {
+      "name": "Reactor temperature",
+      "unit": "degC",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS10": {
+      "name": "Purge rate",
+      "unit": "kscm/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS11": {
+      "name": "Separator temperature",
+      "unit": "degC",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS12": {
+      "name": "Separator level",
+      "unit": "percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS13": {
+      "name": "Separator pressure",
+      "unit": "kPa_gauge",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS14": {
+      "name": "Separator underflow",
+      "unit": "m3/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS15": {
+      "name": "Stripper level",
+      "unit": "percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS16": {
+      "name": "Stripper pressure",
+      "unit": "kPa_gauge",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS17": {
+      "name": "Stripper underflow",
+      "unit": "m3/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS18": {
+      "name": "Stripper temperature",
+      "unit": "degC",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS19": {
+      "name": "Stripper steam flow",
+      "unit": "kg/h",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS20": {
+      "name": "Compressor work",
+      "unit": "kW",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS21": {
+      "name": "Reactor cooling water outlet temperature",
+      "unit": "degC",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS22": {
+      "name": "Condenser cooling water outlet temperature",
+      "unit": "degC",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS23": {
+      "name": "Feed composition A",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS24": {
+      "name": "Feed composition B",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS25": {
+      "name": "Feed composition C",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS26": {
+      "name": "Feed composition D",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS27": {
+      "name": "Feed composition E",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS28": {
+      "name": "Feed composition F",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS29": {
+      "name": "Purge composition A",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS30": {
+      "name": "Purge composition B",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS31": {
+      "name": "Purge composition C",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS32": {
+      "name": "Purge composition D",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS33": {
+      "name": "Purge composition E",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS34": {
+      "name": "Purge composition F",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS35": {
+      "name": "Purge composition G",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS36": {
+      "name": "Purge composition H",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS37": {
+      "name": "Product composition D",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS38": {
+      "name": "Product composition E",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS39": {
+      "name": "Product composition F",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS40": {
+      "name": "Product composition G",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "XMEAS41": {
+      "name": "Product composition H",
+      "unit": "mole_percent",
+      "role": "measured",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/TENames.cpp"
+    },
+    "ACTUAL_XMV10": {
+      "name": "Actual Reactor cooling water flow setting",
+      "unit": "percent_full_scale",
+      "role": "actuator_state",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/teprob.cpp"
+    },
+    "ACTUAL_XMV11": {
+      "name": "Actual Condenser cooling water flow setting",
+      "unit": "percent_full_scale",
+      "role": "actuator_state",
+      "request_writable": false,
+      "model_input_range": null,
+      "normal_operating_range": null,
+      "safety_allowed_range": null,
+      "definition_source": "https://github.com/rcandell/tesim/blob/81a7ac9dc04f91bc0898c36f8522372e0e437fc1/c/teprob.cpp"
+    }
+  },
+  "core_shutdown_rules": [
+    {
+      "quantity": "reactor_pressure",
+      "unit": "kPa_gauge",
+      "minimum": null,
+      "maximum": 3000.0,
+      "source": "nist_tefunc_internal_shutdown"
+    },
+    {
+      "quantity": "reactor_temperature",
+      "unit": "degC",
+      "minimum": null,
+      "maximum": 175.0,
+      "source": "nist_tefunc_internal_shutdown"
+    },
+    {
+      "quantity": "reactor_liquid_volume",
+      "unit": "m3",
+      "minimum": 2.0,
+      "maximum": 24.0,
+      "source": "nist_tefunc_internal_shutdown"
+    },
+    {
+      "quantity": "separator_liquid_volume",
+      "unit": "m3",
+      "minimum": 1.0,
+      "maximum": 12.0,
+      "source": "nist_tefunc_internal_shutdown"
+    },
+    {
+      "quantity": "stripper_liquid_volume",
+      "unit": "m3",
+      "minimum": 1.0,
+      "maximum": 8.0,
+      "source": "nist_tefunc_internal_shutdown"
+    }
+  ],
+  "supported_tests": [
+    {
+      "test_id": "base_case_cooling_step_v1",
+      "command_type": "set_tep_cooling_water",
+      "variables": [
+        "XMV10",
+        "XMV11"
+      ],
+      "configuration": {
+        "variable": "XMV10",
+        "candidate_value": 42.0,
+        "horizon_s": 600,
+        "sample_period_s": 10,
+        "integration_step_s": 0.1,
+        "integrator": "forward_euler",
+        "controller": "none_open_loop_hold",
+        "operating_mode": "original_teinit_base_case",
+        "random_seed": 1431655765,
+        "disturbances": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "initial_profile": "nist-teinit-base-case-v1",
+      "parameter_origin": "upstream_model_default",
+      "horizon_range_s": [
+        1,
+        1800
+      ],
+      "sample_period_range_s": [
+        1,
+        60
+      ],
+      "constraint": "horizon must be an integer multiple of sample period",
+      "supported_faults": [],
+      "limitation": "Only base-case open-loop MV step; evidence-to-fault mapping is not implemented."
+    }
+  ]
+}

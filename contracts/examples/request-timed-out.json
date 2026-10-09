@@ -38,6 +38,7 @@
     "can_approve": false,
     "evidence": null,
     "simulation": null,
+    "tep_simulation": null,
     "verdict": "hold",
     "reason_code": "EVALUATION_TIMEOUT",
     "reason": "예시: 평가 제한 시간 초과",

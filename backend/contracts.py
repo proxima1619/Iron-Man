@@ -11,12 +11,145 @@ class Command(StrictModel):
     target_pct: float = Field(ge=0, le=100, allow_inf_nan=False)
     duration_s: int = Field(default=300, ge=1, le=3600, strict=True)
 
+class TEPCommand(StrictModel):
+    type: Literal["set_tep_cooling_water"]
+    variable: Literal["XMV10", "XMV11"]
+    value: float
+    duration_s: int = Field(default=600, ge=1, le=3600, strict=True)
+    sample_period_s: int = Field(default=10, ge=1, le=60, strict=True)
+
 class NewRequest(StrictModel):
-    equipment_id: Literal["cooling-demo-01"] = "cooling-demo-01"
+    equipment_id: Literal["cooling-demo-01", "tep-sim-01"] = "cooling-demo-01"
     purpose: str = Field(default="냉각 펌프 속도 변경 검토", min_length=1, max_length=500)
-    command: Command
+    command: Command | TEPCommand
     requester_contact: str | None = Field(default=None, exclude=True, max_length=254,
         pattern=r"^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$")
+
+    @model_validator(mode="after")
+    def command_equipment(self):
+        if (self.equipment_id == "tep-sim-01") != isinstance(self.command, TEPCommand):
+            raise ValueError("TEP commands require tep-sim-01; pump commands require cooling-demo-01")
+        return self
+
+class TEPState(StrictModel):
+    profile: Literal["nist-teinit-base-case-v1"] = "nist-teinit-base-case-v1"
+    data_origin: Literal["simulation"] = "simulation"
+    configured_at: float
+    model_version: str
+    # This identifies initialization code, not a snapshot reconstructed from sensors.
+    source_sha256: str
+    wrapper_sha256: str
+    variables_sha256: str
+
+class TEPVariable(StrictModel):
+    name: str
+    unit: Literal["percent_full_scale", "kscm/h", "kg/h", "kPa_gauge", "percent", "degC", "m3/h", "kW", "mole_percent"]
+
+class TEPShutdownRule(StrictModel):
+    quantity: str
+    unit: str
+    minimum: float | None = None
+    maximum: float | None = None
+    source: Literal["nist_tefunc_internal_shutdown"] = "nist_tefunc_internal_shutdown"
+
+class TEPPoint(StrictModel):
+    time_s: float = Field(ge=0)
+    xmv: list[float] = Field(min_length=12, max_length=12)
+    xmeas: list[float] = Field(min_length=41, max_length=41)
+    actual_cooling_setting: list[float] = Field(min_length=2, max_length=2)
+
+class TEPBranch(StrictModel):
+    points: list[TEPPoint] = Field(min_length=2)
+    csv_sha256: str
+
+class TEPMetric(StrictModel):
+    baseline_min: float
+    baseline_max: float
+    candidate_min: float
+    candidate_max: float
+    final_delta: float
+    max_abs_delta: float = Field(ge=0)
+
+class TEPConfiguration(StrictModel):
+    variable: Literal["XMV10", "XMV11"]
+    candidate_value: float
+    horizon_s: int = Field(ge=1, le=3600, strict=True)
+    sample_period_s: int = Field(ge=1, le=60, strict=True)
+    integration_step_s: Literal[0.1] = 0.1
+    integrator: Literal["forward_euler"] = "forward_euler"
+    controller: Literal["none_open_loop_hold"] = "none_open_loop_hold"
+    operating_mode: Literal["original_teinit_base_case"] = "original_teinit_base_case"
+    random_seed: Literal[1431655765] = 1431655765
+    disturbances: list[int] = Field(default_factory=lambda: [0] * 20, min_length=20, max_length=20)
+
+class TEPProvenance(StrictModel):
+    source_url: str
+    source_commit: str
+    source_files_sha256: dict[str, str]
+    wrapper_sha256: str
+    binary_sha256: str
+    compiler: str
+    compiler_flags: list[str]
+    platform: str
+    initial_state: list[float] = Field(min_length=50, max_length=50)
+    initial_xmv: list[float] = Field(min_length=12, max_length=12)
+    initial_state_sha256: str
+    license: str
+
+class TEPResult(StrictModel):
+    schema_version: Literal["tep-1.0"] = "tep-1.0"
+    data_origin: Literal["simulation"] = "simulation"
+    mock: Literal[False] = False
+    status: Literal["completed", "out_of_domain", "failed"]
+    model_version: str
+    configuration: TEPConfiguration
+    variables: dict[str, TEPVariable]
+    core_shutdown_rules: list[TEPShutdownRule]
+    provenance: TEPProvenance | None = None
+    baseline: TEPBranch | None = None
+    candidate: TEPBranch | None = None
+    comparison: dict[str, TEPMetric] = Field(default_factory=dict)
+    failure_code: str | None = None
+    detail: str
+    field_validation: Literal["not_performed_no_measured_data"] = "not_performed_no_measured_data"
+
+    @model_validator(mode="after")
+    def complete_pair(self):
+        if self.status != "completed":
+            if self.baseline or self.candidate or self.comparison or not self.failure_code:
+                raise ValueError("failed TEP run must not publish success metrics")
+            return self
+        if not self.provenance or not self.baseline or not self.candidate or self.failure_code:
+            raise ValueError("completed TEP run requires both branches and provenance")
+        c = self.configuration
+        if (not 0 <= c.candidate_value <= 100 or not 1 <= c.horizon_s <= 1800
+            or c.horizon_s % c.sample_period_s or any(c.disturbances)):
+            raise ValueError("unsupported TEP execution configuration")
+        expected = list(range(0, c.horizon_s + 1, c.sample_period_s))
+        if any([p.time_s for p in b.points] != expected for b in (self.baseline, self.candidate)):
+            raise ValueError("missing, unordered or mismatched TEP time axis")
+        if self.baseline.points[0] != self.candidate.points[0]:
+            raise ValueError("TEP branches require the same initial state and observation")
+        keys = {f"XMEAS{i}" for i in range(1, 42)}
+        variable_keys = keys | {f"XMV{i}" for i in range(1,13)} | {"ACTUAL_XMV10", "ACTUAL_XMV11"}
+        if set(self.comparison) != keys or set(self.variables) != variable_keys:
+            raise ValueError("TEP measurements require definitions and comparison metrics")
+        initial = self.provenance.initial_xmv
+        index = int(c.variable[3:]) - 1
+        candidate = list(initial)
+        candidate[index] = c.candidate_value
+        if (any(p.xmv != initial for p in self.baseline.points)
+            or self.candidate.points[0].xmv != initial
+            or any(p.xmv != candidate for p in self.candidate.points[1:])):
+            raise ValueError("TEP branch inputs differ from captured execution configuration")
+        for i in range(41):
+            a = [p.xmeas[i] for p in self.baseline.points]
+            b = [p.xmeas[i] for p in self.candidate.points]
+            expected_metric = TEPMetric(baseline_min=min(a), baseline_max=max(a), candidate_min=min(b),
+                candidate_max=max(b), final_delta=b[-1]-a[-1], max_abs_delta=max(abs(y-x) for x,y in zip(a,b)))
+            if self.comparison[f"XMEAS{i+1}"] != expected_metric:
+                raise ValueError("TEP comparison differs from the reported time series")
+        return self
 
 class Snapshot(StrictModel):
     revision: int
@@ -190,7 +323,7 @@ class DecisionReport(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     revision: int
     command_digest: str
-    snapshot: Snapshot
+    snapshot: Snapshot | TEPState
     snapshot_digest: str
     model_version: str
     policy_version: str
@@ -199,16 +332,26 @@ class DecisionReport(StrictModel):
     can_approve: bool
     evidence: EvidenceReview | None
     simulation: SimulationResult | None
+    tep_simulation: TEPResult | None = None
     verdict: Literal["blocked", "hold", "awaiting_approval"]
     reason_code: Literal[
         "INVALID_STATE", "POLICY_VIOLATION", "LIMIT_EXCEEDED", "DEMO_PASS",
         "EVIDENCE_INCOMPLETE", "SIMULATION_INCOMPLETE", "MODULE_FAILURE",
         "MATERIAL_DEVIATION", "LIVE_POLICY_NOT_CONFIGURED", "DEMO_POLICY_OUT_OF_SCOPE", "EVALUATION_CONTEXT_CHANGED",
         "EVALUATION_TIMEOUT", "EVALUATION_CANCELLED", "WORKER_FAILURE",
+        "TEP_POLICY_NOT_CONFIGURED",
     ]
     reason: str
     digest: str
     assessment: "ReviewAssessment | None" = None
+
+    @model_validator(mode="after")
+    def tep_hold_only(self):
+        if isinstance(self.snapshot, TEPState) or self.tep_simulation is not None:
+            if (self.can_approve or self.verdict != "hold" or self.execution_scope != "unconfigured"
+                or self.simulation is not None or self.assessment is not None or self.evidence is not None):
+                raise ValueError("TEP results have no approval/execution/evidence policy configured")
+        return self
 
 class Approval(StrictModel):
     actor: str

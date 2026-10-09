@@ -1,0 +1,475 @@
+{
+  "$defs": {
+    "TEPBranch": {
+      "additionalProperties": false,
+      "properties": {
+        "points": {
+          "items": {
+            "$ref": "#/$defs/TEPPoint"
+          },
+          "minItems": 2,
+          "title": "Points",
+          "type": "array"
+        },
+        "csv_sha256": {
+          "title": "Csv Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "points",
+        "csv_sha256"
+      ],
+      "title": "TEPBranch",
+      "type": "object"
+    },
+    "TEPConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "variable": {
+          "enum": [
+            "XMV10",
+            "XMV11"
+          ],
+          "title": "Variable",
+          "type": "string"
+        },
+        "candidate_value": {
+          "title": "Candidate Value",
+          "type": "number"
+        },
+        "horizon_s": {
+          "maximum": 3600,
+          "minimum": 1,
+          "title": "Horizon S",
+          "type": "integer"
+        },
+        "sample_period_s": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Sample Period S",
+          "type": "integer"
+        },
+        "integration_step_s": {
+          "const": 0.1,
+          "default": 0.1,
+          "title": "Integration Step S",
+          "type": "number"
+        },
+        "integrator": {
+          "const": "forward_euler",
+          "default": "forward_euler",
+          "title": "Integrator",
+          "type": "string"
+        },
+        "controller": {
+          "const": "none_open_loop_hold",
+          "default": "none_open_loop_hold",
+          "title": "Controller",
+          "type": "string"
+        },
+        "operating_mode": {
+          "const": "original_teinit_base_case",
+          "default": "original_teinit_base_case",
+          "title": "Operating Mode",
+          "type": "string"
+        },
+        "random_seed": {
+          "const": 1431655765,
+          "default": 1431655765,
+          "title": "Random Seed",
+          "type": "integer"
+        },
+        "disturbances": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 20,
+          "minItems": 20,
+          "title": "Disturbances",
+          "type": "array"
+        }
+      },
+      "required": [
+        "variable",
+        "candidate_value",
+        "horizon_s",
+        "sample_period_s"
+      ],
+      "title": "TEPConfiguration",
+      "type": "object"
+    },
+    "TEPMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_min": {
+          "title": "Baseline Min",
+          "type": "number"
+        },
+        "baseline_max": {
+          "title": "Baseline Max",
+          "type": "number"
+        },
+        "candidate_min": {
+          "title": "Candidate Min",
+          "type": "number"
+        },
+        "candidate_max": {
+          "title": "Candidate Max",
+          "type": "number"
+        },
+        "final_delta": {
+          "title": "Final Delta",
+          "type": "number"
+        },
+        "max_abs_delta": {
+          "minimum": 0,
+          "title": "Max Abs Delta",
+          "type": "number"
+        }
+      },
+      "required": [
+        "baseline_min",
+        "baseline_max",
+        "candidate_min",
+        "candidate_max",
+        "final_delta",
+        "max_abs_delta"
+      ],
+      "title": "TEPMetric",
+      "type": "object"
+    },
+    "TEPPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "time_s": {
+          "minimum": 0,
+          "title": "Time S",
+          "type": "number"
+        },
+        "xmv": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 12,
+          "minItems": 12,
+          "title": "Xmv",
+          "type": "array"
+        },
+        "xmeas": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 41,
+          "minItems": 41,
+          "title": "Xmeas",
+          "type": "array"
+        },
+        "actual_cooling_setting": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Actual Cooling Setting",
+          "type": "array"
+        }
+      },
+      "required": [
+        "time_s",
+        "xmv",
+        "xmeas",
+        "actual_cooling_setting"
+      ],
+      "title": "TEPPoint",
+      "type": "object"
+    },
+    "TEPProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "source_url": {
+          "title": "Source Url",
+          "type": "string"
+        },
+        "source_commit": {
+          "title": "Source Commit",
+          "type": "string"
+        },
+        "source_files_sha256": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Source Files Sha256",
+          "type": "object"
+        },
+        "wrapper_sha256": {
+          "title": "Wrapper Sha256",
+          "type": "string"
+        },
+        "binary_sha256": {
+          "title": "Binary Sha256",
+          "type": "string"
+        },
+        "compiler": {
+          "title": "Compiler",
+          "type": "string"
+        },
+        "compiler_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Compiler Flags",
+          "type": "array"
+        },
+        "platform": {
+          "title": "Platform",
+          "type": "string"
+        },
+        "initial_state": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 50,
+          "minItems": 50,
+          "title": "Initial State",
+          "type": "array"
+        },
+        "initial_xmv": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 12,
+          "minItems": 12,
+          "title": "Initial Xmv",
+          "type": "array"
+        },
+        "initial_state_sha256": {
+          "title": "Initial State Sha256",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_url",
+        "source_commit",
+        "source_files_sha256",
+        "wrapper_sha256",
+        "binary_sha256",
+        "compiler",
+        "compiler_flags",
+        "platform",
+        "initial_state",
+        "initial_xmv",
+        "initial_state_sha256",
+        "license"
+      ],
+      "title": "TEPProvenance",
+      "type": "object"
+    },
+    "TEPShutdownRule": {
+      "additionalProperties": false,
+      "properties": {
+        "quantity": {
+          "title": "Quantity",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "source": {
+          "const": "nist_tefunc_internal_shutdown",
+          "default": "nist_tefunc_internal_shutdown",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "quantity",
+        "unit"
+      ],
+      "title": "TEPShutdownRule",
+      "type": "object"
+    },
+    "TEPVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "percent_full_scale",
+            "kscm/h",
+            "kg/h",
+            "kPa_gauge",
+            "percent",
+            "degC",
+            "m3/h",
+            "kW",
+            "mole_percent"
+          ],
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "unit"
+      ],
+      "title": "TEPVariable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "tep-1.0",
+      "default": "tep-1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "data_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "mock": {
+      "const": false,
+      "default": false,
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "out_of_domain",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "model_version": {
+      "title": "Model Version",
+      "type": "string"
+    },
+    "configuration": {
+      "$ref": "#/$defs/TEPConfiguration"
+    },
+    "variables": {
+      "additionalProperties": {
+        "$ref": "#/$defs/TEPVariable"
+      },
+      "title": "Variables",
+      "type": "object"
+    },
+    "core_shutdown_rules": {
+      "items": {
+        "$ref": "#/$defs/TEPShutdownRule"
+      },
+      "title": "Core Shutdown Rules",
+      "type": "array"
+    },
+    "provenance": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TEPProvenance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "baseline": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TEPBranch"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TEPBranch"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "comparison": {
+      "additionalProperties": {
+        "$ref": "#/$defs/TEPMetric"
+      },
+      "title": "Comparison",
+      "type": "object"
+    },
+    "failure_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Code"
+    },
+    "detail": {
+      "title": "Detail",
+      "type": "string"
+    },
+    "field_validation": {
+      "const": "not_performed_no_measured_data",
+      "default": "not_performed_no_measured_data",
+      "title": "Field Validation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "model_version",
+    "configuration",
+    "variables",
+    "core_shutdown_rules",
+    "detail"
+  ],
+  "title": "TEPResult",
+  "type": "object"
+}

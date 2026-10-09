@@ -2,8 +2,9 @@
 import time
 import uuid
 from fastapi import HTTPException
-from backend.contracts import NewRequest, DecisionReport, Snapshot, EvidenceReview, SimulationResult
+from backend.contracts import NewRequest, DecisionReport, Snapshot, TEPCommand, TEPResult, EvidenceReview, SimulationResult
 from backend.simulator import service as simulator
+from backend.simulator.tep import service as tep
 from backend.simulator.adapter import DemoAdapter
 from backend.gateway.storage import SQLiteStore
 from backend.gateway import review as review_policy, notifications
@@ -87,7 +88,8 @@ class Gateway:
             if row["status"] in {"executing", "completed", "execution_unknown"}:
                 raise HTTPException(409, "이미 실행한 요청입니다. 새 요청을 생성하세요.")
             body = NewRequest.model_validate(row["request"])
-            snapshot = self.adapter.read_state()
+            is_tep = isinstance(body.command, TEPCommand)
+            snapshot = tep.snapshot(time.time()) if is_tep else self.adapter.read_state()
             row.update(status="evaluating", approval=None, report=None, revision=row["revision"] + 1,
                        evaluation=task)
             if task:
@@ -96,8 +98,9 @@ class Gateway:
             self.store.save(row)
             return row, {"request_id": row["id"], "revision": row["revision"],
                 "request": body.model_dump(), "snapshot": snapshot.model_dump(),
-                "model_version": simulator.MODEL_VERSION, "policy_version": POLICY_VERSION,
-                "execution_scope": "virtual" if type(self.adapter) is DemoAdapter else "unconfigured",
+                "model_version": tep.MODEL_VERSION if is_tep else simulator.MODEL_VERSION,
+                "policy_version": tep.POLICY_VERSION if is_tep else POLICY_VERSION,
+                "execution_scope": "virtual" if not is_tep and type(self.adapter) is DemoAdapter else "unconfigured",
                 "review_settings": review_policy.settings(),
                 "task_id": task["id"] if task else None}
 
@@ -117,21 +120,21 @@ class Gateway:
                 for key in ("revision", "command_digest", "snapshot", "snapshot_digest", "model_version", "policy_version", "execution_scope"):
                     if report.get(key) != expected[key]:
                         raise ValueError("Evaluation report does not match captured input")
-                current = self.adapter.read_state()
-                # An observation already rejected as stale stays INVALID_STATE.
-                # Every approval-capable result must still pass finish-time freshness.
-                invalid_input_hold = (report.get("reason_code") == "INVALID_STATE"
-                    and report.get("verdict") == "hold" and report.get("can_approve") is False)
-                if (state_digest(current) != state_digest(Snapshot.model_validate(context["snapshot"]))
-                    or (time.time() - context["snapshot"]["observed_at"] > SNAPSHOT_TTL_S
-                        and not invalid_input_hold)
-                    or simulator.MODEL_VERSION != context["model_version"]
-                    or POLICY_VERSION != context["policy_version"]
-                    or review_policy.settings() != tuple(context.get("review_settings", review_policy.settings()))
-                    or type(self.adapter) is not DemoAdapter):
-                    report = failure_report(context, "EVALUATION_CONTEXT_CHANGED",
-                        "검토 중 설비 상태·버전 또는 상태 유효 시간이 달라졌습니다. 다시 검증하세요.")
-                elif report["reason_code"] == "MODULE_FAILURE":
+                is_tep = context["request"]["command"]["type"] == "set_tep_cooling_water"
+                if is_tep:
+                    current = tep.snapshot(context["snapshot"]["configured_at"])
+                    if (current.model_dump() != context["snapshot"] or tep.MODEL_VERSION != context["model_version"]
+                        or tep.POLICY_VERSION != context["policy_version"]):
+                        report = failure_report(context, "EVALUATION_CONTEXT_CHANGED", "TEP 초기화 프로필·모델·정책이 변경되었습니다.")
+                    elif report.get("tep_simulation") is not None:
+                        result = TEPResult.model_validate(report["tep_simulation"])
+                        command = TEPCommand.model_validate(context["request"]["command"])
+                        if (result.configuration != tep.configuration(command) or result.model_version != context["model_version"]
+                            or (result.status == "completed" and result.variables != tep.VARIABLES)):
+                            raise ValueError("TEP result does not match captured inputs/variable definitions")
+                else:
+                    report = self._finish_cooling_context(context, report)
+                if report["reason_code"] == "MODULE_FAILURE":
                     task_status = "failed"
             report = dict(report)
             report["digest"] = digest(report)
@@ -149,6 +152,22 @@ class Gateway:
             self.store.save(row, notification=note)
             return row
 
+    def _finish_cooling_context(self, context, report):
+        current = self.adapter.read_state()
+        # An observation already rejected as stale stays INVALID_STATE.
+        # Every approval-capable result must still pass finish-time freshness.
+        invalid_input_hold = (report.get("reason_code") == "INVALID_STATE"
+            and report.get("verdict") == "hold" and report.get("can_approve") is False)
+        if (state_digest(current) != state_digest(Snapshot.model_validate(context["snapshot"]))
+            or (time.time() - context["snapshot"]["observed_at"] > SNAPSHOT_TTL_S and not invalid_input_hold)
+            or simulator.MODEL_VERSION != context["model_version"]
+            or POLICY_VERSION != context["policy_version"]
+            or review_policy.settings() != tuple(context.get("review_settings", review_policy.settings()))
+            or type(self.adapter) is not DemoAdapter):
+            report = failure_report(context, "EVALUATION_CONTEXT_CHANGED",
+                "검토 중 설비 상태·버전 또는 상태 유효 시간이 달라졌습니다. 다시 검증하세요.")
+        return report
+
     def evaluate(self, request_id):
         """Synchronous helper for module tests/export; HTTP uses submit_evaluation."""
         row, context = self._prepare_evaluation(request_id)
@@ -162,6 +181,8 @@ class Gateway:
 
     def _approval_context_valid(self, row, report, current):
         body = NewRequest.model_validate(row["request"])
+        if isinstance(body.command, TEPCommand) or report.get("tep_simulation") is not None:
+            return False
         try:
             review = EvidenceReview.model_validate(report["evidence"])
             result = SimulationResult.model_validate(report["simulation"])

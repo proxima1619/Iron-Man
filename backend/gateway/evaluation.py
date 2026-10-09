@@ -2,10 +2,11 @@
 import hashlib
 import json
 import time
-from backend.contracts import NewRequest, Snapshot, Scenario, SimulationResult, EvidenceReview
+from backend.contracts import NewRequest, Snapshot, TEPState, TEPCommand, Scenario, SimulationResult, EvidenceReview
 from backend.evidence import service as evidence
 from backend.simulator import service as simulator
 from backend.gateway import policy, review as review_policy
+from backend.simulator.tep import service as tep
 
 SNAPSHOT_TTL_S = 60
 
@@ -14,10 +15,28 @@ def digest(value):
                                     ensure_ascii=False, allow_nan=False).encode()).hexdigest()
 
 def state_digest(snapshot):
-    return digest(snapshot.model_dump(exclude={"observed_at"}))
+    return digest(snapshot.model_dump(exclude={"observed_at", "configured_at"}))
+
+def read_snapshot(value):
+    return TEPState.model_validate(value) if value.get("profile") else Snapshot.model_validate(value)
+
+def calculate_tep(context, body):
+    report = failure_report(context, "TEP_POLICY_NOT_CONFIGURED", "")
+    result = tep.simulate(body.command)
+    if result.model_version != context["model_version"]:
+        raise ValueError("TEP model version mismatch")
+    report.update(mock=False, tep_simulation=result.model_dump())
+    if result.status == "completed":
+        report["reason"] = ("TEP 기준·변경 비교 완료. TEP 전용 위험·근거·승인 정책이 미설정되어 보류합니다. "
+                            "실측 오차 및 실제 설비 적용성 검증은 미완료입니다.")
+    else:
+        report.update(reason_code="SIMULATION_INCOMPLETE", reason=f"TEP 실행 보류: {result.failure_code}. {result.detail}")
+    return report
 
 def calculate(context):
     body = NewRequest.model_validate(context["request"])
+    if isinstance(body.command, TEPCommand):
+        return calculate_tep(context, body)
     snapshot = Snapshot.model_validate(context["snapshot"])
     report = {"schema_version": "1.0", "revision": context["revision"], "command_digest": digest(body.command.model_dump()),
         "snapshot": snapshot.model_dump(), "snapshot_digest": state_digest(snapshot),
@@ -101,7 +120,7 @@ def calculate(context):
 def failure_report(context, code, reason):
     return {"schema_version": "1.0", "revision": context["revision"],
         "command_digest": digest(context["request"]["command"]),
-        "snapshot": context["snapshot"], "snapshot_digest": state_digest(Snapshot.model_validate(context["snapshot"])),
+        "snapshot": context["snapshot"], "snapshot_digest": state_digest(read_snapshot(context["snapshot"])),
         "model_version": context["model_version"], "policy_version": context["policy_version"],
         "execution_scope": context.get("execution_scope", "unconfigured"),
         "mock": True, "can_approve": False, "evidence": None, "simulation": None,
