@@ -76,7 +76,9 @@
             "execution_denied",
             "execution_reserved",
             "executed",
-            "execution_unknown"
+            "execution_unknown",
+            "evaluation_interrupted",
+            "execution_interrupted"
           ],
           "title": "Kind",
           "type": "string"

@@ -11,7 +11,7 @@ OP = {"Authorization": "Bearer local-operator"}
 APP = {"Authorization": "Bearer local-approver"}
 
 @pytest.fixture
-def client(monkeypatch):
+def client(monkeypatch, tmp_path):
     monkeypatch.setenv("IRON_MAN_OPERATOR_TOKEN", "local-operator")
     monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
     # Approval-path tests exercise the explicit mock-only gateway policy.
@@ -19,8 +19,10 @@ def client(monkeypatch):
     def mock_simulate(*args):
         return calculation(*args).model_copy(update={"mock": True})
     monkeypatch.setattr(simulator, "simulate", mock_simulate)
-    monkeypatch.setattr(main, "gateway", Gateway())
-    return TestClient(main.app)
+    gateway = Gateway(tmp_path / "test.sqlite3")
+    monkeypatch.setattr(main, "gateway", gateway)
+    yield TestClient(main.app)
+    gateway.close()
 
 def evaluated(client, speed=80):
     response = client.post('/requests', headers=OP, json={"command": {"target_pct": speed}})
@@ -83,8 +85,9 @@ def test_changed_approval_context_denies_execution(client, monkeypatch, change):
         stored['approval']['expires_at'] = time.time() - 1
     else:
         stored['report']['reason'] = 'tampered'
+    main.gateway.store.save(stored)
     assert execute(client, row).status_code == 409
-    assert stored['status'] == 'revalidation_required'
+    assert main.gateway.get(row['id'])['status'] == 'revalidation_required'
     assert not main.gateway.adapter.executions
 
 def test_invalid_sensor_holds(client):

@@ -10,7 +10,7 @@
       "duration_s": 300
     }
   },
-  "status": "awaiting_approval",
+  "status": "hold",
   "report": {
     "schema_version": "1.0",
     "revision": 2,
@@ -25,10 +25,10 @@
       "data_origin": "synthetic"
     },
     "snapshot_digest": "00966c1512c0546d40714c454e4dc8686951662fb5d58e03bf82bd26337598db",
-    "model_version": "mock-cooling-v1",
+    "model_version": "cooling-demo-v1",
     "policy_version": "demo-policy-v1",
     "mock": true,
-    "can_approve": true,
+    "can_approve": false,
     "evidence": {
       "schema_version": "1.0",
       "mock": true,
@@ -58,35 +58,35 @@
     },
     "simulation": {
       "schema_version": "1.0",
-      "mock": true,
+      "mock": false,
       "status": "completed",
-      "model_version": "mock-cooling-v1",
+      "model_version": "cooling-demo-v1",
       "scenarios": [
         {
           "kind": "normal",
           "evidence_id": null,
-          "baseline_peak_c": 65.0,
-          "candidate_peak_c": 68.0,
+          "baseline_peak_c": 60.0,
+          "candidate_peak_c": 60.0,
           "limit_c": 80.0,
           "exceeded": false,
-          "value_origin": "hardcoded_demo_fixture"
+          "value_origin": "model_calculation"
         },
         {
           "kind": "degraded_cooling",
           "evidence_id": "demo-evidence-01",
-          "baseline_peak_c": 65.0,
-          "candidate_peak_c": 68.0,
+          "baseline_peak_c": 66.00000000000023,
+          "candidate_peak_c": 73.30600010252004,
           "limit_c": 80.0,
           "exceeded": false,
-          "value_origin": "hardcoded_demo_fixture"
+          "value_origin": "model_calculation"
         }
       ],
-      "limitation": "고정 모의 값입니다. 열수지·시간별 계산·현장 검증은 미구현입니다."
+      "limitation": "합성 초기 상태와 단순 열수지 모델입니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
     },
-    "verdict": "awaiting_approval",
-    "reason_code": "DEMO_PASS",
-    "reason": "모의 시험 통과: 가상 설비 승인 가능",
-    "digest": "ff29bd020d0e662a24cbff2472fd8dc4c5b99c18c7d9a0709da2e83ffa4f87ce"
+    "verdict": "hold",
+    "reason_code": "LIVE_POLICY_NOT_CONFIGURED",
+    "reason": "실제 모듈 승인 정책이 아직 구성되지 않았습니다.",
+    "digest": "cb6a1e21441095d02f168bb1426d524d82a3d28262413b42815b6d43654651a3"
   },
   "approval": null,
   "execution": null,
@@ -103,8 +103,8 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "awaiting_approval",
-      "report_digest": "ff29bd020d0e662a24cbff2472fd8dc4c5b99c18c7d9a0709da2e83ffa4f87ce",
+      "verdict": "hold",
+      "report_digest": "cb6a1e21441095d02f168bb1426d524d82a3d28262413b42815b6d43654651a3",
       "actor": null,
       "reason": null,
       "execution_id": null

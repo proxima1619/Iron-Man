@@ -121,6 +121,109 @@
             }
           }
         }
+      },
+      "get": {
+        "summary": "List Requests",
+        "operationId": "list_requests_requests_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequestRecord"
+                  },
+                  "title": "Response List Requests Requests Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/history": {
+      "get": {
+        "summary": "History",
+        "operationId": "history_requests__request_id__history_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestHistory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/requests/{request_id}": {
@@ -498,7 +601,9 @@
               "execution_denied",
               "execution_reserved",
               "executed",
-              "execution_unknown"
+              "execution_unknown",
+              "evaluation_interrupted",
+              "execution_interrupted"
             ],
             "title": "Kind"
           },
@@ -1049,6 +1154,31 @@
           "command"
         ],
         "title": "NewRequest"
+      },
+      "RequestHistory": {
+        "properties": {
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionReport"
+            },
+            "type": "array",
+            "title": "Reports"
+          },
+          "approvals": {
+            "items": {
+              "$ref": "#/components/schemas/Approval"
+            },
+            "type": "array",
+            "title": "Approvals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reports",
+          "approvals"
+        ],
+        "title": "RequestHistory"
       },
       "RequestRecord": {
         "properties": {

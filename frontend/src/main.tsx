@@ -22,6 +22,7 @@ function App() {
   const [token, setToken] = useState("local-operator");
   const [speed, setSpeed] = useState(60);
   const [row, setRow] = useState<Row | null>(null);
+  const [savedRows, setSavedRows] = useState<Row[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [reason, setReason] = useState("모의 보고서 확인");
@@ -69,7 +70,7 @@ function App() {
         <p>요청을 검토하고, 담당자가 승인한 명령만 가상 설비에 적용합니다.</p>
       </header>
       <aside>
-        개발 골격 · 실제 장비 미연결 · 합성 상태 · 시뮬레이션/근거 검토는 고정
+        개발 중 · 실제 장비 미연결 · 합성 상태와 단순 열수지 계산 · 근거 검토는
         모의 응답입니다.
       </aside>
       <section>
@@ -96,8 +97,8 @@ function App() {
           />
         </label>
         <p className="muted">
-          모의 사례: 60%는 반례 시험 차단, 80%는 모의 승인 가능. 실제 물리
-          계산이 아닙니다.
+          현재 합성 상태 예시: 60%는 위험 시험 차단, 80%는 승인 정책 미설정으로
+          보류됩니다. 현장 검증 결과가 아닙니다.
         </p>
         <button
           disabled={busy}
@@ -117,6 +118,39 @@ function App() {
         >
           새 요청 만들고 검토
         </button>
+      </section>
+      <section>
+        <h2>저장된 요청</h2>
+        <p className="muted">
+          서버를 다시 시작해도 같은 SQLite 파일의 기록을 불러올 수 있습니다.
+        </p>
+        <button
+          disabled={busy}
+          onClick={() =>
+            run(async () => {
+              setSavedRows(await api("/requests"));
+            })
+          }
+        >
+          저장된 요청 불러오기
+        </button>
+        <ul>
+          {savedRows.map((saved) => (
+            <li key={saved.id}>
+              <button
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    setRow(await api(`/requests/${saved.id}`));
+                  })
+                }
+              >
+                {saved.request.command.target_pct}% · {labels[saved.status]} ·{" "}
+                {saved.id.slice(0, 8)}
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
       {error && (
         <p role="alert" className="error">
@@ -139,7 +173,7 @@ function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>모의 조건</th>
+                      <th>시험 조건</th>
                       <th>변경 전 최고 °C</th>
                       <th>변경 후 최고 °C</th>
                       <th>결과</th>
@@ -151,7 +185,7 @@ function App() {
                         <td>{s.kind}</td>
                         <td>{s.baseline_peak_c}</td>
                         <td>{s.candidate_peak_c}</td>
-                        <td>{s.exceeded ? "한계 초과" : "모의 통과"}</td>
+                        <td>{s.exceeded ? "한계 초과" : "계산상 한계 이내"}</td>
                       </tr>
                     ))}
                   </tbody>

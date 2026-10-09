@@ -1,27 +1,27 @@
 {
   "schema_version": "1.0",
-  "mock": true,
+  "mock": false,
   "status": "completed",
-  "model_version": "mock-cooling-v1",
+  "model_version": "cooling-demo-v1",
   "scenarios": [
     {
       "kind": "normal",
       "evidence_id": null,
-      "baseline_peak_c": 65.0,
-      "candidate_peak_c": 68.0,
+      "baseline_peak_c": 60.0,
+      "candidate_peak_c": 60.0,
       "limit_c": 80.0,
       "exceeded": false,
-      "value_origin": "hardcoded_demo_fixture"
+      "value_origin": "model_calculation"
     },
     {
       "kind": "degraded_cooling",
       "evidence_id": "demo-evidence-01",
-      "baseline_peak_c": 65.0,
-      "candidate_peak_c": 68.0,
+      "baseline_peak_c": 66.00000000000023,
+      "candidate_peak_c": 73.30600010252004,
       "limit_c": 80.0,
       "exceeded": false,
-      "value_origin": "hardcoded_demo_fixture"
+      "value_origin": "model_calculation"
     }
   ],
-  "limitation": "고정 모의 값입니다. 열수지·시간별 계산·현장 검증은 미구현입니다."
+  "limitation": "합성 초기 상태와 단순 열수지 모델입니다. 실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. 시계열은 현 v1 API 계약에 포함되지 않습니다."
 }

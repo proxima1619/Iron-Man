@@ -136,7 +136,8 @@ class Approval(StrictModel):
 
 class AuditEvent(StrictModel):
     kind: Literal["created", "evaluation_failed", "evaluated", "approve", "reject",
-                  "execution_denied", "execution_reserved", "executed", "execution_unknown"]
+                  "execution_denied", "execution_reserved", "executed", "execution_unknown",
+                  "evaluation_interrupted", "execution_interrupted"]
     at: float
     verdict: RequestStatus | None = None
     report_digest: str | None = None
@@ -176,3 +177,8 @@ class ExecutionInput(StrictModel):
 class DemoStateInput(StrictModel):
     load_ratio: float = Field(ge=0, le=2, allow_inf_nan=False)
     sensor_quality: Literal["valid", "invalid"] = "valid"
+
+
+class RequestHistory(StrictModel):
+    reports: list[DecisionReport]
+    approvals: list[Approval]

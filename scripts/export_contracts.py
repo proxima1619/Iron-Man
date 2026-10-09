@@ -19,7 +19,7 @@ if __name__ == '__main__':
     for model in (SimulationResult, EvidenceReview, RequestRecord):
         write(f'contracts/{model.__name__}.schema.json', model.model_json_schema())
     request = NewRequest(command={'target_pct': 80})
-    snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100, observed_at=0)
+    snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100, observed_at=1700000000)
     review = review_evidence(request, snapshot)
     from backend.contracts import Scenario
     result = simulate(request.command, snapshot, [Scenario(kind='normal'), *review.proposed_tests])
@@ -41,3 +41,4 @@ if __name__ == '__main__':
         row = gateway.create(request)
         record = RequestRecord.model_validate(gateway.evaluate(row['id']))
         write('contracts/examples/request-record-demo.json', record.model_dump())
+        gateway.close()

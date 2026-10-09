@@ -1,7 +1,6 @@
-"""Owner 1: demo orchestration and authorization. In-memory, single worker only."""
+"""Owner 1: demo orchestration and authorization. SQLite, single worker only."""
 import hashlib
 import json
-import threading
 import time
 import uuid
 from fastapi import HTTPException
@@ -9,6 +8,7 @@ from backend.contracts import NewRequest, Scenario, SimulationResult, EvidenceRe
 from backend.evidence import service as evidence
 from backend.simulator import service as simulator
 from backend.simulator.adapter import DemoAdapter
+from backend.gateway.storage import SQLiteStore
 
 POLICY_VERSION = "demo-policy-v1"
 APPROVAL_TTL_S = 300
@@ -22,15 +22,42 @@ def state_digest(snapshot):
     return digest(snapshot.model_dump(exclude={"observed_at"}))
 
 class Gateway:
-    def __init__(self):
-        self.lock = threading.RLock()
-        self.adapter = DemoAdapter()
-        self.requests = {}
+    def __init__(self, db_path=":memory:"):
+        self.store = SQLiteStore(db_path)
+        self.lock = self.store.lock
+        self.adapter = DemoAdapter(self.store)
+        try:
+            self._recover_interrupted()
+        except BaseException:
+            self.close()
+            raise
+
+    def close(self):
+        self.store.close()
+
+    def _recover_interrupted(self):
+        for row in self.store.list_records():
+            if row["status"] == "evaluating":
+                row.update(status="hold", report=None, approval=None)
+                self.event(row, "evaluation_interrupted", reason="서버 재시작: 평가를 다시 실행하세요.")
+                self.store.save(row)
+            elif row["status"] == "executing":
+                row["status"] = "execution_unknown"
+                self.event(row, "execution_interrupted", reason="서버 재시작: 자동 재실행하지 않습니다.")
+                self.store.save(row)
 
     def get(self, request_id):
-        if request_id not in self.requests:
+        row = self.store.get(request_id)
+        if row is None:
             raise HTTPException(404, "요청을 찾을 수 없습니다.")
-        return self.requests[request_id]
+        return row
+
+    def list_records(self):
+        return self.store.list_records()
+
+    def history(self, request_id):
+        self.get(request_id)
+        return self.store.history(request_id)
 
     def event(self, row, kind, **data):
         row["events"].append({"kind": kind, "at": time.time(), **data})
@@ -41,7 +68,7 @@ class Gateway:
                    "status": "draft", "report": None, "approval": None,
                    "execution": None, "events": []}
             self.event(row, "created")
-            self.requests[row["id"]] = row
+            self.store.save(row)
             return row
 
     def evaluate(self, request_id):
@@ -52,6 +79,8 @@ class Gateway:
             row["approval"] = None
             row["status"] = "evaluating"
             row["revision"] += 1
+            row["report"] = None
+            self.store.save(row)
             body = NewRequest.model_validate(row["request"])
             snapshot = self.adapter.read_state()
             report = {"schema_version": "1.0", "revision": row["revision"], "command_digest": digest(body.command.model_dump()),
@@ -112,6 +141,7 @@ class Gateway:
             row["report"] = report
             row["status"] = report["verdict"]
             self.event(row, "evaluated", verdict=row["status"], report_digest=report["digest"])
+            self.store.save(row)
             return row
 
     def decide(self, request_id, body, actor):
@@ -127,6 +157,7 @@ class Gateway:
                     "expires_at": time.time() + APPROVAL_TTL_S, "reason": body.reason}
                 row["status"] = "approved"
             self.event(row, body.decision, actor=actor, reason=body.reason)
+            self.store.save(row)
             return row
 
     def execute(self, request_id, body):
@@ -155,10 +186,13 @@ class Gateway:
                 row["status"] = "revalidation_required"
                 row["approval"] = None
                 self.event(row, "execution_denied", reason="승인 만료 또는 검증 대상 변경")
+                self.store.save(row)
                 raise HTTPException(409, "승인 만료 또는 검증 대상 변경: 재검증이 필요합니다.")
             execution_id = str(uuid.uuid4())
             row["status"] = "executing"
+            row["execution"] = {"execution_id": execution_id, "status": "unknown"}
             self.event(row, "execution_reserved", execution_id=execution_id)
+            self.store.save(row)  # Commit intent before applying even the virtual command.
             try:
                 result = self.adapter.apply_command(execution_id, command)
                 if result.get("status") != "applied":
@@ -170,4 +204,5 @@ class Gateway:
                 row["execution"] = {"execution_id": execution_id, "status": "unknown"}
                 row["status"] = "execution_unknown"
                 self.event(row, "execution_unknown", execution_id=execution_id)
+            self.store.save(row)
             return row

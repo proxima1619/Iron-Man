@@ -1,11 +1,31 @@
 import os
+import sqlite3
+from contextlib import asynccontextmanager
+from pathlib import Path
+from fastapi.responses import JSONResponse
 from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException
-from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, RequestRecord, Snapshot
+from backend.contracts import NewRequest, DecisionInput, ExecutionInput, DemoStateInput, RequestRecord, Snapshot, RequestHistory
 from backend.gateway.service import Gateway
 
-app = FastAPI(title="Iron Man — demo scaffold", version="0.1.0")
-gateway = Gateway()
+gateway = None
+
+@asynccontextmanager
+async def lifespan(app):
+    global gateway
+    default_path = Path(__file__).resolve().parents[1] / "data" / "ironman.sqlite3"
+    gateway = Gateway(os.getenv("IRON_MAN_DB_PATH", str(default_path)))
+    try:
+        yield
+    finally:
+        gateway.close()
+        gateway = None
+
+app = FastAPI(title="Iron Man — demo scaffold", version="0.1.0", lifespan=lifespan)
+
+@app.exception_handler(sqlite3.Error)
+async def storage_error(request, exc):
+    return JSONResponse(status_code=503, content={"detail": "저장소 오류: 처리 결과를 확인한 뒤 다시 시도하세요."})
 
 def identity(authorization: Annotated[str | None, Header()] = None):
     token = (authorization or "").removeprefix("Bearer ")
@@ -23,7 +43,7 @@ def approver(actor=Depends(identity)):
 @app.get("/health")
 def health():
     return {"status": "ok", "mode": "demo_only", "mock_modules": ["evidence"],
-            "storage": "in_memory", "real_equipment_connected": False}
+            "storage": "sqlite", "real_equipment_connected": False}
 
 @app.get("/state", response_model=Snapshot)
 def state(actor=Depends(identity)):
@@ -33,6 +53,14 @@ def state(actor=Depends(identity)):
 @app.post("/requests", status_code=201, response_model=RequestRecord)
 def create(body: NewRequest, actor=Depends(identity)):
     return gateway.create(body)
+
+@app.get("/requests", response_model=list[RequestRecord])
+def list_requests(actor=Depends(identity)):
+    return gateway.list_records()
+
+@app.get("/requests/{request_id}/history", response_model=RequestHistory)
+def history(request_id: str, actor=Depends(identity)):
+    return gateway.history(request_id)
 
 @app.get("/requests/{request_id}", response_model=RequestRecord)
 def read(request_id: str, actor=Depends(identity)):

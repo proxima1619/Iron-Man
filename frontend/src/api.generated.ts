@@ -45,10 +45,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Requests */
+        get: operations["list_requests_requests_get"];
         put?: never;
         /** Create */
         post: operations["create_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requests/{request_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_requests__request_id__history_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -178,7 +196,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown";
+            kind: "created" | "evaluation_failed" | "evaluated" | "approve" | "reject" | "execution_denied" | "execution_reserved" | "executed" | "execution_unknown" | "evaluation_interrupted" | "execution_interrupted";
             /** At */
             at: number;
             /** Verdict */
@@ -383,6 +401,13 @@ export interface components {
             purpose: string;
             command: components["schemas"]["Command-Output"];
         };
+        /** RequestHistory */
+        RequestHistory: {
+            /** Reports */
+            reports: components["schemas"]["DecisionReport"][];
+            /** Approvals */
+            approvals: components["schemas"]["Approval"][];
+        };
         /** RequestRecord */
         RequestRecord: {
             /** Id */
@@ -565,6 +590,37 @@ export interface operations {
             };
         };
     };
+    list_requests_requests_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestRecord"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_requests_post: {
         parameters: {
             query?: never;
@@ -587,6 +643,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RequestRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_requests__request_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestHistory"];
                 };
             };
             /** @description Validation Error */

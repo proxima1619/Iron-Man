@@ -11,3 +11,8 @@ dist/
 *.log
 
 *.egg-info/
+
+data/
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.lock
