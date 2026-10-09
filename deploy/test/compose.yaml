@@ -1,0 +1,8 @@
+services:
+  caddy:
+    ports: !override
+      - "127.0.0.1:18082:80"
+      - "127.0.0.1:18443:443"
+    volumes:
+      - ./deploy/test/Caddyfile:/etc/caddy/Caddyfile.test:ro
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.test", "--adapter", "caddyfile"]

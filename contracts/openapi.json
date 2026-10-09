@@ -41,6 +41,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
           }
         ],
         "responses": {
@@ -86,6 +102,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
             }
           }
         ],
@@ -140,6 +172,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
             }
           }
         ],
@@ -200,6 +248,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
           }
         ],
         "responses": {
@@ -254,6 +318,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
             }
           }
         ],
@@ -310,6 +390,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
           }
         ],
         "responses": {
@@ -365,6 +461,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
           }
         ],
         "responses": {
@@ -419,6 +531,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
             }
           }
         ],
@@ -485,6 +613,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
           }
         ],
         "requestBody": {
@@ -540,6 +684,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
             }
           }
         ],

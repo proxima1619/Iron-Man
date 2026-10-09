@@ -19,7 +19,7 @@ const labels: Record<string, string> = {
   execution_unknown: "실행 결과 불명",
 };
 function App() {
-  const [token, setToken] = useState("local-operator");
+  const [token, setToken] = useState("");
   const [speed, setSpeed] = useState(60);
   const [row, setRow] = useState<Row | null>(null);
   const [savedRows, setSavedRows] = useState<Row[]>([]);
@@ -31,7 +31,7 @@ function App() {
       method: body === undefined ? "GET" : "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "X-Iron-Man-Token": token,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
@@ -53,7 +53,7 @@ function App() {
     async function poll() {
       try {
         const response = await fetch(`/api/requests/${requestId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { "X-Iron-Man-Token": token },
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("평가 상태 조회 실패");
@@ -116,7 +116,8 @@ function App() {
           />
         </label>
         <p className="muted">
-          요청: local-operator / 승인: local-approver — 로컬 시연용 공개 토큰
+          서버 담당자가 제공한 요청 또는 승인 토큰을 입력하세요.
+          로컬 개발 기본값: local-operator / local-approver
         </p>
         <label>
           목표 펌프 속도 (%){" "}

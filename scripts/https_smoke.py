@@ -1,0 +1,98 @@
+"""Check HTTPS trust, both authentication layers and evaluation over a deployed URL.
+
+Reads credentials from a private JSON file; never prints them. Default TLS trust
+is the system CA store. --ca-file is for the CI-local Caddy test CA only.
+"""
+import argparse
+import base64
+import json
+from pathlib import Path
+import ssl
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+
+def run(access, ca_file=None, http_url=None):
+    base = access["url"].rstrip("/")
+    parsed = urllib.parse.urlsplit(base)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.path:
+        raise ValueError("Test URL must be an HTTPS origin without embedded credentials")
+    context = ssl.create_default_context(cafile=ca_file)
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+    # Send no credentials over HTTP. Confirm the edge redirects to HTTPS.
+    try:
+        response = urllib.request.build_opener(NoRedirect()).open(
+            http_url or f"http://{parsed.hostname}/", timeout=15)
+    except urllib.error.HTTPError as error:
+        response = error
+    with response:
+        assert response.status in {301, 308}
+        location = urllib.parse.urlsplit(response.headers["Location"])
+        assert location.scheme == "https" and location.hostname == parsed.hostname
+    basic = "Basic " + base64.b64encode(
+        (access["username"] + ":" + access["password"]).encode()).decode()
+
+    def request(path, *, login=True, token=None, body=None, auth=None):
+        headers = {}
+        if login:
+            headers["Authorization"] = auth or basic
+        if token:
+            headers["X-Iron-Man-Token"] = token
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        data = None if body is None else json.dumps(body).encode()
+        try:
+            response = urllib.request.urlopen(urllib.request.Request(base + path, headers=headers, data=data),
+                                              context=context, timeout=15)
+        except urllib.error.HTTPError as error:
+            response = error
+        with response:
+            return response.status, response.read()
+
+    assert request("/", login=False)[0] == 401
+    assert request("/", auth="Basic ZGVtbzppbmNvcnJlY3Q=")[0] == 401
+    status, html = request("/")
+    assert status == 200 and b'<div id="root"></div>' in html
+    assert request("/api/requests")[0] == 401  # Site password alone has no role.
+    assert request("/api/requests", login=False, token=access["operator_token"])[0] == 401
+    operator, approver = access["operator_token"], access["approver_token"]
+    assert request("/api/state", token=operator)[0] == 200
+    for speed, verdict in ((60, "blocked"), (80, "hold")):
+        status, body = request("/api/requests", token=operator,
+                               body={"command": {"target_pct": speed}, "purpose": "HTTPS deployment smoke"})
+        assert status == 201
+        row = json.loads(body)
+        path = f'/api/requests/{row["id"]}'
+        status, body = request(path + "/evaluate", token=operator, body={})
+        assert status == 202 and json.loads(body)["status"] == "evaluating"
+        deadline = time.monotonic() + 100
+        while time.monotonic() < deadline:
+            status, body = request(path, token=operator)
+            assert status == 200
+            row = json.loads(body)
+            if row["status"] != "evaluating":
+                break
+            time.sleep(0.2)
+        assert row["status"] == verdict and not row["report"]["can_approve"]
+        decision = {"decision": "approve", "reason": "smoke test must not override policy",
+                    "report_digest": row["report"]["digest"]}
+        assert request(path + "/decisions", token=operator, body=decision)[0] == 403
+        assert request(path + "/decisions", token=approver, body=decision)[0] == 409
+    print("PASS: trusted HTTPS, page password, role isolation, async evaluation, policy retained")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--access-file", type=Path, default=Path(".deploy-private/access.json"))
+    parser.add_argument("--ca-file")
+    parser.add_argument("--http-url", help="HTTP redirect origin override for CI")
+    parser.add_argument("--url", help="Override test origin (CI uses a nonstandard port)")
+    args = parser.parse_args()
+    access = json.loads(args.access_file.read_text())
+    if args.url:
+        access["url"] = args.url
+    run(access, args.ca_file, args.http_url)

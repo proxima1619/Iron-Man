@@ -77,7 +77,7 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 
 저장된 요청 목록은 `GET /requests`, 이전 보고서·승인 이력은 `GET /requests/{id}/history`에서 조회합니다. 목록은 현재 데모용 전체 반환이며 페이지네이션은 후속입니다. 재시작으로 검토가 중단되면 `hold`와 report=null, 실행이 중단되면 `execution_unknown`으로 복구됩니다. 이유는 events의 `evaluation_interrupted` 또는 `execution_interrupted`에 기록됩니다.
 
-모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, 평가 용량 초과 429, DB·작업 시작 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
+모든 요청/상태 API는 `X-Iron-Man-Token` 역할 토큰 또는 기존 `Authorization: Bearer ...`가 필요합니다. 공개 HTTPS 배포에서는 사이트 Basic 인증도 별도로 필요하므로 브라우저/API 클라이언트는 역할 토큰을 `X-Iron-Man-Token`으로 전달합니다. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422, 평가 용량 초과 429, DB·작업 시작 오류 503입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
 
 승인 버튼은 `status == awaiting_approval`이고 `report.can_approve == true`일 때 활성화합니다. 실행 버튼은 `status == approved`일 때 활성화합니다. `report.verdict`는 검토 당시 판정, `status`는 이후 승인·실행까지 포함하는 현재 상태입니다.
 

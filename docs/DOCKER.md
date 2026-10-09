@@ -56,7 +56,7 @@ docker compose up -d --build --wait
 
 `IRON_MAN_EVIDENCE_MODE`는 기본 `fixture`입니다. 실제 LLM 검토는 `live`와 `OPENAI_API_KEY`, `IRON_MAN_EVIDENCE_MODEL`을 함께 설정해야 합니다. `IRON_MAN_EVIDENCE_TIMEOUT_S`는 기본 20초입니다. Compose가 이 설정을 API에 전달하고 별도 평가 프로세스도 이를 이어받습니다. 팀 작성 근거 문서는 이미지의 `/app/data/sources/`에 포함하며, 실제 제조사 자료로 간주하지 않습니다.
 
-API 키는 런타임 환경 변수로 전달하며 이미지·프런트 빌드 인자에 넣지 않습니다. HTTPS·실서비스 로그인·외부 도메인은 외부 배포 단계에서 구성합니다.
+API 키는 런타임 환경 변수로 전달하며 이미지·프런트 빌드 인자에 넣지 않습니다. 공개 HTTPS·사이트 비밀번호·강한 역할 토큰 배포는 [외부 데모 배포](DEPLOYMENT.md)의 `compose.deploy.yaml`을 사용합니다. 개인 계정 로그인은 별도입니다.
 
 ## 확인·문제 해결
 

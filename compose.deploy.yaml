@@ -1,0 +1,46 @@
+# Standalone deployment file: docker compose --env-file .env.deploy -f compose.deploy.yaml up ...
+name: iron-man
+services:
+  api:
+    extends:
+      file: compose.yaml
+      service: api
+    environment:
+      IRON_MAN_DEPLOYMENT: public
+      IRON_MAN_OPERATOR_TOKEN: ${IRON_MAN_OPERATOR_TOKEN:?Generate .env.deploy first}
+      IRON_MAN_APPROVER_TOKEN: ${IRON_MAN_APPROVER_TOKEN:?Generate .env.deploy first}
+
+  web:
+    extends:
+      file: compose.yaml
+      service: web
+    # Only Caddy is published. Remove the inherited localhost development port.
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.10-alpine
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?Set the demo hostname}
+      DEMO_USER: ${DEMO_USER:?Set the demo username}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?Generate the password hash first}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  gateway-data:
+  caddy-data:
+  caddy-config:

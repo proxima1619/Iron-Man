@@ -11,6 +11,7 @@ AI의 설비 변경 요청을 가상 환경에서 검토하고, 담당자가 승
 - [공통 계약](contracts/README.md)
 - [시뮬레이터 모듈 안내](backend/simulator/README.md)
 - [현재 구현 범위와 인계](docs/IMPLEMENTATION.md)
+- [외부 HTTPS 데모 배포](docs/DEPLOYMENT.md): AWS 생성 계획·비용·인증·비밀값·배포 검증
 - [작업·외부 자산 기록](docs/provenance.md)
 
 개발 계획서는 목표 범위이며 현재 코드의 완성 목록이 아닙니다. 현재 상태는 아래 표와 `IMPLEMENTATION.md`를 기준으로 보세요.

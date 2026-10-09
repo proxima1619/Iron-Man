@@ -1,0 +1,16 @@
+{$DEMO_DOMAIN} {
+    encode gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        X-Frame-Options DENY
+        -Server
+    }
+    basic_auth {
+        {env.DEMO_USER} {env.DEMO_PASSWORD_HASH}
+    }
+    reverse_proxy web:8080 {
+        # Site password is checked at the edge; role tokens use their own header.
+        header_up -Authorization
+    }
+}
