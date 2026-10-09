@@ -2,9 +2,9 @@
 
 ## 현재 상태
 
-2026-10-09에 EC2의 기존 합성 냉각 탱크 데모를 HTTPS로 배포하고 인증·브라우저 시연·API 재시작 후 기록 보존을 확인했습니다. 접속 정보는 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
+2026-10-09에 EC2 공개 서버를 TEP 포함 커밋 `4de39be6ad8ba6f57d75c9cd04a1c6b1a1edea51`로 갱신했습니다. [공개 홈페이지](https://43.201.63.65.sslip.io/)와 [TEP 검토 콘솔](https://43.201.63.65.sslip.io/#review)을 사용할 수 있습니다. 접속 정보는 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
 
-TEP를 포함한 이미지는 별도 Compose 프로젝트에서 비root 실행·XMV10/XMV11 HTTP 평가·승인/실행 거절·API 및 전체 스택 재생성 후 보고서 보존을 검증했습니다. 공개 데모 업데이트는 해당 커밋의 CI가 통과한 뒤 수행하고, 업데이트 후 `https_smoke`와 `browser_smoke`로 다시 확인합니다.
+TEP 이미지는 별도 Compose 프로젝트에서 비root 실행·XMV10/XMV11 HTTP 평가·승인/실행 거절·API 및 전체 스택 재생성 후 보고서 보존을 검증했습니다. [전체 CI](https://github.com/proxima1619/Iron-Man/actions/runs/37889292732) 통과 후 공개 서버에 반영하고, 공인 TLS의 HTTP 평가와 실제 Chrome 화면을 다시 확인했습니다. 배포 전 6건의 SQLite 원본을 백업·대조했고, 공개 시험 후 API 컨테이너를 재생성하여 18건의 요청·보고서·판단·실행·감사 기록이 동일하게 유지됨을 확인했습니다. [배포 검증 기록](codex-log/tep-public-deployment-validation.md).
 
 현재 EC2는 콘솔에서 직접 생성했으며 Elastic IP가 없는 자동 할당 IPv4를 사용합니다. 아래 CloudFormation 생성 계획은 기존 서버에 적용한 구성이 아닙니다. 인스턴스를 중지 후 다시 시작하면 IP·DNS·HTTPS 설정 확인이 필요합니다.
 
@@ -18,7 +18,7 @@ TEP를 포함한 이미지는 별도 Compose 프로젝트에서 비root 실행·
 
 공개 포트는 TCP 80(인증서 발급·HTTPS 전환), 443(시연), 관리자 IP의 22(SSH)입니다. API 8000·웹 8080은 호스트에 공개하지 않습니다. 실제 설비는 연결하지 않습니다. 초기 부하 1의 60%·80% 요청은 차단됩니다. 승인 시연은 부하 0.6의 80% 요청이 장기·평형·민감도 등 가상 정책을 통과한 뒤 진행합니다.
 
-UI의 기본 모델은 TEP입니다. TEP 계산은 성공해도 `hold / TEP_POLICY_NOT_CONFIGURED`이며 승인·실행하지 않습니다. 승인 흐름을 시연할 때는 **모델 → 기존 합성 냉각 탱크**를 명시적으로 선택합니다.
+홈페이지의 데모 체험은 합성 냉각 탱크를 사용하며 TEP 기록은 검토 콘솔에서 확인합니다. 검토 콘솔의 기본 모델은 TEP입니다. TEP 계산은 성공해도 `hold / TEP_POLICY_NOT_CONFIGURED`이며 승인·실행하지 않습니다. 승인 흐름을 시연할 때는 **모델 → 기존 합성 냉각 탱크**를 명시적으로 선택합니다.
 
 ## TEP 이미지와 검사
 
