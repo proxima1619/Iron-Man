@@ -1,5 +1,6 @@
 import copy
 import json
+import time
 import pytest
 from backend.contracts import NewRequest, Command, EvidenceReview, RequestRecord
 from backend.evidence import service, llm
@@ -13,6 +14,16 @@ def output():
                        "applicability": "applicable", "matched_conditions": ["가상 냉각 탱크"],
                        "missing_conditions": [], "proposed_test": "degraded_cooling"}],
             "missing_conditions": []}
+
+
+def evidence_test_worker(context, connection):
+    from unittest.mock import patch
+    from backend.gateway.evaluation import calculate
+    try:
+        with patch("backend.evidence.llm.analyze", return_value=output()):
+            connection.send(calculate(context))
+    finally:
+        connection.close()
 
 
 @pytest.fixture(autouse=True)
@@ -195,12 +206,18 @@ def test_live_review_persists_and_validates_via_api(monkeypatch, tmp_path):
     monkeypatch.setattr(llm, "analyze", lambda payload: output())
     headers = {"Authorization": "Bearer test-operator"}
     with TestClient(main.app) as client:
+        main.gateway.evaluations.worker_target = evidence_test_worker
         created = client.post("/requests", headers=headers, json={"command": {"target_pct": 60}})
         assert created.status_code == 201
         request_id = created.json()["id"]
         response = client.post(f"/requests/{request_id}/evaluate", headers=headers)
-        assert response.status_code == 200
-        report = response.json()
+        assert response.status_code == 202
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            report = client.get(f"/requests/{request_id}", headers=headers).json()
+            if report["status"] != "evaluating":
+                break
+            time.sleep(0.01)
         assert report["status"] == "blocked"
         RequestRecord.model_validate(report)
     with TestClient(main.app) as client:

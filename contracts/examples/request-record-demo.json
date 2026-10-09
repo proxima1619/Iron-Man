@@ -68,7 +68,7 @@
           "evidence_id": "demo-evidence-01"
         }
       ],
-      "limitation": "실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다."
+      "limitation": "실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다. 검토 입력: 현재 온도 60°C, 실제 속도 100%, 기존 목표 100%, 요청 목표 80%, 부하 1, 가상 시각 0s, 예측 구간 300s, 모델 cooling-demo-v3. 기존 목표 출처: snapshot."
     },
     "simulation": {
       "schema_version": "1.0",
@@ -100,7 +100,7 @@
     "verdict": "awaiting_approval",
     "reason_code": "DEMO_PASS",
     "reason": "가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.",
-    "digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd"
+    "digest": "7d9dacff77dd27f035fb590efafd7f2fdb5393485ff86aada19373c57ced1679"
   },
   "approval": null,
   "execution": null,
@@ -118,7 +118,7 @@
       "kind": "evaluated",
       "at": 1700000000.0,
       "verdict": "awaiting_approval",
-      "report_digest": "466ae0c24aeda6243d2f9d5a5e739d30b37819d9ddb3a6cacf93398c4fb0b4fd",
+      "report_digest": "7d9dacff77dd27f035fb590efafd7f2fdb5393485ff86aada19373c57ced1679",
       "actor": null,
       "reason": null,
       "execution_id": null

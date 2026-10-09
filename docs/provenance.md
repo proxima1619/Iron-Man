@@ -10,9 +10,18 @@
 ## 모의 자료
 
 - `fixtures/demo-source.md`: 팀 데모용 작성 자료. 실제 논문·제조사 매뉴얼 아님.
-- 시뮬레이터 숫자·임계값: UI/API 흐름 검증을 위한 고정 fixture. 현실 설비 기준 아님.
+- 시뮬레이터 v3는 데모 계수 기반 물리 계산이며 현실 설비 기준·현장 검증값이 아님.
 
-## 외부 라이브러리
+## 3번 실제 외부 문헌 수집 — 2026-10-09
+
+Europe PMC REST API로 실제 검색과 공개 JATS XML 원문 다운로드를 수행했다.
+`data/sources/paper-sources.json`은 PMC11557826, PMC10587106, PMC8874691의
+CC BY 4.0 문단 발췌다. 원 저자·저널·DOI·날짜·원문 URL·문단 위치·XML 해시와 라이선스를 기록했다.
+공백 정규화와 문단 선택만 수행했으며 그림·표·참고문헌은 포함하지 않았다.
+해당 논문의 계수를 가상 설비에 적용하거나 현실 안전성을 검증한 것은 아니다.
+자세한 논문 목록과 적용 한계는 docs/evidence_v3_handoff.md를 참조한다.
+
+## 외부 라이브러리 목록
 
 FastAPI, Pydantic, Uvicorn, Pytest, HTTPX, React, React DOM, TypeScript, Vite 및 전이 의존성 사용.
 정확한 설치 버전은 `requirements-dev.lock.txt`, `frontend/package-lock.json`에서 확인. 각 라이브러리의 라이선스를 따릅니다.

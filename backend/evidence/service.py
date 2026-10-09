@@ -7,6 +7,8 @@ from urllib.parse import urlsplit
 from backend.contracts import NewRequest, Snapshot, EvidenceReview, Scenario
 from backend.evidence import llm
 from backend.evidence.schema import Analysis
+from backend.evidence.context import review_context, context_description
+from backend.evidence import papers
 
 SOURCE_PATH = Path(__file__).resolve().parents[2] / "data" / "sources" / "cooling-demo.json"
 
@@ -40,7 +42,7 @@ def load_sources(path: Path | None = None) -> list[dict]:
     return sources
 
 
-def validate_analysis(raw: dict, sources: list[dict]) -> EvidenceReview:
+def validate_analysis(raw: dict, sources: list[dict], context: dict | None = None) -> EvidenceReview:
     analysis = Analysis.model_validate(raw)
     by_id = {source["source_id"]: source for source in sources}
     cards, tests = [], []
@@ -53,7 +55,11 @@ def validate_analysis(raw: dict, sources: list[dict]) -> EvidenceReview:
         if claim.proposed_test and (claim.stance == "support" or
                                    claim.applicability not in {"applicable", "partial"}):
             raise ValueError("Unsupported counterexample")
-        evidence_id = f"evidence-{index + 1:02d}"
+        identity = json.dumps([claim.source_id, source["version"], claim.claim, claim.excerpt, claim.stance],
+                              ensure_ascii=False).encode()
+        evidence_id = "evidence-" + hashlib.sha256(identity).hexdigest()[:16]
+        if any(card["evidence_id"] == evidence_id for card in cards):
+            raise ValueError("Duplicate evidence claim")
         card = claim.model_dump()
         card.update({key: source[key] for key in source if key != "text"})
         card["evidence_id"] = evidence_id
@@ -61,11 +67,18 @@ def validate_analysis(raw: dict, sources: list[dict]) -> EvidenceReview:
         cards.append(card)
         if claim.proposed_test and not tests:
             tests.append(Scenario(kind=claim.proposed_test, evidence_id=evidence_id))
-    sufficient = bool(cards) and any(c["applicability"] in {"applicable", "partial"} for c in cards)
+    sufficient = bool(cards) and all(c["applicability"] == "applicable" for c in cards)
     missing = list(dict.fromkeys([*analysis.missing_conditions,
                                  *(condition for c in cards for condition in c["missing_conditions"])]))
     sufficient = sufficient and not missing
-    limitation = "사전 수집 문서의 실제 LLM 검토. 팀 작성 가상 설비 규정이며 실제 제조사 자료·현실 안전 검증이 아닙니다."
+    kinds = {source["source_type"] for source in sources}
+    limitation = "실제 LLM 문서 검토. 현실 설비 안전을 보증하지 않습니다."
+    if "paper" in kinds:
+        limitation += " 공개 논문 원문 발췌를 사용하며 해당 논문의 설비·유체·범위와 가상 모델의 차이를 확인해야 합니다."
+    if "team_authored_demo" in kinds:
+        limitation += " 팀 작성 데모 규정은 실제 제조사 자료가 아닙니다."
+    if context:
+        limitation += " " + context_description(context)
     if missing:
         limitation += " 미확인 조건: " + "; ".join(missing)
     fingerprint = hashlib.sha256(json.dumps(sources, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
@@ -79,13 +92,26 @@ def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
         try:
             if mode != "live":
                 raise ValueError("Unsupported evidence mode")
-            sources = load_sources()
+            context = review_context(request, snapshot)
+            if context["domain_reasons"]:
+                return EvidenceReview(mock=False, status="insufficient", cards=[], proposed_tests=[],
+                    limitation=context_description(context) + " 입력 부적합: " + "; ".join(context["domain_reasons"]))
+            source_mode = os.environ.get("IRON_MAN_EVIDENCE_SOURCE_MODE", "local")
+            if source_mode == "local":
+                sources = load_sources()
+            elif source_mode == "europepmc":
+                sources = papers.retrieve_papers(os.environ.get("IRON_MAN_EVIDENCE_QUERY") or papers.DEFAULT_QUERY)
+            else:
+                raise ValueError("Unsupported source mode")
             if not sources:
                 return EvidenceReview(mock=False, status="insufficient", cards=[], proposed_tests=[],
                                       limitation="사전 수집 문서에 관련 근거가 없습니다.")
-            return validate_analysis(llm.analyze({"request": request.model_dump(),
+            result = validate_analysis(llm.analyze({"request": request.model_dump(),
                                                  "snapshot": snapshot.model_dump(),
-                                                 "documents": sources}), sources)
+                                                 "review_context": context,
+                                                 "documents": sources}), sources, context)
+            label = "실시간 Europe PMC 논문 검색·원문 수집" if source_mode == "europepmc" else "사전 수집 문서 검토"
+            return result.model_copy(update={"limitation": label + ". " + result.limitation})
         except Exception:
             return EvidenceReview(mock=False, status="failed", cards=[], proposed_tests=[],
                                   limitation="문서·LLM 검토 실패 또는 시간 초과. 실행을 보류하고 설정·출처를 확인하세요.")
@@ -96,4 +122,5 @@ def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
         "applicability": "unknown", "locator": "fixtures/demo-source.md",
         "source_url": None, "source_type": "team_authored_fixture",
     }], proposed_tests=[Scenario(kind="degraded_cooling", evidence_id="demo-evidence-01")],
-        limitation="실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다.")
+        limitation="실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다. "
+                   + context_description(review_context(request, snapshot)))
