@@ -198,7 +198,7 @@ def test_schema_v1_migration_preserves_history_and_setpoint(tmp_path):
     store = SQLiteStore(path)
     try:
         state = DemoAdapter(store).read_state()
-        assert store.connection.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert store.connection.execute("PRAGMA user_version").fetchone()[0] == 3
         assert state.revision == old_state["revision"] + 1 and state.load_ratio == 0.8
         assert state.pump_speed_pct == state.target_pump_speed_pct == 42
         assert state.temperature_c == 60 and state.simulation_time_s == 0

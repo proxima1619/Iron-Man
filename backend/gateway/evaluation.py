@@ -5,7 +5,7 @@ import time
 from backend.contracts import NewRequest, Snapshot, Scenario, SimulationResult, EvidenceReview
 from backend.evidence import service as evidence
 from backend.simulator import service as simulator
-from backend.gateway import policy
+from backend.gateway import policy, review as review_policy
 
 SNAPSHOT_TTL_S = 60
 
@@ -68,6 +68,8 @@ def calculate(context):
                     actual = {(s.kind, s.evidence_id) for s in result.scenarios}
                     if actual != expected:
                         raise ValueError("missing or unexpected scenario result")
+                    assessment = review_policy.assessment(result, context.get("review_settings"))
+                    report["assessment"] = assessment.model_dump()
                     issue = policy.simulation_issue(result)
                     unsafe = any(s.exceeded or s.baseline_peak_c > policy.LIMIT_C for s in result.scenarios)
                     if issue:
@@ -78,6 +80,9 @@ def calculate(context):
                     else:
                         report.update(verdict="awaiting_approval", reason_code="DEMO_PASS",
                                       can_approve=True, reason="가상 설비 정책 통과: 담당자 승인 후 가상 목표 속도 적용 가능. 실제 설비 안전 승인이 아닙니다.")
+                        if assessment.status == "material_deviation":
+                            report.update(reason_code="MATERIAL_DEVIATION",
+                                reason="설정된 최고 온도 편차 기준 초과: 지정 승인자의 예외 검토가 필요합니다. 가상 설비에만 적용됩니다.")
     except Exception:
         report.update(verdict="hold", reason_code="MODULE_FAILURE", reason="검토 모듈 실패: 실행을 보류합니다.")
     return report

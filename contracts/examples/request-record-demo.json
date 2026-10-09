@@ -122,6 +122,15 @@
       "actor": null,
       "reason": null,
       "execution_id": null
+    },
+    {
+      "kind": "notification_queued",
+      "at": 1700000000.0,
+      "verdict": null,
+      "report_digest": null,
+      "actor": null,
+      "reason": "SMTP 또는 승인자 이메일 미설정",
+      "execution_id": null
     }
   ],
   "evaluation": null

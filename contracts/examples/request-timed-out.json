@@ -41,7 +41,8 @@
     "verdict": "hold",
     "reason_code": "EVALUATION_TIMEOUT",
     "reason": "예시: 평가 제한 시간 초과",
-    "digest": "6e58d0491b6b848065b5961b5467ed414225e5da3e01aa2625e1237dffdcc669"
+    "digest": "6e58d0491b6b848065b5961b5467ed414225e5da3e01aa2625e1237dffdcc669",
+    "assessment": null
   },
   "approval": null,
   "execution": null,
@@ -62,6 +63,15 @@
       "report_digest": "7d9dacff77dd27f035fb590efafd7f2fdb5393485ff86aada19373c57ced1679",
       "actor": null,
       "reason": null,
+      "execution_id": null
+    },
+    {
+      "kind": "notification_queued",
+      "at": 1700000000.0,
+      "verdict": null,
+      "report_digest": null,
+      "actor": null,
+      "reason": "SMTP 또는 승인자 이메일 미설정",
       "execution_id": null
     },
     {

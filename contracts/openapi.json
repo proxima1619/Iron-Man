@@ -932,6 +932,294 @@
           }
         }
       }
+    },
+    "/session": {
+      "get": {
+        "summary": "Session",
+        "operationId": "session_session_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/review-contact": {
+      "get": {
+        "summary": "Review Contact",
+        "operationId": "review_contact_requests__request_id__review_contact_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewContact"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/notifications": {
+      "get": {
+        "summary": "Request Notifications",
+        "operationId": "request_notifications_requests__request_id__notifications_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Notification"
+                  },
+                  "title": "Response Request Notifications Requests  Request Id  Notifications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/notifications/{notification_id}/send": {
+      "post": {
+        "summary": "Send Notification",
+        "operationId": "send_notification_requests__request_id__notifications__notification_id__send_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Notification Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1015,7 +1303,12 @@
               "execution_unknown",
               "evaluation_interrupted",
               "execution_interrupted",
-              "evaluation_started"
+              "evaluation_started",
+              "request_retest",
+              "notification_queued",
+              "notification_sending",
+              "notification_sent",
+              "notification_unknown"
             ],
             "title": "Kind"
           },
@@ -1175,7 +1468,8 @@
             "type": "string",
             "enum": [
               "approve",
-              "reject"
+              "reject",
+              "request_retest"
             ],
             "title": "Decision"
           },
@@ -1282,6 +1576,7 @@
               "EVIDENCE_INCOMPLETE",
               "SIMULATION_INCOMPLETE",
               "MODULE_FAILURE",
+              "MATERIAL_DEVIATION",
               "LIVE_POLICY_NOT_CONFIGURED",
               "DEMO_POLICY_OUT_OF_SCOPE",
               "EVALUATION_CONTEXT_CHANGED",
@@ -1298,6 +1593,16 @@
           "digest": {
             "type": "string",
             "title": "Digest"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -1318,7 +1623,8 @@
           "verdict",
           "reason_code",
           "reason",
-          "digest"
+          "digest",
+          "assessment"
         ],
         "title": "DecisionReport"
       },
@@ -1362,6 +1668,51 @@
           "load_ratio"
         ],
         "title": "DemoStateInput"
+      },
+      "DeviationMetric": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "degraded_cooling"
+            ],
+            "title": "Kind"
+          },
+          "baseline_peak_c": {
+            "type": "number",
+            "title": "Baseline Peak C"
+          },
+          "candidate_peak_c": {
+            "type": "number",
+            "title": "Candidate Peak C"
+          },
+          "absolute_delta_c": {
+            "type": "number",
+            "title": "Absolute Delta C"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "baseline_peak_c",
+          "candidate_peak_c",
+          "absolute_delta_c",
+          "material"
+        ],
+        "title": "DeviationMetric"
       },
       "EvaluationTask": {
         "properties": {
@@ -1702,6 +2053,19 @@
           },
           "command": {
             "$ref": "#/components/schemas/Command-Input"
+          },
+          "requester_contact": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254,
+                "pattern": "^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester Contact"
           }
         },
         "additionalProperties": false,
@@ -1738,6 +2102,82 @@
           "command"
         ],
         "title": "NewRequest"
+      },
+      "Notification": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "report_digest": {
+            "type": "string",
+            "title": "Report Digest"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_configured",
+              "queued",
+              "sending",
+              "sent",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts",
+            "default": 0
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "request_id",
+          "report_digest",
+          "recipient",
+          "status",
+          "created_at",
+          "sent_at",
+          "attempts",
+          "detail"
+        ],
+        "title": "Notification"
       },
       "RequestHistory": {
         "properties": {
@@ -1861,6 +2301,92 @@
         ],
         "title": "RequestRecord"
       },
+      "ReviewAssessment": {
+        "properties": {
+          "comparison": {
+            "type": "string",
+            "const": "baseline_candidate_peak",
+            "title": "Comparison",
+            "default": "baseline_candidate_peak"
+          },
+          "origin": {
+            "type": "string",
+            "const": "synthetic_model",
+            "title": "Origin",
+            "default": "synthetic_model"
+          },
+          "threshold_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold C"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "threshold_not_configured",
+              "within_tolerance",
+              "material_deviation"
+            ],
+            "title": "Status"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/DeviationMetric"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "comparison",
+          "origin",
+          "threshold_c",
+          "status",
+          "metrics",
+          "limitation"
+        ],
+        "title": "ReviewAssessment"
+      },
+      "ReviewContact": {
+        "properties": {
+          "requester_contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester Contact"
+          },
+          "verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "requester_contact",
+          "verified"
+        ],
+        "title": "ReviewContact"
+      },
       "Scenario": {
         "properties": {
           "kind": {
@@ -1949,6 +2475,72 @@
           "value_origin"
         ],
         "title": "ScenarioResult"
+      },
+      "SessionInfo": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "operator",
+              "approver"
+            ],
+            "title": "Role"
+          },
+          "actor_label": {
+            "type": "string",
+            "title": "Actor Label"
+          },
+          "authentication": {
+            "type": "string",
+            "const": "demo_token",
+            "title": "Authentication",
+            "default": "demo_token"
+          },
+          "storage": {
+            "type": "string",
+            "const": "sqlite",
+            "title": "Storage",
+            "default": "sqlite"
+          },
+          "synthetic_approval_enabled": {
+            "type": "boolean",
+            "title": "Synthetic Approval Enabled"
+          },
+          "negligible_delta_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negligible Delta C"
+          },
+          "notification_configured": {
+            "type": "boolean",
+            "title": "Notification Configured"
+          },
+          "virtual_only": {
+            "type": "boolean",
+            "const": true,
+            "title": "Virtual Only",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "actor_label",
+          "authentication",
+          "storage",
+          "synthetic_approval_enabled",
+          "negligible_delta_c",
+          "notification_configured",
+          "virtual_only"
+        ],
+        "title": "SessionInfo"
       },
       "SimulationResult": {
         "properties": {
