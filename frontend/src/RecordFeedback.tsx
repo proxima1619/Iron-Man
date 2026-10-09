@@ -90,6 +90,12 @@ export function RecordFeedback({
           ? "저장된 TEP 기준·변경 결과와 설정된 문헌을 함께 검토합니다. 계산을 다시 실행하지 않으며 과거 결과는 그대로 유지됩니다."
           : "저장된 명령과 결과를 논문과 함께 분석합니다. 과거 결과는 그대로 유지됩니다."}
       </p>
+      {record.report?.reason_code === "INVALID_STATE" && (
+        <aside className="evidence-hold">
+          <strong>이 기록은 당시 상태 검사에서 보류됐습니다.</strong>
+          <p>관측 갱신은 현재 가상 상태만 바꾸므로 저장된 보류 사유는 남아 있습니다. 아래 AI 피드백은 최신 관측 없이 받을 수 있습니다. 당시 계산 결과가 없다면 AI는 보류 이유와 부족 조건을 설명합니다.</p>
+        </aside>
+      )}
       <button
         className="primary"
         disabled={
@@ -104,7 +110,7 @@ export function RecordFeedback({
       </button>
       <p className="muted">
         버튼을 누르면 서버의 API 키로 분석합니다. 설비를 다시 실행하거나
-        승인하지 않습니다.
+        승인하지 않습니다. 위에 표시된 당시 판정과 아래의 새 AI 설명은 별개입니다.
       </p>
       {error && (
         <p className="error" role="alert">

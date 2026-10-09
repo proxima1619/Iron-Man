@@ -298,7 +298,14 @@ function App() {
       {model === "cooling" && <VirtualPlant
         token={token}
         approver={approver}
-        onChanged={() => setConfirmed(false)}
+        onChanged={() => {
+          setConfirmed(false);
+          setRow(null);
+          setHistory(null);
+          setNotes([]);
+          setContact(null);
+          setError("");
+        }}
       />}
       <div className="workspace">
         <nav className="sidebar no-print" aria-label="요청 목록">
@@ -495,6 +502,7 @@ function App() {
                   </div>
                 </div>
                 <p className="verdict">
+                  {report && <strong>저장된 검토 판정: </strong>}
                   {report?.reason ||
                     (row.status === "evaluating"
                       ? "별도 프로세스에서 검토 중입니다. 결과를 자동으로 갱신합니다."
