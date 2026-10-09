@@ -40,7 +40,7 @@
   "unsupported_tests": [],
   "missing_conditions": [
     "TEP 운전 모드·유체·변수 적용 범위 미확인",
-    "TEP 적용 가능한 논문 counter 근거 부족"
+    "TEP 적용 가능한 counter 문헌 근거 부족"
   ],
   "source_bundle_sha256": "17920e27e1439f6217d75e399c7110921c902cab0b7e113d79e72ed07530c990",
   "limitation": "자동 계약 검증 예시 · 실제 LLM 미호출. TEP 문헌 적용성 검토와 실제 설비 검증은 별개입니다. 현장 실측 없음·시뮬레이션 기반·실제 설비 검증 미수행. 시험 제안은 실행 명령이 아닙니다. 안전 범위·승인·재검사는 서버가 관리합니다."

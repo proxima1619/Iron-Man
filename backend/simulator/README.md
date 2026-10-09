@@ -14,6 +14,12 @@
 
 상세한 선정 근거·라이선스·전체 변수 사전·재현 설정·시험 결과·후속 실측 검증 절차는 [TEP_INTEGRATION.md](../../docs/TEP_INTEGRATION.md)를 먼저 읽으세요.
 
+### 실측 확보 전 보정 기능 준비
+
+TEP **냉각수 액추에이터 XMV10/11 응답시간**의 오프라인 보정 후보 도구를 추가했습니다. 원본 기본값은 각각 5초이며 서로 다른 명령/실제 설정 피드백, 단위/시간/태그 대응, 학습/독립 검증 기록을 입력합니다. 계수 추정·기본값 대비 오차·검증 기준·변화 부족/경계/약한 민감도 탈락·출처/해시를 기록합니다. 현재는 팀 생성 시뮬레이션 자료로 기능과 실제 엔진의 기본 응답 일치를 시험했습니다. 전체 공정 열전달·반응·온도/압력 계수의 추정은 후속 범위입니다.
+
+`python -m scripts.generate_tep_calibration_example`로 도구 확인용 자료를 생성한 뒤 `python -m scripts.calibrate_tep --input data/tep-actuator-calibration-simulation.json --output data/tep-actuator-calibration-candidate.json`으로 실행합니다. 후보는 `activated=false`, `can_approve=false`, 전체 공정 실측 검증 미완료입니다. 현재 외부 TEP 엔진은 원본 5초 설정을 유지합니다. 업로드한 참조 파일의 XMV는 명령값이고 실제 액추에이터 피드백/timestamp가 없어 보정 입력으로 자동 대입하지 않습니다. 실측 입력·범위·실행·후보 채택 경계는 [TEP_CALIBRATION.md](../../docs/TEP_CALIBRATION.md)를 읽으세요.
+
 | 파일 | 역할 |
 |---|---|
 | `tep/vendor/teprob.cpp`, `teprob.h` | 고정 NIST 커밋의 원본 공정 방정식, 수정 없이 포함 |
@@ -23,6 +29,8 @@
 | `tep/variables.py` | 12 XMV·41 XMEAS·실제 냉각수 설정의 정의·단위 |
 | `tep/service.py` | 기준/변경 분리 실행, 엄격한 결과 확인, 같은 시간축의 비교 |
 | `tep/reference.py`, `reference_contracts.py`, `reference.lock.json` | 사전 생성 참조 기록의 읽기 전용 로더·계약·로컬 업로드 해시 프로필 |
+| `tep/calibration.py`, `../../../scripts/calibrate_tep.py` | 냉각수 액추에이터 응답시간의 오프라인 보정·독립 검증·후보 JSON |
+| `../../../scripts/generate_tep_calibration_example.py` | 보정 기능 확인용 시뮬레이션 기록 생성, 실측 자료 아님 |
 | `../../../scripts/run_tep.py` | 실제 실행·반복 재현성 확인·JSON 저장 CLI |
 
 Windows의 기존 Ubuntu WSL, g++ 및 GNU `timeout`이 필요합니다. Linux에서도 같은 소스를 빌드합니다. MATLAB·OpenModelica·공개 이력 데이터 파일은 필요 없습니다. 저장소 루트에서:
@@ -41,7 +49,9 @@ $env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
 
 TEP 계산이 성공해도 **TEP 승인 정책 미설정으로 hold**, `can_approve=false`, `execution_scope=unconfigured`입니다. 기존 탱크의 80°C·60/80%·0.65 효율·근거 fixture를 TEP에 적용하지 않습니다. 실제 설비 적용은 구현하지 않았습니다.
 
-2026-10-09 확인: 최신 팀원 데모·근거·배포 변경을 병합하여 전체 **307 tests passed** (참조 17개 포함), 프런트 타입 검사·빌드 통과. 600초 기준/변경 반복 결과·CSV 해시 일치, 변경 없음 차이 0, XMV10/XMV11 변경, 원본 압력 정지와 승인 차단 확인. 로컬 브라우저에서 정상 시험 960개·전치 정상 학습 500개·고장 시험 960개 탐색, XMV10 단위/통계, 출처 포함 JSON 저장을 확인했습니다. 1번이 기록한 Docker 검증은 [배포 업데이트 확인](../../docs/codex-log/tep-docker-update-validation.md)을 참고하세요. 참조 데이터의 컨테이너 마운트·실측 검증은 별도 미완료 단계입니다.
+2026-10-09 확인: 최신 팀원 데모·TEP 근거·배포 변경과 오프라인 보정 도구를 포함하여 전체 **356 tests passed** (참조 17개·보정 24개 포함). 실제 외부 코어·로컬 참조 데이터를 사용하는 시험도 활성화했습니다. 보정 24개는 합성 계수 복원·학습/검증 분리·실패/탈락·반복 일치와 실제 코어의 기본 액추에이터 응답 대조를 확인하며 실측 정확도 검증은 아닙니다. 병합 후 프런트 타입 검사·빌드도 통과했습니다. 앞선 로컬 브라우저 검증에서 정상 시험 960개·전치 정상 학습 500개·고장 시험 960개 탐색, XMV10 단위/통계, 출처 포함 JSON 저장을 확인했습니다. 600초 기준/변경 반복 결과·CSV 해시 일치, 변경 없음 차이 0, XMV10/XMV11 변경, 원본 압력 정지와 승인 차단 확인. 1번이 기록한 Docker 검증은 [배포 업데이트 확인](../../docs/codex-log/tep-docker-update-validation.md)을 참고하세요. 참조 데이터의 컨테이너 마운트·실측 검증은 별도 미완료 단계입니다.
+
+전체 시험은 TEP 근거 변경까지 병합한 `74bfe66`에서 실행했습니다. 이후 추가된 배포 커밋 `5d6b42e` 병합 후에는 해당 변경의 배포·자동 프런트 테스트 **20 passed**와 프런트 타입 검사·빌드를 다시 확인했습니다.
 
 ## 기존 합성 냉각 탱크 (별도 경로)
 

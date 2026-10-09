@@ -32,8 +32,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export function DemoExperience() {
-  const [operator, setOperator] = useState("local-operator");
-  const [approver, setApprover] = useState("local-approver");
+  const localDemo = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
+  const [operator, setOperator] = useState(localDemo ? "local-operator" : "");
+  const [approver, setApprover] = useState(localDemo ? "local-approver" : "");
   const [speed, setSpeed] = useState(80);
   const [load, setLoad] = useState(0.6);
   const [row, setRow] = useState<CoolingRow | null>(null);
@@ -361,8 +362,9 @@ export function DemoExperience() {
               {locked ? "처리 중…" : `${speed}%로 새 가상 검토 시작`}
             </button>
           </details>
-          <details>
+          <details open={!localDemo || undefined}>
             <summary>데모 연결 설정</summary>
+            {!operator && <p>저장된 기록과 AI 설정을 확인하려면 공유받은 요청 담당자 토큰을 입력하세요.</p>}
             <label>
               요청 담당자 토큰
               <input
@@ -391,8 +393,8 @@ export function DemoExperience() {
               />
             </label>
             <p className="muted">
-              로컬 공개 데모 토큰을 사용합니다. 실제 담당자 신원 인증이 아니며
-              토큰을 브라우저에 저장하지 않습니다.
+              운영자가 공유한 역할 토큰을 사용합니다. 실제 담당자 신원 인증이
+              아니며 토큰을 브라우저에 저장하지 않습니다.
             </p>
           </details>
           {plant && (

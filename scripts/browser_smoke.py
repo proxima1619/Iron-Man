@@ -1,6 +1,6 @@
 """Optional Chromium smoke test. CI installs Playwright and trusts its local CA.
 
-Uses real browser Basic authentication and real fetch, without mocked APIs,
+Uses public browser access and real fetch, without mocked APIs,
 screenshots, traces, credential logging or TLS verification bypass.
 """
 import argparse
@@ -13,9 +13,7 @@ def run(access, url):
     from playwright.sync_api import sync_playwright, expect
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
-        context = browser.new_context(http_credentials={
-            "username": access["username"], "password": access["password"], "origin": url,
-        })
+        context = browser.new_context()
         page = context.new_page()
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
@@ -91,7 +89,7 @@ def run(access, url):
             page.get_by_label("예측 구간 (초)").fill("600")
             page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
             expect(page.locator(".review > section:first-child .badge")).to_have_text("보류", timeout=30000)
-            expect(page.get_by_role("heading", name="TEP 외부 시뮬레이션 비교")).to_be_visible()
+            expect(page.get_by_role("heading", name="이번 요청에서 새로 실행한 TEP 결과")).to_be_visible()
             expect(page.get_by_role("heading", name="TEP 근거·역근거 검토")).to_be_visible()
             expect(page.get_by_text("실행 상태: completed", exact=True)).to_be_visible()
             expect(page.get_by_role("img", name="XMEAS9 기준 및 변경 시계열, degC")).to_be_visible()
@@ -101,7 +99,11 @@ def run(access, url):
         page.goto(url + "/#demo")
         expect(page.get_by_role("heading", name="저장된 결과를 읽고, AI 설명을 받아보세요.")).to_be_visible()
         page.get_by_text("데모 연결 설정", exact=True).click()
+        page.get_by_label("요청 담당자 토큰").fill("invalid-demo-token")
+        expect(page.get_by_text("요청 담당자 토큰이 유효하지 않습니다. 아래 데모 연결 설정에 공유받은 토큰을 입력하세요.", exact=True)).to_be_visible()
         page.get_by_label("요청 담당자 토큰").fill(access["operator_token"])
+        expect(page.get_by_text("연결 설정 자세히 보기", exact=True)).to_be_visible()
+        expect(page.get_by_text("요청 담당자 토큰이 유효하지 않습니다. 아래 데모 연결 설정에 공유받은 토큰을 입력하세요.", exact=True)).to_have_count(0)
         page.get_by_role("button", name="저장된 기록 보기").click()
         records = page.get_by_label("검토할 저장 데이터")
         expect(records).to_be_visible()

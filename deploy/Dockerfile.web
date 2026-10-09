@@ -6,6 +6,9 @@ COPY frontend/ ./
 RUN npm run build
 
 FROM nginx:stable-alpine
+ARG IRON_MAN_WEB_COMMIT=local
+LABEL org.opencontainers.image.revision=$IRON_MAN_WEB_COMMIT
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
+RUN printf '{"commit":"%s"}\n' "$IRON_MAN_WEB_COMMIT" > /usr/share/nginx/html/deployment.json
 EXPOSE 8080

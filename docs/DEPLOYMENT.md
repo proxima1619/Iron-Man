@@ -2,14 +2,14 @@
 
 ## 현재 상태
 
-2026-10-09에 EC2 공개 서버를 TEP 포함 커밋 `4de39be6ad8ba6f57d75c9cd04a1c6b1a1edea51`로 갱신했습니다. [공개 홈페이지](https://43.201.63.65.sslip.io/)와 [TEP 검토 콘솔](https://43.201.63.65.sslip.io/#review)을 사용할 수 있습니다. 접속 정보는 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
+2026-10-09에 공개 서버 API와 프런트를 검증 커밋 `3a2ad447909fde017bf63e1910d2c1d275054360`으로 갱신했습니다. [공개 홈페이지](https://ironman.2bc93f41.nip.io/)와 [TEP 검토 콘솔](https://ironman.2bc93f41.nip.io/#review)은 사이트 아이디·비밀번호 없이 열립니다. [기존 주소](https://43.201.63.65.sslip.io/)도 함께 제공합니다. API 역할 토큰은 `.deploy-private/access.json`에 비공개로 보관합니다. 아래 `demo.example.com` 등은 설정 예시입니다.
 
-TEP 이미지는 별도 Compose 프로젝트에서 비root 실행·XMV10/XMV11 HTTP 평가·승인/실행 거절·API 및 전체 스택 재생성 후 보고서 보존을 검증했습니다. [전체 CI](https://github.com/proxima1619/Iron-Man/actions/runs/37889292732) 통과 후 공개 서버에 반영하고, 공인 TLS의 HTTP 평가와 실제 Chrome 화면을 다시 확인했습니다. 배포 전 6건의 SQLite 원본을 백업·대조했고, 공개 시험 후 API 컨테이너를 재생성하여 18건의 요청·보고서·판단·실행·감사 기록이 동일하게 유지됨을 확인했습니다. [배포 검증 기록](codex-log/tep-public-deployment-validation.md).
+[전체 CI](https://github.com/proxima1619/Iron-Man/actions/runs/37893527452) 성공 뒤 EC2 timer가 별도 체크아웃에서 프런트를 빌드·교체했고, 공개 HTTPS의 `/deployment.json`으로 버전을 확인했습니다. 자동 프런트 교체 전후 API 컨테이너 ID가 동일했습니다. 기존 18건의 SQLite 원본 행이 배포 후 유지됐으며, HTTP·실제 Chrome 시험 뒤 API 재시작으로 30건의 요청·보고서·판단·실행·감사 이력이 동일하게 보존됨을 확인했습니다. [이번 배포 검증 기록](codex-log/public-frontend-deployment-validation.md). 이전 TEP 코어 검증은 [별도 기록](codex-log/tep-public-deployment-validation.md)에 남깁니다.
 
 현재 EC2는 콘솔에서 직접 생성했으며 Elastic IP가 없는 자동 할당 IPv4를 사용합니다. 아래 CloudFormation 생성 계획은 기존 서버에 적용한 구성이 아닙니다. 인스턴스를 중지 후 다시 시작하면 IP·DNS·HTTPS 설정 확인이 필요합니다.
 
 ```text
-브라우저 → HTTPS + 사이트 비밀번호(Caddy) → React / Nginx
+브라우저 → 공개 HTTPS(Caddy) → React / Nginx
                                             ↓ X-Iron-Man-Token
                                         FastAPI 1 worker
                                           ├─ SQLite volume
@@ -95,22 +95,44 @@ python3 -m scripts.deploy_check
 docker compose --env-file .env.deploy -f compose.deploy.yaml up -d --build --wait --wait-timeout 180
 ```
 
-Compose 2.24.4 이상이 필요합니다. 생성기는 `.env.deploy`(600)와 `.deploy-private/access.json`(600, 디렉터리 700)을 만들고 기존 파일은 덮어쓰지 않습니다. 비밀값은 터미널에 출력하지 않습니다.
+Compose 2.24.4 이상이 필요합니다. 생성기는 `.env.deploy`(600)와 `.deploy-private/access.json`(600, 디렉터리 700)에 API 역할 토큰을 만들고 기존 파일은 덮어쓰지 않습니다. 비밀값은 터미널에 출력하지 않습니다.
 
-- `.env.deploy`: 실행 토큰, 해시된 사이트 비밀번호, 선택적 LLM 설정. Git·Docker 이미지에서 제외.
-- `.deploy-private/access.json`: 실제 사이트 계정·비밀번호와 역할 토큰. 소유자만 읽고 비공개 관리.
+- `.env.deploy`: 역할 토큰, 도메인·별칭, 선택적 LLM 설정. Git·Docker 이미지에서 제외.
+- `.deploy-private/access.json`: 공개 URL과 역할 토큰. 소유자만 읽고 비공개 관리.
 - 공개 모드에서 서로 다른 32~128자의 URL-safe 역할 토큰이 없으면 API가 시작되지 않음.
 - 기본 근거 모드는 `fixture`. `live`는 서버 파일의 `OPENAI_API_KEY`, `IRON_MAN_EVIDENCE_MODEL` 설정·재시작이 필요. 실제 외부 API 비용·응답은 별도 확인.
 - 셸에 export한 변수는 `--env-file`보다 우선할 수 있음. 기존 로컬 토큰을 export한 셸을 재사용하지 않고 `deploy_check`로 실제 설정을 확인. `docker compose config` 원문은 비밀값을 포함하므로 공유 금지.
 
-## 두 단계 인증과 팀원 연동
+## 공개 접속과 API 권한
 
-1. 사이트 접속: 브라우저 Basic 인증 창에 사이트 계정·비밀번호 입력.
-2. 요청·승인: 화면에 해당 역할 토큰 입력. 요청 토큰에는 승인 권한이 없음.
+홈페이지는 아이디·비밀번호 없이 열립니다. 요청·승인 화면은 해당 역할 토큰을 입력합니다. 요청 토큰에는 승인 권한이 없습니다. 화면/API는 토큰을 **`X-Iron-Man-Token`** 헤더로 전송합니다. Caddy는 과거 브라우저에 캐시된 Basic 헤더를 제거합니다. 로컬 직접 API의 `Authorization: Bearer ...`도 유지합니다.
 
-브라우저 `Authorization`은 사이트 Basic 인증에 사용합니다. 화면/API는 역할 토큰을 **`X-Iron-Man-Token`** 헤더로 전송합니다. Caddy는 인증 후 Basic 헤더를 제거하여 API로 전달하지 않습니다. 로컬 직접 API 호출의 기존 `Authorization: Bearer ...`도 유지합니다. 서로 다른 Bearer와 역할 헤더를 동시에 보내면 401입니다.
+토큰을 URL에 넣지 않습니다. 요청 토큰은 심사자에게 비공개로 전달하고 승인 토큰은 담당자에게만 전달합니다. 개인 계정·사용자별 요청 소유권·SSO는 아닙니다. 토큰은 브라우저 메모리에 보관하며 새로고침 후 다시 입력합니다.
 
-계정·토큰을 URL에 넣지 않습니다. 사이트 계정과 요청 토큰은 심사자에게 비공개 제출란 등 승인된 방법으로 전달하고, 승인 토큰은 담당자에게만 전달합니다. 현재는 공유 데모 계정·역할 인증이며 개인 계정·사용자별 요청 소유권·SSO가 아닙니다. 토큰은 브라우저 메모리에 보관하며 새로고침 후 다시 입력합니다. Basic 인증은 브라우저가 캐시하므로 공용 컴퓨터에서는 시크릿 창을 사용하고 종료하세요.
+## 프런트 자동 반영과 공유 주소
+
+공유 주소는 `https://ironman.2bc93f41.nip.io/`입니다. 카톡에는 루트 URL 전체를 복사하며 `/#review`는 직접 검토 콘솔을 여는 선택 경로입니다. 이전 주소는 `DEMO_ALIAS`로 함께 제공합니다. 무료 IP 기반 DNS이므로 EC2 주소 변경 시 이름을 다시 설정해야 합니다. [DNS 서비스 설명](https://nip.io/).
+
+운영 `.env.deploy`의 `DEMO_DOMAIN`과 필요한 경우 `DEMO_ALIAS`를 변경하고 Caddy를 재생성합니다. 자동 배포의 `/etc/iron-man-frontend.env`에 있는 `IRON_MAN_PUBLIC_URL`도 새 HTTPS origin으로 변경합니다. 인증서는 Caddy가 관리합니다. 프런트 공유 미리보기에는 Open Graph 제목·설명을 제공합니다.
+
+`iron-man-frontend.timer`는 매분 main 변경을 확인합니다. `checks` CI 전체가 성공한 커밋의 프런트만 별도 `/opt/iron-man-frontend` 체크아웃에서 빌드하고 운영 web 컨테이너를 교체합니다. 반영 시간은 CI 시간 + 빌드 + 최대 1분의 확인 시간입니다. 실패한 CI·빌드는 기존 버전을 유지합니다. 교체 후 공개 HTTPS 버전 확인에 실패하면 이전 이미지로 복구합니다. `/deployment.json`에 프런트 커밋 SHA를 표시합니다.
+
+프런트 담당자는 수정한 `frontend/` 파일을 main에 push하면 됩니다. 로컬 저장이나 다른 브랜치는 배포하지 않습니다. 백엔드·정책·환경변수·참조 데이터 변경은 1번이 별도로 통합 배포합니다. 새 API가 필요한 프런트는 해당 백엔드를 먼저 반영해야 합니다. API 컨테이너·SQLite 볼륨은 프런트 배포 과정에서 교체하지 않습니다.
+
+Ubuntu 설치 예:
+
+```bash
+sudo install -d -o ubuntu -g ubuntu /opt/iron-man-frontend
+sudo install -m 644 deploy/systemd/iron-man-frontend.service /etc/systemd/system/
+sudo install -m 644 deploy/systemd/iron-man-frontend.timer /etc/systemd/system/
+printf 'IRON_MAN_PUBLIC_URL=https://ironman.2bc93f41.nip.io\n' | sudo tee /etc/iron-man-frontend.env >/dev/null
+sudo systemctl daemon-reload
+sudo systemctl enable --now iron-man-frontend.timer
+sudo systemctl start iron-man-frontend.service
+journalctl -u iron-man-frontend.service --no-pager -n 20
+```
+
+서비스는 Docker 권한이 있는 `ubuntu` 사용자로 실행합니다. 공개 저장소·CI 결과를 조회하므로 GitHub에 SSH 개인 키나 서버 토큰을 전달하지 않습니다. 중지: `sudo systemctl disable --now iron-man-frontend.timer`.
 
 ## 배포 확인과 5번 검증
 
@@ -119,11 +141,11 @@ python3 -m scripts.https_smoke
 docker compose --env-file .env.deploy -f compose.deploy.yaml ps
 ```
 
-검사는 공인 TLS 신뢰, 비인증/잘못된 비밀번호 401, 사이트 비밀번호만으로 API 접근 불가, 역할 토큰만으로 사이트 접근 불가, 평가 202·상태 조회를 확인합니다. TEP XMV10/XMV11의 실제 코어 실행, 코어 정지·범위 밖 입력의 보류와 승인·실행 409를 검사한 뒤, 탱크의 부하 1·60% 차단, 부하 0.6·80% 승인 대기·담당자 승인·가상 적용·가상 시간 진행·유효하지 않은 센서 보류를 확인합니다. 요청 기록 7건을 생성하며 가상 상태를 초기화합니다. 기본 fixture 설정을 전제로 하며 실제 장비·외부 LLM을 호출하지 않습니다.
+검사는 공인 TLS 신뢰, 로그인 없는 홈페이지 200, API의 토큰 없음·잘못된 토큰 401, 유효 역할 토큰 허용, 평가 202·상태 조회를 확인합니다. TEP XMV10/XMV11의 실제 코어 실행, 코어 정지·범위 밖 입력의 보류와 승인·실행 409를 검사한 뒤, 탱크의 부하 1·60% 차단, 부하 0.6·80% 승인 대기·담당자 승인·가상 적용·가상 시간 진행·유효하지 않은 센서 보류를 확인합니다. 요청 기록 7건을 생성하며 가상 상태를 초기화합니다. 기본 fixture 설정을 전제로 하며 실제 장비·외부 LLM을 호출하지 않습니다.
 
-**5번은 별도 검증**입니다. 다른 컴퓨터·휴대폰의 다른 네트워크에서 URL을 열고 계정→토큰→요청→자동 갱신을 확인하세요. 서버 재시작 후 기록 조회와 노트북 전원을 끈 상태의 접속을 확인하고 브라우저 시연 영상을 남깁니다. 가상 전용 정책과 실제 설비 미연결·모의 근거의 한계를 발표에 명시합니다.
+**5번은 별도 검증**입니다. 다른 컴퓨터·휴대폰의 다른 네트워크에서 URL을 열고 홈페이지→역할 토큰→요청→자동 갱신을 확인하세요. 서버 재시작 후 기록 조회와 노트북 전원을 끈 상태의 접속을 확인하고 브라우저 시연 영상을 남깁니다. 가상 전용 정책과 실제 설비 미연결·모의 근거의 한계를 발표에 명시합니다.
 
-GitHub Actions `https` job은 같은 공개 설정을 사용하되 localhost·테스트 CA로 검사합니다. CA를 명시적으로 신뢰하며 TLS 검증을 끄지 않습니다. Chromium에서도 사이트 인증→역할 토큰→요청→자동 결과 갱신→저장 목록을 검사합니다. 공인 DNS·인증서 발급·AWS 실서버 검증을 대신하지 않습니다.
+GitHub Actions `https` job은 같은 공개 설정을 사용하되 localhost·테스트 CA로 검사합니다. CA를 명시적으로 신뢰하며 TLS 검증을 끄지 않습니다. Chromium에서도 공개 홈페이지→역할 토큰→요청→자동 결과 갱신→저장 목록을 검사합니다. 공인 DNS·인증서 발급·AWS 실서버 검증을 대신하지 않습니다.
 
 ## 업데이트·백업·삭제
 

@@ -34,6 +34,8 @@
 
 ## 어디부터 볼까?
 
+오프라인 TEP 냉각수 액추에이터 보정 입력/후보는 [TEPActuatorCalibrationDataset.schema.json](TEPActuatorCalibrationDataset.schema.json), [TEPActuatorCalibrationResult.schema.json](TEPActuatorCalibrationResult.schema.json)입니다. HTTP 계약과 별도입니다. 입력은 명령과 실제 설정 피드백을 구분하며 결과는 `offline_candidate_only`, `activated=false`, `can_approve=false`입니다. `candidate_ready`는 해당 성분 기록의 검증 기준 통과이며 전체 공정·현장 검증 완료가 아닙니다. 후보를 `TEPResult`/승인 보고서로 사용하지 마세요. [입력 정의·출처·단위·시험·활성화 경계](../docs/TEP_CALIBRATION.md)
+
 | 담당 | 먼저 볼 파일 | 구현할 경계 |
 |---|---|---|
 | 2번 | `SimulationResult.schema.json`, `examples/simulation-demo.json`, `examples/simulation-out-of-domain.json` | `simulate(command, snapshot, scenarios) -> SimulationResult` |

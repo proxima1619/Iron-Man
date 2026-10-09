@@ -21,36 +21,19 @@ def inputs():
     context = {"model_version": simulator.MODEL_VERSION, "initial_profile": "nist-teinit-base-case-v1",
                "configuration": simulator.configuration(request().command).model_dump(),
                "requested_variable": "XMV10", "variables": data["variables"]}
-    paper = {"source_id": "paper-example", "title": "Unit-test paper source", "text":
-             "XMV10 response is described in the model. Model mismatch limits transfer to field operation.",
-             "locator": "Unit-test abstract paragraphs 1-2", "source_url": "https://example.org/paper",
-             "source_type": "paper", "publisher": "Unit-test publisher", "version": "test-v1",
-             "published_at": "not_recorded", "usage": "Test text only; not a real publication"}
-    return [*evidence.model_sources(data), paper], context
+    return evidence.model_sources(data), context
 
 
-def analysis(sources=None):
-    sources = sources if sources is not None else inputs()[0]
-    paper = next(source for source in sources if source["source_type"] == "paper")
-    model = next(source for source in sources if source["source_type"] == "model_source")
-    if paper["source_id"] == "paper-example":
-        support_excerpt = paper["text"].split(" Model mismatch", 1)[0]
-        counter_excerpt = "Model mismatch limits transfer to field operation."
-    else:
-        support_excerpt = paper["text"][:200]
-        counter_excerpt = paper["text"][-200:]
-    definition_excerpt = '"model_version": "' + simulator.MODEL_VERSION + '"'
-    support = {"source_id": paper["source_id"], "claim": "The paper discusses the requested input response.",
-        "stance": "support", "excerpt": support_excerpt, "applicability": "applicable",
-        "matched_conditions": ["XMV10", "percent_full_scale", "open-loop TEP"], "missing_conditions": [],
-        "proposed_test": None, "evidence_purpose": "physical_mechanism", "variable_ids": ["XMV10"]}
-    counter = {**support, "claim": "The paper states transfer limitations.", "stance": "counter",
-        "excerpt": counter_excerpt, "proposed_test": evidence.TEST_ID}
-    definition = {"source_id": model["source_id"], "claim": "The model registry pins the TEP variable definition.",
-        "stance": "limitation", "excerpt": definition_excerpt, "applicability": "applicable",
-        "matched_conditions": ["pinned model version", "XMV10 unit definition"], "missing_conditions": [],
-        "proposed_test": None, "evidence_purpose": "model_definition", "variable_ids": ["XMV10"]}
-    return {"cards": [support, counter, definition], "missing_conditions": []}
+def analysis():
+    sources, _ = inputs()
+    support = {"source_id": "tep-variable-contract", "claim": "선정한 TEP 변수·시험 정의를 확인했다.",
+        "stance": "support", "excerpt": '"model_version": "' + simulator.MODEL_VERSION + '"',
+        "applicability": "applicable", "matched_conditions": ["XMV10 percent_full_scale, 원래 초기화와 외란 없는 시험"],
+        "missing_conditions": [], "proposed_test": None, "evidence_purpose": "model_definition", "variable_ids": ["XMV10"]}
+    counter = {**support, "source_id": "tep-wrapper", "stance": "counter", "claim": "설정 변경을 기준 유지와 비교하되 고장 시험으로 간주하지 않는다.",
+        "excerpt": "inputs[index - 1] = value;", "proposed_test": evidence.TEST_ID}
+    assert support["excerpt"] in sources[0]["text"]
+    return {"cards": [support, counter], "missing_conditions": []}
 
 
 def result_stub():
@@ -107,22 +90,15 @@ def test_forged_quote_definition_or_parameter_rejected(mutation):
     with pytest.raises(ValueError): evidence.validate_analysis(raw, sources, context)
 
 
-def test_model_definition_source_cannot_be_cited_as_paper_mechanism():
+def test_papers_cannot_define_model_or_safety_ranges():
     sources, context = inputs()
-    raw = analysis(sources)
-    raw["cards"][0]["source_id"] = next(source["source_id"] for source in sources
-                                            if source["source_type"] == "model_source")
-    with pytest.raises(ValueError): evidence.validate_analysis(raw, sources, context)
-
-
-def test_model_definitions_cannot_replace_missing_paper_support_and_counter():
-    sources, context = inputs()
-    raw = analysis(sources)
-    raw["cards"] = [raw["cards"][-1]]
-    review = evidence.validate_analysis(raw, sources, context)
-    assert review.status == "insufficient"
-    assert any("support" in value for value in review.missing_conditions)
-    assert any("counter" in value for value in review.missing_conditions)
+    paper = {**sources[0], "source_id": "paper-example", "source_type": "paper"}
+    raw = analysis()
+    raw["cards"][0]["source_id"] = paper["source_id"]
+    with pytest.raises(ValueError): evidence.validate_analysis(raw, [*sources, paper], context)
+    raw["cards"][0].update(evidence_purpose="physical_mechanism", applicability="partial",
+                          missing_conditions=["설비·유체 대응 미확인"])
+    assert evidence.validate_analysis(raw, [*sources, paper], context).status == "insufficient"
 
 
 def test_wrong_requested_variable_has_no_mapping():
@@ -146,16 +122,12 @@ def test_live_flow_uses_tep_prompt_not_pump_prompt(monkeypatch):
     captured = {}
     def analyze(payload, **kwargs):
         captured.update(payload=payload, kwargs=kwargs)
-        return analysis(payload["documents"])
+        return analysis()
     monkeypatch.setattr(llm, "analyze", analyze)
     result = evidence.review_evidence(request(), simulator.snapshot(1), result_stub())
     assert result.status == "completed"
-    assert captured["kwargs"]["base_instructions"] == evidence.INSTRUCTIONS + "\n" + evidence.SOURCE_ROLE_INSTRUCTIONS
-    source_types = {s["source_type"] for s in captured["payload"]["documents"]}
-    assert {"model_source", "simulation_record"} <= source_types
-    simulation = next(s for s in captured["payload"]["documents"] if s["source_type"] == "simulation_record")
-    assert "comparison" in simulation["text"] and "baseline_value" in simulation["text"]
-    assert "not field measurements" in simulation["usage"]
+    assert captured["kwargs"]["base_instructions"] == evidence.INSTRUCTIONS
+    assert all(s["source_type"] in {"model_source", "paper"} for s in captured["payload"]["documents"])
 
 
 def test_failure_and_fixture_never_reuse_cooling_review(monkeypatch):

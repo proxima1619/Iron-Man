@@ -1,6 +1,5 @@
 import type { components } from "./api.generated";
 type Review = components["schemas"]["TEPEvidenceReview"];
-const sourceTypes = { model_source: "2? ????? ??", paper: "?? ??", simulation_record: "?? ??? TEP ?? ??" };
 const purposes = { model_definition: "모델 정의", physical_mechanism: "일반 물리 현상", simulation_observation: "시뮬레이션 관측", safety_basis: "안전 기준" };
 const statuses = { completed: "근거 검토 완료", insufficient: "근거 부족", failed: "검토 실패", demo_fixture: "문헌 검토 미실행" };
 function link(value: string | null | undefined) {
@@ -11,12 +10,12 @@ export function TepEvidencePanel({ review }: { review: Review | null | undefined
   return <section aria-labelledby="tep-evidence-heading">
     <h2 id="tep-evidence-heading">TEP 근거·역근거 검토</h2>
     {!review ? <p>이 기록에는 TEP 근거 검토 결과가 없습니다.</p> : <>
-      <p>{statuses[review.status]} ? {review.mock ? "?? LLM ??? ? ?? ??" : review.status === "failed" ? "?? ?? ?? ? ???? ?? ??? ???? ??" : "????? ?? ?? ??"}</p>
+      <p>{statuses[review.status]} · {review.mock ? "실제 LLM 미호출" : "원문·적용 조건 검증 경로"}</p>
       <p>초기 프로필: {review.initial_profile} · 모델: {review.model_version}</p>
       <p className="muted">{review.limitation}</p>
       {review.cards.map(card => <article key={card.evidence_id}>
         <h3>{card.title}</h3>
-        <p>{sourceTypes[card.source_type]} ? {purposes[card.evidence_purpose]} ? {card.stance} ? ?? ?? {card.applicability}</p>
+        <p>{purposes[card.evidence_purpose]} · {card.stance} · 적용 조건 {card.applicability}</p>
         <p>{card.claim}</p><blockquote>{card.excerpt}</blockquote>
         <p>{card.locator} · {card.version}</p>
         {link(card.source_url) && <a href={link(card.source_url)!} target="_blank" rel="noreferrer">원문 보기</a>}

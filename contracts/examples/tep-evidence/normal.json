@@ -5,7 +5,7 @@
   "data_origin": "simulation",
   "field_validation": "not_performed_no_measured_data",
   "mock": false,
-  "status": "insufficient",
+  "status": "completed",
   "cards": [
     {
       "evidence_id": "tep-evidence-8736b93d5e7d2bd0",
@@ -102,10 +102,7 @@
     }
   ],
   "unsupported_tests": [],
-  "missing_conditions": [
-    "TEP 적용 가능한 논문 support 근거 부족",
-    "TEP 적용 가능한 논문 counter 근거 부족"
-  ],
+  "missing_conditions": [],
   "source_bundle_sha256": "85a6ece30d8087eac549231fc3b5cceb04b62a7db173c2fb6a1cee6467439e00",
   "limitation": "자동 계약 검증 예시 · 실제 LLM 미호출. TEP 문헌 적용성 검토와 실제 설비 검증은 별개입니다. 현장 실측 없음·시뮬레이션 기반·실제 설비 검증 미수행. 시험 제안은 실행 명령이 아닙니다. 안전 범위·승인·재검사는 서버가 관리합니다."
 }

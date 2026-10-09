@@ -51,14 +51,12 @@ def test_empty_config_never_authenticates_empty_headers(monkeypatch):
 
 
 def test_generated_credentials_are_private_distinct_and_not_overwritten(tmp_path, monkeypatch, capsys):
-    hashed = "$2a$14$" + "a" * 53
-    monkeypatch.setattr(deploy_config, "hash_password", lambda password: hashed)
     env, access = deploy_config.generate("demo.example.com", tmp_path)
     data = json.loads(access.read_text())
-    assert len({data["password"], data["operator_token"], data["approver_token"]}) == 3
-    assert min(len(data[key]) for key in ("password", "operator_token", "approver_token")) >= 32
-    assert data["password"] not in env.read_text()
-    assert f"DEMO_PASSWORD_HASH='{hashed}'" in env.read_text()
+    assert data["operator_token"] != data["approver_token"]
+    assert min(len(data[key]) for key in ("operator_token", "approver_token")) >= 32
+    assert "password" not in data and "username" not in data
+    assert "DEMO_PASSWORD_HASH" not in env.read_text()
     # Windows stat mode bits do not describe NTFS ACLs. Check POSIX modes
     # on the Linux deployment platform; credential behavior is tested on both.
     if os.name == "posix":

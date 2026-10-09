@@ -1,0 +1,260 @@
+{
+  "$defs": {
+    "ActuatorChannel": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "percent_full_scale",
+          "title": "Unit",
+          "type": "string"
+        },
+        "target_tag": {
+          "minLength": 1,
+          "title": "Target Tag",
+          "type": "string"
+        },
+        "actual_tag": {
+          "minLength": 1,
+          "title": "Actual Tag",
+          "type": "string"
+        },
+        "normalization_reference": {
+          "minLength": 1,
+          "title": "Normalization Reference",
+          "type": "string"
+        },
+        "minimum_tau_s": {
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Minimum Tau S",
+          "type": "number"
+        },
+        "maximum_tau_s": {
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Maximum Tau S",
+          "type": "number"
+        },
+        "max_validation_rmse": {
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "title": "Max Validation Rmse",
+          "type": "number"
+        },
+        "max_validation_abs_error": {
+          "exclusiveMinimum": 0,
+          "maximum": 20,
+          "title": "Max Validation Abs Error",
+          "type": "number"
+        },
+        "actual_resolution": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Actual Resolution",
+          "type": "number"
+        }
+      },
+      "required": [
+        "unit",
+        "target_tag",
+        "actual_tag",
+        "normalization_reference",
+        "minimum_tau_s",
+        "maximum_tau_s",
+        "max_validation_rmse",
+        "max_validation_abs_error",
+        "actual_resolution"
+      ],
+      "title": "ActuatorChannel",
+      "type": "object"
+    },
+    "ActuatorRecording": {
+      "additionalProperties": false,
+      "properties": {
+        "recording_id": {
+          "minLength": 1,
+          "title": "Recording Id",
+          "type": "string"
+        },
+        "source_recording_id": {
+          "minLength": 1,
+          "title": "Source Recording Id",
+          "type": "string"
+        },
+        "source_file_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source File Sha256",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "variable": {
+          "enum": [
+            "XMV10",
+            "XMV11"
+          ],
+          "title": "Variable",
+          "type": "string"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/$defs/ActuatorSample"
+          },
+          "maxItems": 2000,
+          "minItems": 4,
+          "title": "Samples",
+          "type": "array"
+        }
+      },
+      "required": [
+        "recording_id",
+        "source_recording_id",
+        "source_file_sha256",
+        "started_at",
+        "variable",
+        "samples"
+      ],
+      "title": "ActuatorRecording",
+      "type": "object"
+    },
+    "ActuatorSample": {
+      "additionalProperties": false,
+      "properties": {
+        "time_s": {
+          "maximum": 3600,
+          "minimum": 0,
+          "title": "Time S",
+          "type": "number"
+        },
+        "target_percent_full_scale": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Target Percent Full Scale",
+          "type": "number"
+        },
+        "actual_percent_full_scale": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Actual Percent Full Scale",
+          "type": "number"
+        },
+        "quality": {
+          "const": "valid",
+          "title": "Quality",
+          "type": "string"
+        }
+      },
+      "required": [
+        "time_s",
+        "target_percent_full_scale",
+        "actual_percent_full_scale",
+        "quality"
+      ],
+      "title": "ActuatorSample",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "tep-actuator-calibration-1.0",
+      "default": "tep-actuator-calibration-1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_uri": {
+      "minLength": 1,
+      "title": "Source Uri",
+      "type": "string"
+    },
+    "asset_id": {
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "data_origin": {
+      "enum": [
+        "measured",
+        "simulation"
+      ],
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "mapping_status": {
+      "const": "user_confirmed_actuator_mapping",
+      "title": "Mapping Status",
+      "type": "string"
+    },
+    "actuator_faults": {
+      "const": "none",
+      "title": "Actuator Faults",
+      "type": "string"
+    },
+    "source_model_version": {
+      "const": "nist-tep-81a7ac9-ironman-v1",
+      "default": "nist-tep-81a7ac9-ironman-v1",
+      "title": "Source Model Version",
+      "type": "string"
+    },
+    "candidate_model_version": {
+      "minLength": 1,
+      "title": "Candidate Model Version",
+      "type": "string"
+    },
+    "channels": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ActuatorChannel"
+      },
+      "maxProperties": 2,
+      "minProperties": 1,
+      "propertyNames": {
+        "enum": [
+          "XMV10",
+          "XMV11"
+        ]
+      },
+      "title": "Channels",
+      "type": "object"
+    },
+    "training": {
+      "items": {
+        "$ref": "#/$defs/ActuatorRecording"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Training",
+      "type": "array"
+    },
+    "validation": {
+      "items": {
+        "$ref": "#/$defs/ActuatorRecording"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Validation",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_id",
+    "source_uri",
+    "asset_id",
+    "data_origin",
+    "mapping_status",
+    "actuator_faults",
+    "candidate_model_version",
+    "channels",
+    "training",
+    "validation"
+  ],
+  "title": "TEPActuatorCalibrationDataset",
+  "type": "object"
+}
