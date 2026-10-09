@@ -11,6 +11,8 @@ from backend.gateway.service import Gateway
 from backend.gateway import review, notifications
 from backend.contracts import SessionInfo, Notification, ReviewContact
 from backend.config import validate_runtime_config
+from backend.simulator.tep import reference as tep_reference
+from backend.simulator.tep.reference_contracts import ReferenceCatalog, ReferenceSeries
 
 gateway = None
 
@@ -59,6 +61,21 @@ def approver(actor=Depends(identity)):
 def health():
     return {"status": "ok", "mode": "demo_only", "mock_modules": ["evidence"],
             "storage": "sqlite", "real_equipment_connected": False}
+
+
+@app.exception_handler(tep_reference.ReferenceFailure)
+async def reference_error(request, exc):
+    return JSONResponse(status_code=exc.status_code, content={"code": exc.code, "detail": exc.detail})
+
+
+@app.get("/tep/reference/catalog", response_model=ReferenceCatalog)
+def tep_reference_catalog(actor=Depends(identity)):
+    return tep_reference.catalog()
+
+
+@app.get("/tep/reference/series/{file_id}", response_model=ReferenceSeries)
+def tep_reference_series(file_id: str, variable: str = "XMEAS9", actor=Depends(identity)):
+    return tep_reference.series(file_id, variable)
 
 @app.get("/state", response_model=Snapshot)
 def state(actor=Depends(identity)):

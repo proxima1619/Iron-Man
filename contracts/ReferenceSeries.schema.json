@@ -1,0 +1,324 @@
+{
+  "$defs": {
+    "ReferenceFile": {
+      "additionalProperties": false,
+      "properties": {
+        "file_id": {
+          "title": "File Id",
+          "type": "string"
+        },
+        "condition": {
+          "enum": [
+            "normal",
+            "fault"
+          ],
+          "title": "Condition",
+          "type": "string"
+        },
+        "fault_index": {
+          "anyOf": [
+            {
+              "maximum": 21,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fault Index"
+        },
+        "split": {
+          "enum": [
+            "training",
+            "test"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "observation_count": {
+          "exclusiveMinimum": 0,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "stored_layout": {
+          "enum": [
+            "observations_by_variables",
+            "variables_by_observations"
+          ],
+          "title": "Stored Layout",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "present": {
+          "title": "Present",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "file_id",
+        "condition",
+        "split",
+        "observation_count",
+        "stored_layout",
+        "sha256",
+        "present"
+      ],
+      "title": "ReferenceFile",
+      "type": "object"
+    },
+    "ReferenceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "tep-reference-1.0",
+          "default": "tep-reference-1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "profile_id": {
+          "const": "local-tep-52vars-20261009",
+          "default": "local-tep-52vars-20261009",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "data_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "record_kind": {
+          "const": "prerecorded_reference",
+          "default": "prerecorded_reference",
+          "title": "Record Kind",
+          "type": "string"
+        },
+        "used_for_approval": {
+          "const": false,
+          "default": false,
+          "title": "Used For Approval",
+          "type": "boolean"
+        },
+        "field_validation": {
+          "const": "not_performed_no_measured_data",
+          "default": "not_performed_no_measured_data",
+          "title": "Field Validation",
+          "type": "string"
+        },
+        "source_url": {
+          "default": null,
+          "title": "Source Url",
+          "type": "null"
+        },
+        "source_version_status": {
+          "const": "unverified_local_upload",
+          "default": "unverified_local_upload",
+          "title": "Source Version Status",
+          "type": "string"
+        },
+        "license_status": {
+          "const": "bundled_code_notice_present_dataset_scope_unverified",
+          "default": "bundled_code_notice_present_dataset_scope_unverified",
+          "title": "License Status",
+          "type": "string"
+        },
+        "source_files_sha256": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Source Files Sha256",
+          "type": "object"
+        },
+        "column_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Column Order",
+          "type": "array"
+        },
+        "timestamp_status": {
+          "const": "absent",
+          "default": "absent",
+          "title": "Timestamp Status",
+          "type": "string"
+        },
+        "sample_period_s": {
+          "default": null,
+          "title": "Sample Period S",
+          "type": "null"
+        },
+        "inferred_sample_period_s": {
+          "const": 180,
+          "default": 180,
+          "title": "Inferred Sample Period S",
+          "type": "integer"
+        },
+        "sample_period_status": {
+          "const": "bundled_code_only_unverified_per_file",
+          "default": "bundled_code_only_unverified_per_file",
+          "title": "Sample Period Status",
+          "type": "string"
+        },
+        "controller": {
+          "const": "bundled_closed_loop_per_file_unverified",
+          "default": "bundled_closed_loop_per_file_unverified",
+          "title": "Controller",
+          "type": "string"
+        },
+        "random_seed": {
+          "default": null,
+          "title": "Random Seed",
+          "type": "null"
+        },
+        "operating_mode": {
+          "default": null,
+          "title": "Operating Mode",
+          "type": "null"
+        },
+        "initial_state": {
+          "default": null,
+          "title": "Initial State",
+          "type": "null"
+        },
+        "fault_onset_sample": {
+          "default": null,
+          "title": "Fault Onset Sample",
+          "type": "null"
+        },
+        "comparison_status": {
+          "const": "not_matched_to_current_open_loop_run",
+          "default": "not_matched_to_current_open_loop_run",
+          "title": "Comparison Status",
+          "type": "string"
+        },
+        "limitation": {
+          "title": "Limitation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_files_sha256",
+        "column_order",
+        "limitation"
+      ],
+      "title": "ReferenceMetadata",
+      "type": "object"
+    },
+    "ReferenceStatistics": {
+      "additionalProperties": false,
+      "properties": {
+        "minimum": {
+          "title": "Minimum",
+          "type": "number"
+        },
+        "maximum": {
+          "title": "Maximum",
+          "type": "number"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum",
+        "mean"
+      ],
+      "title": "ReferenceStatistics",
+      "type": "object"
+    },
+    "ReferenceVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "percent_full_scale",
+            "kscm/h",
+            "kg/h",
+            "kPa_gauge",
+            "percent",
+            "degC",
+            "m3/h",
+            "kW",
+            "mole_percent"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "column_index": {
+          "maximum": 51,
+          "minimum": 0,
+          "title": "Column Index",
+          "type": "integer"
+        },
+        "definition_source": {
+          "const": "bundled_teprob.f.txt_and_readme.txt",
+          "default": "bundled_teprob.f.txt_and_readme.txt",
+          "title": "Definition Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "unit",
+        "column_index"
+      ],
+      "title": "ReferenceVariable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/ReferenceMetadata"
+    },
+    "file": {
+      "$ref": "#/$defs/ReferenceFile"
+    },
+    "variable": {
+      "title": "Variable",
+      "type": "string"
+    },
+    "definition": {
+      "$ref": "#/$defs/ReferenceVariable"
+    },
+    "sample_indices": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Sample Indices",
+      "type": "array"
+    },
+    "values": {
+      "items": {
+        "type": "number"
+      },
+      "title": "Values",
+      "type": "array"
+    },
+    "statistics": {
+      "$ref": "#/$defs/ReferenceStatistics"
+    }
+  },
+  "required": [
+    "metadata",
+    "file",
+    "variable",
+    "definition",
+    "sample_indices",
+    "values",
+    "statistics"
+  ],
+  "title": "ReferenceSeries",
+  "type": "object"
+}

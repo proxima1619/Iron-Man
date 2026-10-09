@@ -19,6 +19,19 @@
 
 실제 실행 결과 예시는 `python -m scripts.run_tep --repeat`로 생성합니다. 생성 파일을 하드코딩된 성공 fixture로 사용하지 마세요. [전체 변수·실행·검증 절차](../docs/TEP_INTEGRATION.md)
 
+## 데모용 참조 데이터 계약 `tep-reference-1.0`
+
+`GET /tep/reference/catalog`은 `ReferenceCatalog`, `GET /tep/reference/series/{file_id}?variable=XMEAS9`은 `ReferenceSeries`를 반환합니다. 기존 역할 토큰이 필요합니다. 타입 원본은 `backend/simulator/tep/reference_contracts.py`이고 [ReferenceCatalog.schema.json](ReferenceCatalog.schema.json), [ReferenceSeries.schema.json](ReferenceSeries.schema.json)도 생성합니다.
+
+- `metadata.data_origin=simulation`, `record_kind=prerecorded_reference`, `used_for_approval=false`입니다. 사전 생성 시뮬레이션 기록을 `TEPResult`, `DecisionReport.tep_simulation`이나 실제 계측 Snapshot으로 대입하지 마세요.
+- `file`은 정상/Fault 번호·학습/시험 구분·관측 수·원본 해시·저장 방향을 담습니다. `catalog.files[].present`는 파일 존재만 의미하며 내용 검사는 series 조회 시 합니다. 정상 `d00.dat`의 52×500 배열은 500개 관측으로 전치합니다.
+- 열은 `XMEAS1..41, XMV1..11`, `column_index`는 0부터입니다. 단위는 `definition.unit`입니다. XMV10/11은 percent_full_scale 냉각수 설정이며 실제 펌프 속도와 동일하지 않습니다. XMV12는 없습니다.
+- `sample_indices`는 0부터 세는 표본 번호, `values`는 선택 변수의 전체 값입니다. `statistics`는 해당 기록의 최소/최대/평균이며 안전·정상 허용 범위가 아닙니다.
+- timestamp가 없어 `sample_period_s=null`입니다. `inferred_sample_period_s=180`은 동봉 코드의 설정이며 파일별 확정 간격이 아닙니다. 파일별 초기 상태·시드·운전 모드·고장 시작 표본은 null, 현재 개루프 실행과의 비교 상태는 `not_matched_to_current_open_loop_run`입니다. RMSE·실측 정확도나 동일 초기 조건 비교를 만들지 마세요.
+- 원배포 URL·버전·데이터 라이선스 적용 범위는 미확인이고 코드/설명 고지 해시와 로컬 데이터 해시를 보존합니다. 자료 없음·손상·단위 불명·프로필 불일치 시 503 `{code,detail}`, 미지원 파일 404, 미지원 변수 422, 인증 없음 401입니다. 부분 성공 시계열이나 성공 fixture는 반환하지 않습니다.
+
+참조 조회는 요청·승인·설비 상태를 변경하지 않습니다. 외부 TEP 기준/변경 실행은 이 데이터 없이도 진행되며 TEP 승인 정책의 보류는 유지됩니다. [실행·검증·배포 경로 안내](../docs/TEP_LOCAL_DATA_AUDIT.md)
+
 ## 어디부터 볼까?
 
 | 담당 | 먼저 볼 파일 | 구현할 경계 |

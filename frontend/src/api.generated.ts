@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tep/reference/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tep Reference Catalog */
+        get: operations["tep_reference_catalog_tep_reference_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tep/reference/series/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tep Reference Series */
+        get: operations["tep_reference_series_tep_reference_series__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/state": {
         parameters: {
             query?: never;
@@ -683,6 +717,185 @@ export interface components {
             };
             sensitivity: components["schemas"]["SensitivityAssessment"];
         };
+        /** ReferenceCatalog */
+        ReferenceCatalog: {
+            metadata: components["schemas"]["ReferenceMetadata"];
+            /** Variables */
+            variables: {
+                [key: string]: components["schemas"]["ReferenceVariable"];
+            };
+            /** Files */
+            files: components["schemas"]["ReferenceFile"][];
+        };
+        /** ReferenceFile */
+        ReferenceFile: {
+            /** File Id */
+            file_id: string;
+            /**
+             * Condition
+             * @enum {string}
+             */
+            condition: "normal" | "fault";
+            /** Fault Index */
+            fault_index: number | null;
+            /**
+             * Split
+             * @enum {string}
+             */
+            split: "training" | "test";
+            /** Observation Count */
+            observation_count: number;
+            /**
+             * Stored Layout
+             * @enum {string}
+             */
+            stored_layout: "observations_by_variables" | "variables_by_observations";
+            /** Sha256 */
+            sha256: string;
+            /** Present */
+            present: boolean;
+        };
+        /** ReferenceMetadata */
+        ReferenceMetadata: {
+            /**
+             * Schema Version
+             * @default tep-reference-1.0
+             * @constant
+             */
+            schema_version: "tep-reference-1.0";
+            /**
+             * Profile Id
+             * @default local-tep-52vars-20261009
+             * @constant
+             */
+            profile_id: "local-tep-52vars-20261009";
+            /**
+             * Data Origin
+             * @default simulation
+             * @constant
+             */
+            data_origin: "simulation";
+            /**
+             * Record Kind
+             * @default prerecorded_reference
+             * @constant
+             */
+            record_kind: "prerecorded_reference";
+            /**
+             * Used For Approval
+             * @default false
+             * @constant
+             */
+            used_for_approval: false;
+            /**
+             * Field Validation
+             * @default not_performed_no_measured_data
+             * @constant
+             */
+            field_validation: "not_performed_no_measured_data";
+            /** Source Url */
+            source_url: null;
+            /**
+             * Source Version Status
+             * @default unverified_local_upload
+             * @constant
+             */
+            source_version_status: "unverified_local_upload";
+            /**
+             * License Status
+             * @default bundled_code_notice_present_dataset_scope_unverified
+             * @constant
+             */
+            license_status: "bundled_code_notice_present_dataset_scope_unverified";
+            /** Source Files Sha256 */
+            source_files_sha256: {
+                [key: string]: string;
+            };
+            /** Column Order */
+            column_order: string[];
+            /**
+             * Timestamp Status
+             * @default absent
+             * @constant
+             */
+            timestamp_status: "absent";
+            /** Sample Period S */
+            sample_period_s: null;
+            /**
+             * Inferred Sample Period S
+             * @default 180
+             * @constant
+             */
+            inferred_sample_period_s: 180;
+            /**
+             * Sample Period Status
+             * @default bundled_code_only_unverified_per_file
+             * @constant
+             */
+            sample_period_status: "bundled_code_only_unverified_per_file";
+            /**
+             * Controller
+             * @default bundled_closed_loop_per_file_unverified
+             * @constant
+             */
+            controller: "bundled_closed_loop_per_file_unverified";
+            /** Random Seed */
+            random_seed: null;
+            /** Operating Mode */
+            operating_mode: null;
+            /** Initial State */
+            initial_state: null;
+            /** Fault Onset Sample */
+            fault_onset_sample: null;
+            /**
+             * Comparison Status
+             * @default not_matched_to_current_open_loop_run
+             * @constant
+             */
+            comparison_status: "not_matched_to_current_open_loop_run";
+            /** Limitation */
+            limitation: string;
+        };
+        /** ReferenceSeries */
+        ReferenceSeries: {
+            metadata: components["schemas"]["ReferenceMetadata"];
+            file: components["schemas"]["ReferenceFile"];
+            /** Variable */
+            variable: string;
+            definition: components["schemas"]["ReferenceVariable"];
+            /** Sample Indices */
+            sample_indices: number[];
+            /** Values */
+            values: number[];
+            statistics: components["schemas"]["ReferenceStatistics"];
+        };
+        /** ReferenceStatistics */
+        ReferenceStatistics: {
+            /** Minimum */
+            minimum: number;
+            /** Maximum */
+            maximum: number;
+            /** Mean */
+            mean: number;
+        };
+        /** ReferenceVariable */
+        ReferenceVariable: {
+            /** Name */
+            name: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "percent_full_scale" | "kscm/h" | "kg/h" | "kPa_gauge" | "percent" | "degC" | "m3/h" | "kW" | "mole_percent";
+            /** Column Index */
+            column_index: number;
+            /**
+             * Definition Source
+             * @default bundled_teprob.f.txt_and_readme.txt
+             * @constant
+             */
+            definition_source: "bundled_teprob.f.txt_and_readme.txt";
+        };
         /** RequestHistory */
         RequestHistory: {
             /** Reports */
@@ -1211,6 +1424,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    tep_reference_catalog_tep_reference_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceCatalog"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tep_reference_series_tep_reference_series__file_id__get: {
+        parameters: {
+            query?: {
+                variable?: string;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceSeries"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -21,6 +21,149 @@
         }
       }
     },
+    "/tep/reference/catalog": {
+      "get": {
+        "summary": "Tep Reference Catalog",
+        "operationId": "tep_reference_catalog_tep_reference_catalog_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceCatalog"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tep/reference/series/{file_id}": {
+      "get": {
+        "summary": "Tep Reference Series",
+        "operationId": "tep_reference_series_tep_reference_series__file_id__get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          },
+          {
+            "name": "variable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "XMEAS9",
+              "title": "Variable"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/state": {
       "get": {
         "summary": "State",
@@ -2358,6 +2501,371 @@
           "sensitivity"
         ],
         "title": "PhysicalAssessment"
+      },
+      "ReferenceCatalog": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ReferenceMetadata"
+          },
+          "variables": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ReferenceVariable"
+            },
+            "type": "object",
+            "title": "Variables"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceFile"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metadata",
+          "variables",
+          "files"
+        ],
+        "title": "ReferenceCatalog"
+      },
+      "ReferenceFile": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "fault"
+            ],
+            "title": "Condition"
+          },
+          "fault_index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 21.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fault Index"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "training",
+              "test"
+            ],
+            "title": "Split"
+          },
+          "observation_count": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Observation Count"
+          },
+          "stored_layout": {
+            "type": "string",
+            "enum": [
+              "observations_by_variables",
+              "variables_by_observations"
+            ],
+            "title": "Stored Layout"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "present": {
+            "type": "boolean",
+            "title": "Present"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file_id",
+          "condition",
+          "fault_index",
+          "split",
+          "observation_count",
+          "stored_layout",
+          "sha256",
+          "present"
+        ],
+        "title": "ReferenceFile"
+      },
+      "ReferenceMetadata": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "tep-reference-1.0",
+            "title": "Schema Version",
+            "default": "tep-reference-1.0"
+          },
+          "profile_id": {
+            "type": "string",
+            "const": "local-tep-52vars-20261009",
+            "title": "Profile Id",
+            "default": "local-tep-52vars-20261009"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "record_kind": {
+            "type": "string",
+            "const": "prerecorded_reference",
+            "title": "Record Kind",
+            "default": "prerecorded_reference"
+          },
+          "used_for_approval": {
+            "type": "boolean",
+            "const": false,
+            "title": "Used For Approval",
+            "default": false
+          },
+          "field_validation": {
+            "type": "string",
+            "const": "not_performed_no_measured_data",
+            "title": "Field Validation",
+            "default": "not_performed_no_measured_data"
+          },
+          "source_url": {
+            "type": "null",
+            "title": "Source Url"
+          },
+          "source_version_status": {
+            "type": "string",
+            "const": "unverified_local_upload",
+            "title": "Source Version Status",
+            "default": "unverified_local_upload"
+          },
+          "license_status": {
+            "type": "string",
+            "const": "bundled_code_notice_present_dataset_scope_unverified",
+            "title": "License Status",
+            "default": "bundled_code_notice_present_dataset_scope_unverified"
+          },
+          "source_files_sha256": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Source Files Sha256"
+          },
+          "column_order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Column Order"
+          },
+          "timestamp_status": {
+            "type": "string",
+            "const": "absent",
+            "title": "Timestamp Status",
+            "default": "absent"
+          },
+          "sample_period_s": {
+            "type": "null",
+            "title": "Sample Period S"
+          },
+          "inferred_sample_period_s": {
+            "type": "integer",
+            "const": 180,
+            "title": "Inferred Sample Period S",
+            "default": 180
+          },
+          "sample_period_status": {
+            "type": "string",
+            "const": "bundled_code_only_unverified_per_file",
+            "title": "Sample Period Status",
+            "default": "bundled_code_only_unverified_per_file"
+          },
+          "controller": {
+            "type": "string",
+            "const": "bundled_closed_loop_per_file_unverified",
+            "title": "Controller",
+            "default": "bundled_closed_loop_per_file_unverified"
+          },
+          "random_seed": {
+            "type": "null",
+            "title": "Random Seed"
+          },
+          "operating_mode": {
+            "type": "null",
+            "title": "Operating Mode"
+          },
+          "initial_state": {
+            "type": "null",
+            "title": "Initial State"
+          },
+          "fault_onset_sample": {
+            "type": "null",
+            "title": "Fault Onset Sample"
+          },
+          "comparison_status": {
+            "type": "string",
+            "const": "not_matched_to_current_open_loop_run",
+            "title": "Comparison Status",
+            "default": "not_matched_to_current_open_loop_run"
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "profile_id",
+          "data_origin",
+          "record_kind",
+          "used_for_approval",
+          "field_validation",
+          "source_url",
+          "source_version_status",
+          "license_status",
+          "source_files_sha256",
+          "column_order",
+          "timestamp_status",
+          "sample_period_s",
+          "inferred_sample_period_s",
+          "sample_period_status",
+          "controller",
+          "random_seed",
+          "operating_mode",
+          "initial_state",
+          "fault_onset_sample",
+          "comparison_status",
+          "limitation"
+        ],
+        "title": "ReferenceMetadata"
+      },
+      "ReferenceSeries": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ReferenceMetadata"
+          },
+          "file": {
+            "$ref": "#/components/schemas/ReferenceFile"
+          },
+          "variable": {
+            "type": "string",
+            "title": "Variable"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/ReferenceVariable"
+          },
+          "sample_indices": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Sample Indices"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/ReferenceStatistics"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metadata",
+          "file",
+          "variable",
+          "definition",
+          "sample_indices",
+          "values",
+          "statistics"
+        ],
+        "title": "ReferenceSeries"
+      },
+      "ReferenceStatistics": {
+        "properties": {
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "minimum",
+          "maximum",
+          "mean"
+        ],
+        "title": "ReferenceStatistics"
+      },
+      "ReferenceVariable": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "percent_full_scale",
+              "kscm/h",
+              "kg/h",
+              "kPa_gauge",
+              "percent",
+              "degC",
+              "m3/h",
+              "kW",
+              "mole_percent"
+            ],
+            "title": "Unit"
+          },
+          "column_index": {
+            "type": "integer",
+            "maximum": 51.0,
+            "minimum": 0.0,
+            "title": "Column Index"
+          },
+          "definition_source": {
+            "type": "string",
+            "const": "bundled_teprob.f.txt_and_readme.txt",
+            "title": "Definition Source",
+            "default": "bundled_teprob.f.txt_and_readme.txt"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "unit",
+          "column_index",
+          "definition_source"
+        ],
+        "title": "ReferenceVariable"
       },
       "RequestHistory": {
         "properties": {

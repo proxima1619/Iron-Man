@@ -41,4 +41,44 @@ README의 학습 파일 480행 설명은 실제 `d00.dat`의 500개 표본 및 �
 - 현재 Iron-Man NIST 경로는 원본 기본 상태·시드 1431655765·제어기 없음·0.1초 적분·기본 10초 관측·최대 1800초 시험이다. 폐루프 기록과 초기 상태·시드·제어·시간축이 일치하지 않는다.
 - 관측 52개를 내부 50 상태의 체크포인트로 사용하지 않는다. 대응 조건 없이 현재 모델과 행 순서만 맞춘 RMSE를 정확도나 현장 오차로 표시하지 않는다.
 
-사용 가능한 다음 작업은 공개 TEP 정상/고장 통계와 변수 로더, 출처 확인 후 동일 제어기·초기 상태·시드·입력 이력의 참조 재현 비교다. 실제 설비 오차·현장 적용성 검증은 별도 실측 자료가 확인될 때 진행한다. **현재 실측 검증은 미완료, TEP 승인 정책은 hold 상태를 유지한다.**
+현재 정상/고장 참조 기록의 로더·API·데모 화면을 연결했다. 출처 확인 후 동일 제어기·초기 상태·시드·입력 이력을 맞춘 참조 재현 비교는 후속 작업이다. 실제 설비 오차·현장 적용성 검증은 별도 실측 자료가 확인될 때 진행한다. **현재 실측 검증은 미완료, TEP 승인 정책은 hold 상태를 유지한다.**
+
+## 데모에서 사용하는 방법
+
+기존 백엔드·프런트를 실행하고 역할 토큰을 입력해 연결한다. 모델을 **TEP 외부 시뮬레이터**로 선택한 뒤 검토 영역 아래 **TEP 참조 데이터 · 정상/고장 기록 탐색**을 펼친다. 기본 정상 시험 기록은 `d00_te.dat`다. 정상/Fault 1..21의 학습·시험 기록과 52개 변수를 선택하고 표본 번호 그래프·최소/최대/평균·전체 값을 확인할 수 있다. JSON 저장에는 선택 변수 전체 값, 원본 해시, 변수 순서·단위, 확인되지 않은 생성 설정도 포함한다. 통계는 관측 범위이며 정상/안전 허용 범위가 아니다. Fault 번호의 물리 의미나 시작 위치는 추정해서 표시하지 않는다.
+
+변경 요청 생성·평가는 이전처럼 **외부 NIST 엔진**에서 같은 초기 상태로 기준 입력·변경 입력을 계산한다. 참조 기록을 재생하여 새 명령의 결과처럼 보여주거나 첫 행을 완전한 초기 상태로 사용하지 않는다. 참조 조회는 요청·보고서·SQLite 설비 상태를 수정하지 않는다. 참조 기록은 인쇄 승인 보고서에서 제외하며 내려받는 JSON에도 `record_kind=prerecorded_reference`, `data_origin=simulation`, `used_for_approval=false`, 실측 검증 미완료를 보존한다.
+
+### 로컬 경로와 API
+
+기본 `archive/TEP_data`를 그대로 두면 읽을 수 있다. 설치 패키지·다른 경로에서는 다음과 같이 백엔드 실행 전에 절대 경로를 설정한다. `.env.example`은 안내이며 자동 로드되지 않는다.
+
+```powershell
+$env:IRON_MAN_TEP_REFERENCE_DIR='C:\Users\renbn\Documents\Codex\Iron-Man\archive\TEP_data'
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+프런트는 `frontend`에서 `npm run dev`로 실행한다. 역할 토큰은 백엔드의 기존 설정을 따른다. 직접 조회/저장 예:
+
+```powershell
+$headers = @{'X-Iron-Man-Token'='local-operator'}
+Invoke-RestMethod 'http://127.0.0.1:8000/tep/reference/catalog' -Headers $headers
+$result = Invoke-RestMethod 'http://127.0.0.1:8000/tep/reference/series/d00.dat?variable=XMV10' -Headers $headers
+$result | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 data/tep-reference-XMV10.json
+```
+
+파일 이름은 해시 프로필에 있는 44개로 제한한다. XMV12는 기록에 없으므로 조회할 수 없다. 전체 52개 열을 검사한 뒤 선택 변수만 반환한다. `d00.dat` 전치, 관측 수, NaN/무한대, 단위와 원본/설명 파일의 SHA-256을 검사한다. 자료 없음·손상·프로필 불일치는 HTTP 503과 오류 코드만 반환하고 부분 성공 시계열을 반환하지 않는다. 미지원 파일은 404, 미지원 변수는 422, 인증 없음은 401이다. 프로필의 해시는 **현재 로컬 업로드의 식별자**이며 공식 원배포 자료와 바이트 일치를 증명하지 않는다. 파일이 변경되면 재검토 후 프로필을 갱신해야 한다.
+
+### 배포 담당 1번에게 넘길 사항
+
+원본 데이터는 저장소나 wheel에 포함하지 않는다. 로컬 경로는 API 프로세스가 직접 읽으므로 별도 프로그램이나 MATLAB 라이선스는 필요하지 않다. 배포 시 데이터/허가 고지를 서버에 별도로 전달하고 API 컨테이너에 **읽기 전용**으로 마운트한 경로를 `IRON_MAN_TEP_REFERENCE_DIR`에 지정해야 한다. `readme.txt`, `teprob.f.txt`, `temain.f.txt`, `temain_mod.f.txt`도 해시/변수 정의 검사에 필요하다. Dockerfile·Compose·CI 최종 통합은 1번 담당이며 이번 작업에서 컨테이너 배포·라이선스 적용 범위 확인을 완료했다고 표시하지 않는다. 참조 경로가 없으면 참조 탐색에만 실패 메시지를 표시하고 외부 TEP 실행은 계속 지원한다.
+
+### 검증
+
+```powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+$env:IRON_MAN_TEST_TEP_REFERENCE='1'
+.\.venv\Scripts\python.exe -m pytest tests/test_tep_reference.py -q
+```
+
+17개 참조 테스트 통과: 실제 44개 파일·31,700개 관측의 전체 열 유한값 검사와 반복 읽기 일치, 전치/냉각수 열/단위 매핑, 미지원 변수·누락·손상·해시 불일치·불명 단위의 실패, API 인증과 가상 설비 상태 미변경을 확인했다. 작은 합성 배열은 파서/HTTP 검사용이며 물리 모델 검증용 데이터가 아니다. 외부 TEP 실행 검증은 [TEP_INTEGRATION.md](TEP_INTEGRATION.md)의 별도 시험을 따른다. 현재 단계는 기록 구조와 연동 재현성 확인이며 실측 정확도 또는 실제 설비 적용성 검증은 미완료다.

@@ -20,4 +20,4 @@ build-backend = "setuptools.build_meta"
 include = ["backend*"]
 
 [tool.setuptools.package-data]
-"backend.simulator.tep" = ["runner.cpp", "source.lock.json", "vendor/*"]
+"backend.simulator.tep" = ["runner.cpp", "source.lock.json", "reference.lock.json", "vendor/*"]
