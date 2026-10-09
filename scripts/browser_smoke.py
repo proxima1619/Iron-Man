@@ -87,7 +87,7 @@ def run(access, url):
         expect(page.locator(".request-list button").first).to_be_visible()
         page.get_by_role("combobox", name=re.compile(r"^모델")).select_option("tep")
         for variable in ("XMV10", "XMV11"):
-            page.get_by_label("냉각수 입력").select_option(variable)
+            page.get_by_role("combobox", name=re.compile(r"^냉각수 입력")).select_option(variable)
             page.get_by_label("예측 구간 (초)").fill("600")
             page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
             expect(page.locator(".review > section:first-child .badge")).to_have_text("보류", timeout=30000)
