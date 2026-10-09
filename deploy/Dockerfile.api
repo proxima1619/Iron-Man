@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     IRON_MAN_TEP_ENGINE_DIR=/opt/tep \
     IRON_MAN_TEP_RUN_DIR=/data/tep-runs \
     IRON_MAN_EVIDENCE_SOURCE_PATH=/app/data/sources/cooling-demo.json
-RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 \
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 coreutils \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home app \

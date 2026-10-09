@@ -14,13 +14,14 @@ BASE = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8080').rstrip('/
 TOKEN = os.environ.get('IRON_MAN_OPERATOR_TOKEN', 'local-operator')
 APPROVER = os.environ.get('IRON_MAN_APPROVER_TOKEN', 'local-approver')
 
-def api(path, body=None, token=TOKEN):
+def api(path, body=None, token=TOKEN, *, with_status=False):
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = f'Bearer {token}'
     data = None if body is None else json.dumps(body).encode()
     with urllib.request.urlopen(urllib.request.Request(BASE + '/api' + path, data=data, headers=headers), timeout=15) as response:
-        return json.load(response)
+        value = json.load(response)
+        return (response.status, value) if with_status else value
 
 def wait_ready():
     deadline = time.monotonic() + 60
@@ -37,6 +38,12 @@ def compose(*args):
 if __name__ == '__main__':
     assert wait_ready()['storage'] == 'sqlite'
     compose('exec', '-T', 'api', 'python', '-c',
+            'import os, shutil; from pathlib import Path; from backend.simulator.tep.service import manifest; '
+            'assert os.geteuid() != 0; assert shutil.which("timeout"); '
+            'assert not shutil.which("g++"); manifest(Path(os.environ["IRON_MAN_TEP_ENGINE_DIR"])); '
+            'p=Path(os.environ["IRON_MAN_TEP_RUN_DIR"]); p.mkdir(parents=True, exist_ok=True); '
+            'assert os.access(p, os.W_OK)')
+    compose('exec', '-T', 'api', 'python', '-c',
             'from backend.evidence.service import load_sources; assert load_sources()')
     with urllib.request.urlopen(BASE, timeout=10) as response:
         assert b'<div id="root"></div>' in response.read()
@@ -45,6 +52,14 @@ if __name__ == '__main__':
         raise AssertionError('Unauthenticated request was accepted')
     except urllib.error.HTTPError as error:
         assert error.code == 401
+    from scripts.tep_smoke import run as run_tep
+    api('/demo/reset', {}, token=APPROVER)
+    def tep_request(path, *, token, body=None):
+        try:
+            return api(path, body, token, with_status=True)
+        except urllib.error.HTTPError as error:
+            return error.code, json.load(error)
+    tep_records = run_tep(tep_request, TOKEN, APPROVER)
     row = api('/requests', {'command': {'target_pct': 60}, 'purpose': 'Compose persistence smoke test'})
     report = api(f'/requests/{row["id"]}/evaluate', {})
     deadline = time.monotonic() + 100
@@ -71,6 +86,8 @@ if __name__ == '__main__':
     wait_ready()
     assert api(f'/requests/{row["id"]}') == report
     assert api(request_path) == applied
+    for tep_row in tep_records:
+        assert api(f'/requests/{tep_row["id"]}') == tep_row
     after_state = api('/state')
     after_state.pop('observed_at')
     assert after_state == before_state
@@ -79,5 +96,8 @@ if __name__ == '__main__':
     wait_ready()
     assert api(f'/requests/{row["id"]}') == report
     assert api(request_path + '/execute', {'report_digest': approved['report']['digest']}) == applied
+    for tep_row in tep_records:
+        assert api(f'/requests/{tep_row["id"]}') == tep_row
+        assert api(f'/requests/{tep_row["id"]}/history')['reports']
     assert api(f'/requests/{row["id"]}/history')['reports']
     print('PASS: web, proxy, auth, API replacement, full stack recreation, persistent request/report/state')

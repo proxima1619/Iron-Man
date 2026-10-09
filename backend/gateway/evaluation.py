@@ -44,9 +44,19 @@ def calculate(context):
         "execution_scope": context.get("execution_scope", "unconfigured"),
         "mock": True, "can_approve": False, "evidence": None, "simulation": None}
     try:
-        if (snapshot.domain_status != "ready" or snapshot.sensor_quality != "valid"
-                or not 0 <= time.time() - snapshot.observed_at <= SNAPSHOT_TTL_S):
-            report.update(verdict="hold", reason_code="INVALID_STATE", reason="센서 품질 또는 상태 유효 시간을 확인하세요.")
+        age_s = time.time() - snapshot.observed_at
+        state_issues = []
+        if snapshot.sensor_quality != "valid":
+            state_issues.append("센서 품질이 불량입니다")
+        if snapshot.domain_status != "ready":
+            state_issues.append("모델 지원 범위 밖입니다: " + (snapshot.domain_reason or snapshot.domain_status))
+        if age_s < 0:
+            state_issues.append("관측 시각이 서버 시각보다 미래입니다. 시계 설정을 확인하세요")
+        elif age_s > SNAPSHOT_TTL_S:
+            state_issues.append(f"마지막 관측 후 {age_s:.0f}초가 지나 상태 유효 시간 {SNAPSHOT_TTL_S}초를 초과했습니다. 가상 상태를 다시 읽고 새 요청을 검토하세요")
+        if state_issues:
+            report.update(verdict="hold", reason_code="INVALID_STATE",
+                          reason=" / ".join(state_issues) + ". 논문 검토와 계산을 시작하지 않았습니다.")
         elif body.command.target_pct < 20:
             report.update(verdict="blocked", reason_code="POLICY_VIOLATION", reason="데모 정책의 최소 속도 20% 미만입니다.")
         else:

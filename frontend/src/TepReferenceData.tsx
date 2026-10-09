@@ -105,7 +105,7 @@ export function TepReferenceData({ token, enabled }: { token: string; enabled: b
               <text x="75" y="260" fontSize="12">표본 0</text>
               <text x="640" y="260" fontSize="12">표본 {shown.values.length - 1}</text>
               <text x="75" y="25" fontSize="13">{shown.variable} ({shown.definition.unit})</text>
-              <polyline points={line} fill="none" stroke="#b6e3cd" strokeWidth="1.5" />
+              <polyline points={line} fill="none" stroke="var(--accent)" strokeWidth="1.5" />
             </svg>
             <p className="muted">시간 기록이 없어 표본 번호로 표시합니다. 동봉 코드의 기록 간격은 180초이며 파일별 간격·고장 시작 표본은 미확인입니다.</p>
             <table><thead><tr><th>관측 수</th><th>최소 ({shown.definition.unit})</th><th>최대 ({shown.definition.unit})</th><th>평균 ({shown.definition.unit})</th></tr></thead>
