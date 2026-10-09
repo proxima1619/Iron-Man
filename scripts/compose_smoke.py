@@ -35,6 +35,8 @@ def compose(*args):
 
 if __name__ == '__main__':
     assert wait_ready()['storage'] == 'sqlite'
+    compose('exec', '-T', 'api', 'python', '-c',
+            'from backend.evidence.service import load_sources; assert load_sources()')
     with urllib.request.urlopen(BASE, timeout=10) as response:
         assert b'<div id="root"></div>' in response.read()
     try:

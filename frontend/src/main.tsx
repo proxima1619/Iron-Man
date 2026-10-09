@@ -102,8 +102,8 @@ function App() {
         <p>요청을 검토하고, 담당자가 승인한 명령만 가상 설비에 적용합니다.</p>
       </header>
       <aside>
-        개발 중 · 실제 장비 미연결 · 합성 상태와 단순 열수지 계산 · 근거 검토는
-        모의 응답입니다.
+        개발 중 · 실제 장비 미연결 · 합성 상태와 단순 열수지 계산 · 근거 검토
+        방식은 보고서에 표시됩니다.
       </aside>
       <section>
         <h2>1. 요청</h2>
@@ -247,11 +247,16 @@ function App() {
                 <p className="muted">{row.report.simulation.limitation}</p>
               </>
             )}
+            {row.report?.evidence && <p>근거 검토: {row.report.evidence.mock
+              ? "모의 응답" : "LLM 검토 경로 · 사전 수집 문서"} · {row.report.evidence.status}</p>}
             {row.report?.evidence?.cards.map((c) => (
               <article key={c.title}>
                 <h3>{c.title}</h3>
                 <p>{c.claim}</p>
-                <small>원본 위치: {c.locator} · 적용 조건 확인 불가</small>
+                <small>원본 위치: {c.locator} · {c.stance} · 적용 조건: {c.applicability || "unknown"}</small>
+                {c.excerpt && <blockquote>{c.excerpt}</blockquote>}
+                {!!c.matched_conditions?.length && <p>일치 조건: {c.matched_conditions.join(" / ")}</p>}
+                {!!c.missing_conditions?.length && <p>미확인 조건: {c.missing_conditions.join(" / ")}</p>}
               </article>
             ))}
             <p className="muted">{row.report?.evidence?.limitation}</p>

@@ -3,33 +3,52 @@
 import math
 
 from backend.contracts import Command, Scenario, SimulationResult, Snapshot
+from backend.simulator.model import MODEL, advance_state
 
-MODEL_VERSION = "cooling-demo-v1"
-LIMIT_C = 80.0
-DT_S = 1
-DEGRADED_EFFICIENCY = 0.65
-HEAT_GAIN_C_PER_S = 0.15
-COOLING_GAIN_C_PER_S_PER_PCT = 0.002
-PUMP_RESPONSE_S = 20.0
+MODEL_VERSION = MODEL.version
+LIMIT_C = MODEL.limit_c
+DT_S = MODEL.dt_s
+DEGRADED_EFFICIENCY = MODEL.degraded_efficiency
+
+
+class ModelDomainError(ValueError):
+    """A calculated state leaves the supported domain; do not publish partial metrics."""
+
+
+def _check_state(temperature_c: float, speed_pct: float, time_s: float) -> None:
+    for name, value, low, high in (
+        ("temperature_c", temperature_c, MODEL.temperature_min_c, MODEL.temperature_max_c),
+        ("pump_speed_pct", speed_pct, 0.0, 100.0),
+    ):
+        if not math.isfinite(value) or not low <= value <= high:
+            raise ModelDomainError(
+                f"out_of_domain:{name}, time_s={time_s:g}, value={value:g}, range=[{low:g}, {high:g}]")
 
 
 def _run(snapshot: Snapshot, target_pct: float, duration_s: int,
-         efficiency: float) -> dict:
+         efficiency: float, *, dt_s: float = DT_S) -> dict:
+    if not math.isfinite(dt_s) or not 0 < dt_s <= MODEL.dt_s:
+        raise ValueError("dt_s must be finite and in (0, 1] seconds")
     temperature = snapshot.temperature_c
     effective_speed = snapshot.pump_speed_pct
-    series = [{"time_s": 0, "temperature_c": round(temperature, 4)}]
+    _check_state(temperature, effective_speed, 0)
+    series = [{"time_s": 0, "temperature_c": temperature,
+               "pump_speed_pct": effective_speed}]
     peak = temperature
     first_exceeded = 0 if temperature > LIMIT_C else None
-    for second in range(1, duration_s + 1):
-        effective_speed += (target_pct - effective_speed) * DT_S / PUMP_RESPONSE_S
-        temperature += DT_S * (
-            HEAT_GAIN_C_PER_S * snapshot.load_ratio
-            - COOLING_GAIN_C_PER_S_PER_PCT * effective_speed * efficiency
-        )
+    elapsed_s = 0.0
+    for index in range(math.ceil(duration_s / dt_s)):
+        next_time_s = min(duration_s, (index + 1) * dt_s)
+        temperature, effective_speed = advance_state(
+            temperature, effective_speed, target_pct, snapshot.load_ratio,
+            efficiency, next_time_s - elapsed_s)
+        elapsed_s = next_time_s
+        _check_state(temperature, effective_speed, elapsed_s)
         peak = max(peak, temperature)
         if first_exceeded is None and temperature > LIMIT_C:
-            first_exceeded = second
-        series.append({"time_s": second, "temperature_c": round(temperature, 4)})
+            first_exceeded = elapsed_s
+        series.append({"time_s": round(elapsed_s, 10), "temperature_c": temperature,
+                       "pump_speed_pct": effective_speed})
     return {"series": series, "peak_c": peak,
             "first_exceeded_s": first_exceeded}
 
@@ -43,7 +62,7 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
     if snapshot.sensor_quality != "valid":
         reasons.append("invalid_sensor_quality")
     for name, value, low, high in (
-        ("temperature_c", snapshot.temperature_c, 0, 120),
+        ("temperature_c", snapshot.temperature_c, MODEL.temperature_min_c, MODEL.temperature_max_c),
         ("load_ratio", snapshot.load_ratio, 0, 1.5),
         ("pump_speed_pct", snapshot.pump_speed_pct, 0, 100),
     ):
@@ -51,8 +70,12 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
             reasons.append(f"out_of_domain:{name}")
     if not math.isfinite(snapshot.observed_at) or snapshot.observed_at <= 0:
         reasons.append("invalid_observation_time")
-    limitation = ("합성 초기 상태와 단순 열수지 모델입니다. 실제 설비·센서·전력 사용량의 "
-                  "정확도를 검증하지 않았습니다. 시계열은 현 v1 API 계약에 포함되지 않습니다.")
+    limitation = (f"합성 상태·데모 계수의 열수지 모델 v2입니다. 열용량 {MODEL.thermal_capacity_j_per_k:g} J/K, "
+                  f"기준 열입력 {MODEL.nominal_heat_input_w:g} W, "
+                  f"전속도 열교환계수 {MODEL.full_speed_conductance_w_per_k:g} W/K, "
+                  f"냉각수 {MODEL.coolant_temperature_c:g}°C를 가정합니다. "
+                  "실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. "
+                  "시계열은 현 v1 API 계약에 포함되지 않습니다.")
     if reasons:
         return SimulationResult(mock=False, status="out_of_domain",
             model_version=MODEL_VERSION, scenarios=[],
@@ -63,8 +86,15 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
     rows = []
     for scenario in scenarios:
         efficiency = DEGRADED_EFFICIENCY if scenario.kind == "degraded_cooling" else 1.0
-        baseline = _run(snapshot, snapshot.pump_speed_pct, command.duration_s, efficiency)
-        candidate = _run(snapshot, command.target_pct, command.duration_s, efficiency)
+        runs = {}
+        for branch, speed in (("baseline", snapshot.pump_speed_pct), ("candidate", command.target_pct)):
+            try:
+                runs[branch] = _run(snapshot, speed, command.duration_s, efficiency)
+            except ModelDomainError as exc:
+                return SimulationResult(mock=False, status="out_of_domain",
+                    model_version=MODEL_VERSION, scenarios=[],
+                    limitation=f"{limitation} 계산 범위 초과: {scenario.kind}/{branch}: {exc}")
+        baseline, candidate = runs["baseline"], runs["candidate"]
         rows.append({"kind": scenario.kind, "evidence_id": scenario.evidence_id,
                      "baseline_peak_c": baseline["peak_c"],
                      "candidate_peak_c": candidate["peak_c"],

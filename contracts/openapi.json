@@ -1095,11 +1095,91 @@
             "type": "string",
             "enum": [
               "team_authored_fixture",
+              "team_authored_demo",
               "paper",
               "manual",
               "field_record"
             ],
             "title": "Source Type"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          },
+          "proposed_test": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "degraded_cooling"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Test"
+          },
+          "parameter_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "demo_assumption"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameter Origin"
           },
           "matched_conditions": {
             "items": {
@@ -1128,6 +1208,13 @@
           "locator",
           "source_url",
           "source_type",
+          "excerpt",
+          "publisher",
+          "version",
+          "published_at",
+          "usage",
+          "proposed_test",
+          "parameter_origin",
           "matched_conditions",
           "missing_conditions"
         ],

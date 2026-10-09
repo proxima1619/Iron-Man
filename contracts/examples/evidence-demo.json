@@ -13,6 +13,13 @@
       "locator": "fixtures/demo-source.md",
       "source_url": null,
       "source_type": "team_authored_fixture",
+      "excerpt": null,
+      "publisher": null,
+      "version": null,
+      "published_at": null,
+      "usage": null,
+      "proposed_test": null,
+      "parameter_origin": null,
       "matched_conditions": [],
       "missing_conditions": []
     }

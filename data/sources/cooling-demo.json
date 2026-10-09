@@ -1,0 +1,38 @@
+[
+  {
+    "source_id": "team-cooling-support-v1",
+    "title": "가상 냉각 탱크 검토 규정 — 변경 목적",
+    "publisher": "Iron Man 팀",
+    "version": "1",
+    "published_at": "2026-10-09",
+    "usage": "팀 작성 데모 자료, 프로젝트 내부 사용",
+    "source_url": null,
+    "source_type": "team_authored_demo",
+    "locator": "data/sources/cooling-demo.json / team-cooling-support-v1",
+    "text": "대상은 cooling-demo-01 가상 냉각 탱크다. set_pump_speed 명령으로 펌프 속도를 낮추는 요청은 전력 절감을 목적으로 검토할 수 있다. 전력 모델과 실측 자료가 없으므로 절감량이나 안전성을 확정할 수 없다. 동일 부하에서 기존 속도와 요청 속도의 온도 결과를 비교해야 한다."
+  },
+  {
+    "source_id": "team-cooling-counter-v1",
+    "title": "가상 냉각 탱크 검토 규정 — 효율 저하 반례",
+    "publisher": "Iron Man 팀",
+    "version": "1",
+    "published_at": "2026-10-09",
+    "usage": "팀 작성 데모 자료, 프로젝트 내부 사용",
+    "source_url": null,
+    "source_type": "team_authored_demo",
+    "locator": "data/sources/cooling-demo.json / team-cooling-counter-v1",
+    "text": "대상은 cooling-demo-01 가상 냉각 탱크다. 펌프 속도를 낮추는 변경은 정상 냉각 조건만으로 검토하지 않는다. 냉각 효율이 저하되면 제거되는 열량이 줄어 온도가 상승할 수 있다는 데모 가정을 사용한다. degraded_cooling 추가 시험에서 동일 명령의 온도 제한 초과 여부를 확인해야 한다. 효율 수치는 문헌값이 아니며 시뮬레이터 담당자가 정한 데모 조건을 사용한다."
+  },
+  {
+    "source_id": "team-cooling-limits-v1",
+    "title": "가상 냉각 탱크 검토 규정 — 적용 한계",
+    "publisher": "Iron Man 팀",
+    "version": "1",
+    "published_at": "2026-10-09",
+    "usage": "팀 작성 데모 자료, 프로젝트 내부 사용",
+    "source_url": null,
+    "source_type": "team_authored_demo",
+    "locator": "data/sources/cooling-demo.json / team-cooling-limits-v1",
+    "text": "이 규정은 합성 상태를 사용하는 cooling-demo-01 가상 설비에만 적용한다. 실제 제조사 매뉴얼이나 검증된 물리 자료가 아니다. 실제 설비 적용 조건은 확인할 수 없다. 센서 품질이 invalid이거나 상태가 오래되면 검토에 필요한 현재 상태를 확인할 수 없다. 온도 제한, 모델 유효 범위와 승인 여부는 서버와 시뮬레이터 담당자의 별도 규칙으로 판단한다."
+  }
+]

@@ -25,7 +25,7 @@
       "data_origin": "synthetic"
     },
     "snapshot_digest": "00966c1512c0546d40714c454e4dc8686951662fb5d58e03bf82bd26337598db",
-    "model_version": "cooling-demo-v1",
+    "model_version": "cooling-demo-v2",
     "policy_version": "demo-policy-v1",
     "mock": true,
     "can_approve": false,
@@ -34,7 +34,7 @@
     "verdict": "hold",
     "reason_code": "EVALUATION_TIMEOUT",
     "reason": "예시: 평가 제한 시간 초과",
-    "digest": "e22d69f54a2092285f1a4db7f99ef82d1fb8b14b3471e0033155b0cff3049039"
+    "digest": "6b78edbc33682e685815d0472071d8dc487239f3765994feff1926dbc6e6fd7a"
   },
   "approval": null,
   "execution": null,
@@ -52,7 +52,7 @@
       "kind": "evaluated",
       "at": 1700000000.0,
       "verdict": "hold",
-      "report_digest": "cb6a1e21441095d02f168bb1426d524d82a3d28262413b42815b6d43654651a3",
+      "report_digest": "ec9e8f9d16edb90335b731ebf82c14d8218e80d6bdba171408d6604527771a5e",
       "actor": null,
       "reason": null,
       "execution_id": null
@@ -79,7 +79,7 @@
       "kind": "evaluated",
       "at": 1700000090.0,
       "verdict": "hold",
-      "report_digest": "e22d69f54a2092285f1a4db7f99ef82d1fb8b14b3471e0033155b0cff3049039",
+      "report_digest": "6b78edbc33682e685815d0472071d8dc487239f3765994feff1926dbc6e6fd7a",
       "actor": null,
       "reason": null,
       "execution_id": null
