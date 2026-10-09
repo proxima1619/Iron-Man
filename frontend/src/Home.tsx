@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import "./home.css";
-import { DemoExperience } from "./DemoExperience";
 
 export function Home() {
   const [health, setHealth] = useState<"loading" | "ready" | "offline">(
@@ -124,7 +123,6 @@ export function Home() {
           </div>
         </dl>
       </section>
-      <DemoExperience />
       <section className="home-system" aria-label="서비스 상태">
         <div>
           <h2>로컬 시연 환경</h2>

@@ -4,6 +4,7 @@ import type { components } from "./api.generated";
 import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
 import { Home } from "./Home";
+import { DemoPage } from "./DemoPage";
 import { EvidencePanel } from "./EvidencePanel";
 
 type Row = components["schemas"]["RequestRecord"];
@@ -888,12 +889,14 @@ function Website() {
   useEffect(() => {
     const onHash = () => {
       setPage(window.location.hash);
+      if (["#home", "#demo", "#review", ""].includes(window.location.hash))
+        window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
   const consolePage = page === "#review" || page.startsWith("#evidence-");
-  return consolePage ? <App /> : <Home />;
+  return consolePage ? <App /> : page === "#demo" ? <DemoPage /> : <Home />;
 }
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
