@@ -271,7 +271,8 @@
     text-align: center;
   }
 }
-.demo-database select {
+.demo-database select,
+.demo-controls > label select {
   display: block;
   width: 100%;
   min-width: 0;

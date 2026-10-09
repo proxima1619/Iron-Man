@@ -116,6 +116,26 @@ export function EvidencePanel({
                     : `변경 결과는 ${s.limit_c}°C 제한 이내입니다.`}
                   {s.baseline_peak_c > s.limit_c &&
                     " 기존 운전 결과도 제한을 초과하므로 함께 검토해야 합니다."}
+                  {s.physical_assessment && (
+                    <p className="muted">
+                      장기 {s.physical_assessment.horizon_s}초 최고: 기존{" "}
+                      {s.physical_assessment.baseline.peak_c.toFixed(2)}°C /
+                      변경 {s.physical_assessment.candidate.peak_c.toFixed(2)}
+                      °C. 변경 평형{" "}
+                      {s.physical_assessment.candidate.equilibrium_c === null
+                        ? "유한 평형 없음"
+                        : `${s.physical_assessment.candidate.equilibrium_c.toFixed(2)}°C`}
+                      . 계수 민감도:{" "}
+                      {s.physical_assessment.sensitivity.status === "completed"
+                        ? `변경 최악 평형 ${s.physical_assessment.sensitivity.candidate_worst_equilibrium_c?.toFixed(2)}°C`
+                        : "지원 범위 밖"}
+                      .{" "}
+                      {s.physical_assessment.candidate.first_exceeded_s !==
+                        null &&
+                        `첫 초과 표본 ${s.physical_assessment.candidate.first_exceeded_s}초.`}{" "}
+                      계수는 데모 가정이며 실측 보정되지 않았습니다.
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>

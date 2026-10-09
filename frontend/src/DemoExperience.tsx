@@ -22,6 +22,7 @@ export function DemoExperience() {
   const [operator, setOperator] = useState("local-operator");
   const [approver, setApprover] = useState("local-approver");
   const [speed, setSpeed] = useState(80);
+  const [load, setLoad] = useState(0.6);
   const [row, setRow] = useState<Row | null>(null);
   const [savedRows, setSavedRows] = useState<Row[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -223,6 +224,17 @@ export function DemoExperience() {
             )}
           </div>
           <h3>1. 시연 조건 선택</h3>
+          <label>
+            준비할 부하 비율
+            <select
+              value={load}
+              disabled={locked}
+              onChange={(e) => setLoad(Number(e.target.value))}
+            >
+              <option value={1}>1.0 · 장기 위험 검토</option>
+              <option value={0.6}>0.6 · 가상 승인 흐름 검토</option>
+            </select>
+          </label>
           <div className="demo-options">
             <button
               className={speed === 60 ? "selected" : ""}
@@ -240,12 +252,12 @@ export function DemoExperience() {
               onClick={() => setSpeed(80)}
             >
               <strong>80%</strong>
-              <span>담당자 승인 사례</span>
+              <span>장기 위험·승인 검토</span>
             </button>
           </div>
           <p className="muted">
-            초기 합성 상태에서의 예시입니다. 현재 상태가 바뀌면 결과도
-            달라집니다. 예측 구간은 300초입니다.
+            먼저 초기 상태로 준비하세요. 최신 정책은 300초·3600초·평형·계수
+            민감도를 확인합니다. 부하 1에서는 80%도 차단될 수 있습니다.
           </p>
           <button
             className="full"
@@ -256,7 +268,13 @@ export function DemoExperience() {
                 const session = await api<Session>("/session", "approver");
                 if (session.role !== "approver")
                   throw new Error("승인 담당자 토큰이 필요합니다.");
-                setPlant(await api<Snapshot>("/demo/reset", "approver", {}));
+                await api<Snapshot>("/demo/reset", "approver", {});
+                setPlant(
+                  await api<Snapshot>("/demo/state", "approver", {
+                    load_ratio: load,
+                    sensor_quality: "valid",
+                  }),
+                );
                 setRow(null);
                 setFromDatabase(false);
                 setConfirmed(false);
@@ -331,8 +349,8 @@ export function DemoExperience() {
           </details>
           {plant && (
             <p className="demo-state">
-              초기 온도 {plant.temperature_c.toFixed(1)}°C · 목표 속도{" "}
-              {plant.target_pump_speed_pct ?? plant.pump_speed_pct}%
+              온도 {plant.temperature_c.toFixed(1)}°C · 부하 {plant.load_ratio}{" "}
+              · 목표 속도 {plant.target_pump_speed_pct ?? plant.pump_speed_pct}%
             </p>
           )}
           <a href="#review">전체 검토 콘솔 열기 ↗</a>
