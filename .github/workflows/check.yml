@@ -26,3 +26,19 @@ jobs:
       - run: npm run generate:api
       - run: git diff --exit-code -- src/api.generated.ts
       - run: npm run build
+
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: iron-man-ci
+      IRON_MAN_HTTP_PORT: '18080'
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose up -d --build --wait --wait-timeout 120
+      - run: python3 -m scripts.compose_smoke http://127.0.0.1:18080
+      - if: failure()
+        run: docker compose logs --tail=150
+      - if: always()
+        run: docker compose down

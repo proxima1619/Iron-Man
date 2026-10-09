@@ -37,3 +37,10 @@ API 연결된 React 화면과 비교 표가 있습니다. 다음은 시계열 �
 `backend/gateway/storage.py`에 요청·보고서/승인 이력·가상 설비 상태·적용 영수증을 저장합니다. 기본 DB는 `data/ironman.sqlite3`, 배포 시 `IRON_MAN_DB_PATH`로 지정합니다. 데이터 파일은 Git에서 제외합니다.
 
 API `/requests` 목록과 `/requests/{id}/history`를 추가했고 기존 API 형식은 유지했습니다. UI에서 저장된 요청을 다시 불러올 수 있습니다. 시작 시 미완료 검토는 보류, 미완료 실행은 결과 불명으로 복구합니다. 프로세스 잠금으로 동일 DB의 다중 서버를 거부합니다. 평가 작업 분리와 외부 배포는 아직 미구현입니다.
+
+
+## 1번 개발 3단계 — Docker Compose
+
+`deploy/Dockerfile.api`, `deploy/Dockerfile.web`, `deploy/nginx.conf`, `compose.yaml`을 추가했습니다. 웹과 API를 함께 빌드·실행하고 SQLite 디렉터리를 named volume으로 유지합니다. API 컨테이너 교체 시 Nginx가 Docker DNS를 재조회합니다. API는 한 worker·비root 사용자로 실행하고 호스트에 포트를 직접 공개하지 않습니다.
+
+기본 접속은 localhost:8080입니다. HTTPS·도메인·외부 접근 인증은 아직 배포하지 않았습니다. 긴 평가 작업 분리도 다음 단계입니다. 실제 Compose 빌드·재생성 검사는 GitHub Actions의 compose job에서 확인합니다.

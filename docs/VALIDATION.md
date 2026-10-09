@@ -29,3 +29,10 @@
 - 정상 앱 시작·종료를 두 번 수행하여 요청 목록·보고서 조회 유지 확인.
 - 승인 경로 검증은 테스트 전용 mock 정책 사용. 실제 계산 승인 정책은 여전히 미설정.
 - 브라우저에서 저장 목록 버튼 클릭 확인은 미실행; HTTP API와 프런트 빌드로 검증.
+
+## Docker Compose 구성
+
+- 로컬 `docker compose config --quiet` 통과, 기존 백엔드 55 tests passed.
+- 로컬 Docker Desktop 엔진이 응답하지 않아 로컬 컨테이너 실행은 확인하지 못함.
+- GitHub Actions compose job에 이미지 빌드·HTTP 프록시·인증·API 교체·전체 스택 재생성 후 기록 보존 검사를 추가. 실제 실행 결과는 해당 커밋의 Actions 기록 참조.
+- 외부 서버 배포·HTTPS·실서비스 인증은 이번 단계 범위 밖.

@@ -39,7 +39,17 @@ React → FastAPI → 요청·데모 정책 검사
 - 검증: API 통합 테스트, 프런트 타입 검사·빌드, GitHub Actions 구성
 - 저장: **SQLite**. 요청·보고서 이력·승인·실행 기록과 가상 설비 상태를 저장합니다. 기본 파일은 `data/ironman.sqlite3`이며, 같은 파일을 사용하는 서버는 한 개만 실행합니다. [저장·복구 안내](docs/STORAGE.md)를 확인하세요.
 
-## 실행
+## Docker로 실행
+
+Docker Desktop/Engine 실행 후 저장소 루트에서:
+
+```bash
+docker compose up -d --build --wait
+```
+
+화면: http://localhost:8080. 웹·API가 함께 실행되며 DB는 영구 볼륨에 저장됩니다. [Docker 실행·저장·설정 안내](docs/DOCKER.md)를 확인하세요. 외부 공개·HTTPS 배포는 다음 단계입니다.
+
+## Python·Node로 직접 실행
 
 Python 3.11 이상, Node.js 22 이상을 권장합니다. 저장소 루트에서 시작합니다.
 
