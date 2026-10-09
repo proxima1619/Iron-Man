@@ -89,7 +89,7 @@ def run(access, url):
             page.get_by_label("예측 구간 (초)").fill("600")
             page.get_by_role("button", name="요청 생성 · 시뮬레이션 검토").click()
             expect(page.locator(".review > section:first-child .badge")).to_have_text("보류", timeout=30000)
-            expect(page.get_by_role("heading", name="TEP 외부 시뮬레이션 비교")).to_be_visible()
+            expect(page.get_by_role("heading", name="이번 요청에서 새로 실행한 TEP 결과")).to_be_visible()
             expect(page.get_by_role("heading", name="TEP 근거·역근거 검토")).to_be_visible()
             expect(page.get_by_text("실행 상태: completed", exact=True)).to_be_visible()
             expect(page.get_by_role("img", name="XMEAS9 기준 및 변경 시계열, degC")).to_be_visible()
