@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:academy.kisa.or.kr)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "mcp__181a512c-5a2b-4075-953b-b4e3c5700fd1__notion-search",
+      "mcp__181a512c-5a2b-4075-953b-b4e3c5700fd1__notion-fetch",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "mcp__181a512c-5a2b-4075-953b-b4e3c5700fd1__notion-update-page"
+    ]
+  }
+}
