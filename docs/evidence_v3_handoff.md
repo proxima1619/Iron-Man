@@ -108,7 +108,8 @@ Docker에서는 SOURCE_PATH=/app/data/sources/paper-sources.json을 사용한다
 자동 시험은 가상 시간 진행 후 온도·실제 속도·기존 목표·요청 목표 전달, 과거 snapshot 호환,
 지원 시험·근거 ID, 논문 조건 불일치, 실제 API 비동기 응답과 SQLite 복원을 확인한다.
 외부 검색과 논문 3개 XML 다운로드는 실제 수행했다. 실제 LLM 호출은 API 키·모델 설정이 없어 미실행이다.
-전체 pytest 192개, 프런트 TypeScript·Vite 빌드, Compose 설정 검사와 diff 공백 검사를 통과했다.
+최종 main 패치의 가상 승인 정책까지 반영 후 전체 pytest 219개, 프런트 TypeScript·Vite 빌드,
+Compose 설정 검사와 diff 공백 검사를 통과했다. 외부 논문의 승인 정책 우회 방지도 검사했다.
 Docker 엔진이 꺼져 있어 컨테이너 실동작은 미검증이며 설정 구문만 검사했다.
 
 API 참고: [Europe PMC RESTful API](https://europepmc.org/RestfulWebService).

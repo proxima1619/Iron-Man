@@ -64,7 +64,7 @@ LLM 응답을 대체한 자동 시험이며 실제 모델의 추출 정확도·�
 API 키를 사용한 라이브 호출과 실제 모델 품질 평가는 아직 수행하지 않았다.
 
 2026-10-09 실행 결과: Python 3.13 가상환경에서 기존 gateway 시험을 포함해
-최신 SQLite·가상 상태 v3·비동기 평가 및 실제 논문 기능 통합 후 `pytest -q` 192개 통과.
+최신 SQLite·가상 상태 v3·비동기 평가·가상 승인 정책 및 실제 논문 기능 통합 후 `pytest -q` 219개 통과.
 TestClient 관련 의존성 deprecation warning 1개.
 프런트 `npm run build`의 TypeScript 검사와 Vite 빌드 통과. `git diff --check` 통과.
 추가 재현·수정 내용과 미검증 범위는 [재검증 기록](evidence_audit.md)을 참고한다.

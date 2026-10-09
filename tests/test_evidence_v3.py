@@ -111,3 +111,24 @@ def test_fixture_example_preserves_v3_values_and_is_not_live_claim():
     review = EvidenceReview.model_validate(example["evidence"])
     assert review.mock is True
     assert "기존 목표 60%" in review.limitation and "요청 목표 80%" in review.limitation
+
+
+def test_external_paper_does_not_bypass_server_source_policy(monkeypatch):
+    monkeypatch.setenv("IRON_MAN_EVIDENCE_SOURCE_MODE", "europepmc")
+    sources = service.load_sources(Path("data/sources/paper-sources.json"))
+    monkeypatch.setattr(papers, "retrieve_papers", lambda query: sources)
+    # Even a model claiming applicability cannot authorize an unregistered paper.
+    raw = {"cards": [{"source_id": sources[0]["source_id"], "claim": "Review test only",
+        "stance": "counter", "excerpt": sources[0]["text"].split("\n\n")[0][:200],
+        "applicability": "applicable", "matched_conditions": ["model asserted match"],
+        "missing_conditions": [], "proposed_test": "degraded_cooling"}], "missing_conditions": []}
+    monkeypatch.setattr(llm, "analyze", lambda payload: raw)
+    gateway = Gateway()
+    try:
+        row = gateway.create(NewRequest(command=Command(target_pct=80)))
+        row = gateway.evaluate(row["id"])
+        assert row["status"] == "hold" and row["report"]["reason_code"] == "EVIDENCE_INCOMPLETE"
+        assert row["report"]["evidence"]["cards"][0]["source_type"] == "paper"
+        assert row["approval"] is None and not gateway.adapter.executions
+    finally:
+        gateway.close()
