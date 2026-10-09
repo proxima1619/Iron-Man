@@ -11,7 +11,10 @@ export function EvidenceCatalog({ token }: { token: string }) {
   useEffect(() => {
     setCatalog(null);
     setError("");
-    if (!token) return;
+    if (!token) {
+      setBusy(false);
+      return;
+    }
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 15000);
     let active = true;
@@ -24,9 +27,11 @@ export function EvidenceCatalog({ token }: { token: string }) {
         });
         if (!response.ok)
           throw new Error(
-            response.status === 404
-              ? "새 근거 API가 아직 실행되지 않았습니다. 백엔드를 scripts/start_api.py로 재시작하세요."
-              : "근거 설정을 불러오지 못했습니다. 서버 연결과 담당자 토큰을 확인하세요.",
+            response.status === 401 || response.status === 403
+              ? "요청 담당자 토큰이 유효하지 않습니다. 아래 데모 연결 설정에 공유받은 토큰을 입력하세요."
+              : response.status === 404
+                ? "서버에 근거 조회 기능이 아직 배포되지 않았습니다. 운영 담당자에게 확인하세요."
+                : "근거 설정을 불러오지 못했습니다. 잠시 후 연결 설정 확인을 다시 눌러주세요.",
           );
         const value = (await response.json()) as Catalog;
         if (active) setCatalog(value);
@@ -49,7 +54,7 @@ export function EvidenceCatalog({ token }: { token: string }) {
   }, [token, revision]);
 
   return (
-    <section className="evidence-catalog" aria-label="AI 설명 준비 상태 상태">
+    <section className="evidence-catalog" aria-label="AI 설명 준비 상태">
       <div className="section-head">
         <h3>AI 설명 준비 상태</h3>
         <button
