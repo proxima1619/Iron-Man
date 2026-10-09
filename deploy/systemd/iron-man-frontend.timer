@@ -1,0 +1,10 @@
+[Unit]
+Description=Check Iron Man main for frontend updates every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=60s
+Unit=iron-man-frontend.service
+
+[Install]
+WantedBy=timers.target

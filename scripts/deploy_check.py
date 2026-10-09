@@ -24,6 +24,8 @@ def check(config):
     with patch.dict(os.environ, environment, clear=True):
         validate_runtime_config()
     validate_domain(edge["environment"]["DEMO_DOMAIN"])
+    if edge["environment"].get("DEMO_ALIAS"):
+        validate_domain(edge["environment"]["DEMO_ALIAS"])
     if edge["environment"]["DEMO_DOMAIN"] == "localhost":
         raise ValueError("Use a public DNS hostname for the deployed demo")
     if environment.get("IRON_MAN_EVIDENCE_MODE") not in {"fixture", "live"}:

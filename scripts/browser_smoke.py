@@ -1,6 +1,6 @@
 """Optional Chromium smoke test. CI installs Playwright and trusts its local CA.
 
-Uses real browser Basic authentication and real fetch, without mocked APIs,
+Uses public browser access and real fetch, without mocked APIs,
 screenshots, traces, credential logging or TLS verification bypass.
 """
 import argparse
@@ -13,9 +13,7 @@ def run(access, url):
     from playwright.sync_api import sync_playwright, expect
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
-        context = browser.new_context(http_credentials={
-            "username": access["username"], "password": access["password"], "origin": url,
-        })
+        context = browser.new_context()
         page = context.new_page()
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))

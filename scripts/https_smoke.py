@@ -1,10 +1,9 @@
-"""Check HTTPS trust, both authentication layers and evaluation over a deployed URL.
+"""Check public HTTPS access, API role authentication and real evaluation.
 
 Reads credentials from a private JSON file; never prints them. Default TLS trust
 is the system CA store. --ca-file is for the CI-local Caddy test CA only.
 """
 import argparse
-import base64
 import json
 from pathlib import Path
 import ssl
@@ -33,13 +32,10 @@ def run(access, ca_file=None, http_url=None):
         assert response.status in {301, 308}
         location = urllib.parse.urlsplit(response.headers["Location"])
         assert location.scheme == "https" and location.hostname == parsed.hostname
-    basic = "Basic " + base64.b64encode(
-        (access["username"] + ":" + access["password"]).encode()).decode()
-
-    def request(path, *, login=True, token=None, body=None, auth=None):
+    def request(path, *, token=None, body=None, auth=None):
         headers = {}
-        if login:
-            headers["Authorization"] = auth or basic
+        if auth:
+            headers["Authorization"] = auth
         if token:
             headers["X-Iron-Man-Token"] = token
         if body is not None:
@@ -53,12 +49,13 @@ def run(access, ca_file=None, http_url=None):
         with response:
             return response.status, response.read()
 
-    assert request("/", login=False)[0] == 401
-    assert request("/", auth="Basic ZGVtbzppbmNvcnJlY3Q=")[0] == 401
+    assert request("/", auth="Basic ZGVtbzppbmNvcnJlY3Q=")[0] == 200
     status, html = request("/")
     assert status == 200 and b'<div id="root"></div>' in html
-    assert request("/api/requests")[0] == 401  # Site password alone has no role.
-    assert request("/api/requests", login=False, token=access["operator_token"])[0] == 401
+    assert request("/api/requests")[0] == 401
+    assert request("/api/requests", token="incorrect")[0] == 401
+    assert request("/api/requests", token=access["operator_token"])[0] == 200
+    assert request("/api/health")[0] == 200
     operator, approver = access["operator_token"], access["approver_token"]
     from scripts.tep_smoke import run as run_tep
     def tep_request(path, *, token, body=None):
@@ -119,7 +116,7 @@ def run(access, ca_file=None, http_url=None):
     assert row["report"]["can_approve"] is False
     # Restore a fresh starting point before the independent browser smoke test.
     assert request("/api/demo/reset", token=approver, body={})[0] == 200
-    print("PASS: trusted HTTPS, both auth layers, blocked/held requests, human approval, virtual application and clock")
+    print("PASS: public trusted HTTPS, API role auth, blocked/held requests, human approval, virtual application and clock")
 
 
 if __name__ == "__main__":
