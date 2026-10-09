@@ -1,0 +1,14 @@
+[Unit]
+Description=Deploy Iron Man frontend after successful main CI
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+EnvironmentFile=/etc/iron-man-frontend.env
+ExecStart=/usr/bin/python3 /opt/iron-man/scripts/auto_frontend.py --url ${IRON_MAN_PUBLIC_URL}
+TimeoutStartSec=900
+UMask=0077
+NoNewPrivileges=true
+

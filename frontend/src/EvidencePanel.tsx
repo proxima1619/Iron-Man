@@ -80,8 +80,8 @@ export function EvidencePanel({
   record?: components["schemas"]["RequestRecord"] | null;
   evidence?: Review;
 }) {
+  const coolingSnapshot = report && "temperature_c" in report.snapshot ? report.snapshot : null;
   const review = evidence || report?.evidence;
-  const coolingSnapshot = report && "observed_at" in report.snapshot ? report.snapshot : null;
   const pumpCommand = record?.request.command.type === "set_pump_speed" ? record.request.command : null;
   const appliedExecution = record?.execution?.status === "applied" && record.execution.command.type === "set_pump_speed"
     ? record.execution
@@ -191,13 +191,11 @@ export function EvidencePanel({
                 coolingSnapshot.pump_speed_pct}
               % · 초기 실제 속도 {coolingSnapshot.pump_speed_pct}%
             </dd>
-            {record?.request.command.type === "set_pump_speed" && (
+            {pumpCommand && (
               <>
                 <dt>변경 요청</dt>
                 <dd>
-                  {pumpCommand
-                    ? `${pumpCommand.target_pct}% · 예측 구간 ${pumpCommand.duration_s}초`
-                    : "명령 정보 없음"}
+                  {pumpCommand.target_pct}% · 예측 구간 {pumpCommand.duration_s}초
                 </dd>
               </>
             )}

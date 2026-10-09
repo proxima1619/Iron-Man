@@ -74,7 +74,7 @@ jobs:
             if docker compose --env-file .env.deploy -f compose.deploy.yaml -f deploy/test/compose.yaml cp caddy:/data/caddy/pki/authorities/local/root.crt .deploy-private/ca.crt; then break; fi
             sleep 1
           done
-      - name: Verify HTTPS and both authentication layers
+      - name: Verify public HTTPS and API role authentication
         run: python3 -m scripts.https_smoke --url https://localhost:18443 --http-url http://localhost:18082 --ca-file .deploy-private/ca.crt
       - name: Install browser smoke dependencies and trust only the test CA
         run: |
