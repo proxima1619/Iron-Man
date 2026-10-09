@@ -1,0 +1,9 @@
+{
+  "equipment_id": "cooling-demo-01",
+  "purpose": "냉각 펌프 속도 변경 검토",
+  "command": {
+    "type": "set_pump_speed",
+    "target_pct": 80.0,
+    "duration_s": 300
+  }
+}

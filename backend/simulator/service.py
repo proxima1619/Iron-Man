@@ -19,5 +19,5 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario]) ->
             "exceeded": unsafe,
             "value_origin": "hardcoded_demo_fixture",
         })
-    return SimulationResult(model_version=MODEL_VERSION, scenarios=rows,
+    return SimulationResult(mock=True, status="completed", model_version=MODEL_VERSION, scenarios=rows,
         limitation="고정 모의 값입니다. 열수지·시간별 계산·현장 검증은 미구현입니다.")

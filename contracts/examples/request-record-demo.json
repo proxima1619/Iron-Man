@@ -1,0 +1,113 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "revision": 2,
+  "request": {
+    "equipment_id": "cooling-demo-01",
+    "purpose": "냉각 펌프 속도 변경 검토",
+    "command": {
+      "type": "set_pump_speed",
+      "target_pct": 80.0,
+      "duration_s": 300
+    }
+  },
+  "status": "awaiting_approval",
+  "report": {
+    "schema_version": "1.0",
+    "revision": 2,
+    "command_digest": "f2ecfd91254e0b8384341bfb8c9a3cd1099d10e095d451504fd5aed339f0408b",
+    "snapshot": {
+      "revision": 1,
+      "temperature_c": 60.0,
+      "load_ratio": 1.0,
+      "pump_speed_pct": 100.0,
+      "observed_at": 1700000000.0,
+      "sensor_quality": "valid",
+      "data_origin": "synthetic"
+    },
+    "snapshot_digest": "00966c1512c0546d40714c454e4dc8686951662fb5d58e03bf82bd26337598db",
+    "model_version": "mock-cooling-v1",
+    "policy_version": "demo-policy-v1",
+    "mock": true,
+    "can_approve": true,
+    "evidence": {
+      "schema_version": "1.0",
+      "mock": true,
+      "status": "demo_fixture",
+      "cards": [
+        {
+          "evidence_id": "demo-evidence-01",
+          "source_id": "team-demo-note",
+          "title": "팀 작성 모의 운전 조건",
+          "stance": "limitation",
+          "claim": "냉각 효율 저하 조건을 추가 확인하는 흐름을 시연합니다.",
+          "applicability": "unknown",
+          "locator": "fixtures/demo-source.md",
+          "source_url": null,
+          "source_type": "team_authored_fixture",
+          "matched_conditions": [],
+          "missing_conditions": []
+        }
+      ],
+      "proposed_tests": [
+        {
+          "kind": "degraded_cooling",
+          "evidence_id": "demo-evidence-01"
+        }
+      ],
+      "limitation": "실제 검색·논문·LLM 검토가 아닙니다. 가상 설비 전용 모의 응답입니다."
+    },
+    "simulation": {
+      "schema_version": "1.0",
+      "mock": true,
+      "status": "completed",
+      "model_version": "mock-cooling-v1",
+      "scenarios": [
+        {
+          "kind": "normal",
+          "evidence_id": null,
+          "baseline_peak_c": 65.0,
+          "candidate_peak_c": 68.0,
+          "limit_c": 80.0,
+          "exceeded": false,
+          "value_origin": "hardcoded_demo_fixture"
+        },
+        {
+          "kind": "degraded_cooling",
+          "evidence_id": "demo-evidence-01",
+          "baseline_peak_c": 65.0,
+          "candidate_peak_c": 68.0,
+          "limit_c": 80.0,
+          "exceeded": false,
+          "value_origin": "hardcoded_demo_fixture"
+        }
+      ],
+      "limitation": "고정 모의 값입니다. 열수지·시간별 계산·현장 검증은 미구현입니다."
+    },
+    "verdict": "awaiting_approval",
+    "reason_code": "DEMO_PASS",
+    "reason": "모의 시험 통과: 가상 설비 승인 가능",
+    "digest": "ff29bd020d0e662a24cbff2472fd8dc4c5b99c18c7d9a0709da2e83ffa4f87ce"
+  },
+  "approval": null,
+  "execution": null,
+  "events": [
+    {
+      "kind": "created",
+      "at": 1700000000.0,
+      "verdict": null,
+      "report_digest": null,
+      "actor": null,
+      "reason": null,
+      "execution_id": null
+    },
+    {
+      "kind": "evaluated",
+      "at": 1700000000.0,
+      "verdict": "awaiting_approval",
+      "report_digest": "ff29bd020d0e662a24cbff2472fd8dc4c5b99c18c7d9a0709da2e83ffa4f87ce",
+      "actor": null,
+      "reason": null,
+      "execution_id": null
+    }
+  ]
+}

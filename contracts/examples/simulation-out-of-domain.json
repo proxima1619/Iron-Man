@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "mock": false,
+  "status": "out_of_domain",
+  "model_version": "example-model-v1",
+  "scenarios": [],
+  "limitation": "입력 부하가 모델 검증 범위를 벗어납니다."
+}

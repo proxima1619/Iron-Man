@@ -1,0 +1,1392 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Iron Man — demo scaffold",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/state": {
+      "get": {
+        "summary": "State",
+        "operationId": "state_state_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_requests_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewRequest-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}": {
+      "get": {
+        "summary": "Read",
+        "operationId": "read_requests__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/evaluate": {
+      "post": {
+        "summary": "Evaluate",
+        "operationId": "evaluate_requests__request_id__evaluate_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/decisions": {
+      "post": {
+        "summary": "Decide",
+        "operationId": "decide_requests__request_id__decisions_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}/execute": {
+      "post": {
+        "summary": "Execute",
+        "operationId": "execute_requests__request_id__execute_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/demo/state": {
+      "post": {
+        "summary": "Change State",
+        "operationId": "change_state_demo_state_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoStateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppliedExecution": {
+        "properties": {
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "applied",
+            "title": "Status"
+          },
+          "virtual": {
+            "type": "boolean",
+            "const": true,
+            "title": "Virtual"
+          },
+          "command": {
+            "$ref": "#/components/schemas/Command-Output"
+          },
+          "state": {
+            "$ref": "#/components/schemas/Snapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "execution_id",
+          "status",
+          "virtual",
+          "command",
+          "state"
+        ],
+        "title": "AppliedExecution"
+      },
+      "Approval": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "report_digest": {
+            "type": "string",
+            "title": "Report Digest"
+          },
+          "expires_at": {
+            "type": "number",
+            "title": "Expires At"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "actor",
+          "report_digest",
+          "expires_at",
+          "reason"
+        ],
+        "title": "Approval"
+      },
+      "AuditEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "created",
+              "evaluation_failed",
+              "evaluated",
+              "approve",
+              "reject",
+              "execution_denied",
+              "execution_reserved",
+              "executed",
+              "execution_unknown"
+            ],
+            "title": "Kind"
+          },
+          "at": {
+            "type": "number",
+            "title": "At"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "evaluating",
+                  "blocked",
+                  "hold",
+                  "awaiting_approval",
+                  "approved",
+                  "rejected",
+                  "revalidation_required",
+                  "executing",
+                  "completed",
+                  "execution_unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          },
+          "report_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Digest"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "at",
+          "verdict",
+          "report_digest",
+          "actor",
+          "reason",
+          "execution_id"
+        ],
+        "title": "AuditEvent"
+      },
+      "Command-Input": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "set_pump_speed",
+            "title": "Type",
+            "default": "set_pump_speed"
+          },
+          "target_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Target Pct"
+          },
+          "duration_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Duration S",
+            "default": 300
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_pct"
+        ],
+        "title": "Command"
+      },
+      "Command-Output": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "set_pump_speed",
+            "title": "Type",
+            "default": "set_pump_speed"
+          },
+          "target_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Target Pct"
+          },
+          "duration_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Duration S",
+            "default": 300
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "target_pct",
+          "duration_s"
+        ],
+        "title": "Command"
+      },
+      "DecisionInput": {
+        "properties": {
+          "report_digest": {
+            "type": "string",
+            "title": "Report Digest"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "report_digest",
+          "decision",
+          "reason"
+        ],
+        "title": "DecisionInput"
+      },
+      "DecisionReport": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "command_digest": {
+            "type": "string",
+            "title": "Command Digest"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/Snapshot"
+          },
+          "snapshot_digest": {
+            "type": "string",
+            "title": "Snapshot Digest"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "can_approve": {
+            "type": "boolean",
+            "title": "Can Approve"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimulationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "blocked",
+              "hold",
+              "awaiting_approval"
+            ],
+            "title": "Verdict"
+          },
+          "reason_code": {
+            "type": "string",
+            "enum": [
+              "INVALID_STATE",
+              "POLICY_VIOLATION",
+              "LIMIT_EXCEEDED",
+              "DEMO_PASS",
+              "EVIDENCE_INCOMPLETE",
+              "SIMULATION_INCOMPLETE",
+              "MODULE_FAILURE",
+              "LIVE_POLICY_NOT_CONFIGURED"
+            ],
+            "title": "Reason Code"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "digest": {
+            "type": "string",
+            "title": "Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "revision",
+          "command_digest",
+          "snapshot",
+          "snapshot_digest",
+          "model_version",
+          "policy_version",
+          "mock",
+          "can_approve",
+          "evidence",
+          "simulation",
+          "verdict",
+          "reason_code",
+          "reason",
+          "digest"
+        ],
+        "title": "DecisionReport"
+      },
+      "DemoStateInput": {
+        "properties": {
+          "load_ratio": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Load Ratio"
+          },
+          "sensor_quality": {
+            "type": "string",
+            "enum": [
+              "valid",
+              "invalid"
+            ],
+            "title": "Sensor Quality",
+            "default": "valid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "load_ratio"
+        ],
+        "title": "DemoStateInput"
+      },
+      "EvidenceCard": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Evidence Id"
+          },
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Id"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title"
+          },
+          "stance": {
+            "type": "string",
+            "enum": [
+              "support",
+              "counter",
+              "limitation"
+            ],
+            "title": "Stance"
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Claim"
+          },
+          "applicability": {
+            "type": "string",
+            "enum": [
+              "applicable",
+              "partial",
+              "mismatch",
+              "unknown"
+            ],
+            "title": "Applicability"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Locator"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "team_authored_fixture",
+              "paper",
+              "manual",
+              "field_record"
+            ],
+            "title": "Source Type"
+          },
+          "matched_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Conditions"
+          },
+          "missing_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Conditions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "source_id",
+          "title",
+          "stance",
+          "claim",
+          "applicability",
+          "locator",
+          "source_url",
+          "source_type",
+          "matched_conditions",
+          "missing_conditions"
+        ],
+        "title": "EvidenceCard"
+      },
+      "EvidenceReview": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "demo_fixture",
+              "completed",
+              "insufficient",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceCard"
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "proposed_tests": {
+            "items": {
+              "$ref": "#/components/schemas/Scenario"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Proposed Tests"
+          },
+          "limitation": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "mock",
+          "status",
+          "cards",
+          "proposed_tests",
+          "limitation"
+        ],
+        "title": "EvidenceReview"
+      },
+      "ExecutionInput": {
+        "properties": {
+          "report_digest": {
+            "type": "string",
+            "title": "Report Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "report_digest"
+        ],
+        "title": "ExecutionInput"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NewRequest-Input": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "const": "cooling-demo-01",
+            "title": "Equipment Id",
+            "default": "cooling-demo-01"
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Purpose",
+            "default": "냉각 펌프 속도 변경 검토"
+          },
+          "command": {
+            "$ref": "#/components/schemas/Command-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "title": "NewRequest"
+      },
+      "NewRequest-Output": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "const": "cooling-demo-01",
+            "title": "Equipment Id",
+            "default": "cooling-demo-01"
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Purpose",
+            "default": "냉각 펌프 속도 변경 검토"
+          },
+          "command": {
+            "$ref": "#/components/schemas/Command-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "purpose",
+          "command"
+        ],
+        "title": "NewRequest"
+      },
+      "RequestRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "request": {
+            "$ref": "#/components/schemas/NewRequest-Output"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "evaluating",
+              "blocked",
+              "hold",
+              "awaiting_approval",
+              "approved",
+              "rejected",
+              "revalidation_required",
+              "executing",
+              "completed",
+              "execution_unknown"
+            ],
+            "title": "Status"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Approval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppliedExecution"
+              },
+              {
+                "$ref": "#/components/schemas/UnknownExecution"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request",
+          "status",
+          "report",
+          "approval",
+          "execution",
+          "events"
+        ],
+        "title": "RequestRecord"
+      },
+      "Scenario": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "degraded_cooling"
+            ],
+            "title": "Kind"
+          },
+          "evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "evidence_id"
+        ],
+        "title": "Scenario"
+      },
+      "ScenarioResult": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "degraded_cooling"
+            ],
+            "title": "Kind"
+          },
+          "evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          },
+          "baseline_peak_c": {
+            "type": "number",
+            "title": "Baseline Peak C"
+          },
+          "candidate_peak_c": {
+            "type": "number",
+            "title": "Candidate Peak C"
+          },
+          "limit_c": {
+            "type": "number",
+            "title": "Limit C"
+          },
+          "exceeded": {
+            "type": "boolean",
+            "title": "Exceeded"
+          },
+          "value_origin": {
+            "type": "string",
+            "enum": [
+              "hardcoded_demo_fixture",
+              "model_calculation"
+            ],
+            "title": "Value Origin"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "evidence_id",
+          "baseline_peak_c",
+          "candidate_peak_c",
+          "limit_c",
+          "exceeded",
+          "value_origin"
+        ],
+        "title": "ScenarioResult"
+      },
+      "SimulationResult": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "mock": {
+            "type": "boolean",
+            "title": "Mock"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "out_of_domain",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "model_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Model Version"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioResult"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          },
+          "limitation": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "mock",
+          "status",
+          "model_version",
+          "scenarios",
+          "limitation"
+        ],
+        "title": "SimulationResult"
+      },
+      "Snapshot": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "temperature_c": {
+            "type": "number",
+            "title": "Temperature C"
+          },
+          "load_ratio": {
+            "type": "number",
+            "title": "Load Ratio"
+          },
+          "pump_speed_pct": {
+            "type": "number",
+            "title": "Pump Speed Pct"
+          },
+          "observed_at": {
+            "type": "number",
+            "title": "Observed At"
+          },
+          "sensor_quality": {
+            "type": "string",
+            "enum": [
+              "valid",
+              "invalid"
+            ],
+            "title": "Sensor Quality",
+            "default": "valid"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "synthetic",
+            "title": "Data Origin",
+            "default": "synthetic"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "temperature_c",
+          "load_ratio",
+          "pump_speed_pct",
+          "observed_at",
+          "sensor_quality",
+          "data_origin"
+        ],
+        "title": "Snapshot"
+      },
+      "UnknownExecution": {
+        "properties": {
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "execution_id",
+          "status"
+        ],
+        "title": "UnknownExecution"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

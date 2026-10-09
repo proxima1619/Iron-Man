@@ -1,0 +1,181 @@
+{
+  "$defs": {
+    "EvidenceCard": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "stance": {
+          "enum": [
+            "support",
+            "counter",
+            "limitation"
+          ],
+          "title": "Stance",
+          "type": "string"
+        },
+        "claim": {
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "partial",
+            "mismatch",
+            "unknown"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "source_type": {
+          "enum": [
+            "team_authored_fixture",
+            "paper",
+            "manual",
+            "field_record"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "matched_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Conditions",
+          "type": "array"
+        },
+        "missing_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "title",
+        "stance",
+        "claim",
+        "applicability",
+        "locator",
+        "source_type"
+      ],
+      "title": "EvidenceCard",
+      "type": "object"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "normal",
+            "degraded_cooling"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Scenario",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "mock": {
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "demo_fixture",
+        "completed",
+        "insufficient",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "cards": {
+      "items": {
+        "$ref": "#/$defs/EvidenceCard"
+      },
+      "title": "Cards",
+      "type": "array"
+    },
+    "proposed_tests": {
+      "items": {
+        "$ref": "#/$defs/Scenario"
+      },
+      "maxItems": 3,
+      "title": "Proposed Tests",
+      "type": "array"
+    },
+    "limitation": {
+      "minLength": 1,
+      "title": "Limitation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "mock",
+    "status",
+    "limitation"
+  ],
+  "title": "EvidenceReview",
+  "type": "object"
+}

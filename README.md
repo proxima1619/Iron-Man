@@ -23,7 +23,7 @@ AI의 설비 변경 요청을 가상 환경에서 검토하고, 담당자가 승
 | 3번 | `backend/evidence` | 실제 출처 검색, 구조화 LLM 검토, 적용 조건·근거 부족 |
 | 4번 | `frontend/src` | 그래프, 출처 확인 UI, 보고서 표현, 발표·영상 |
 
-공통 계약은 `backend/contracts.py`에 있습니다. 변경 시 네 담당의 입력·출력을 함께 확인하세요.
+공통 계약 v1.0은 [팀 연동 계약](contracts/README.md)에 정리되어 있습니다. JSON 예시·상태별 처리·생성 명령을 먼저 확인하세요. Python 원본은 `backend/contracts.py`, 프런트 자동 생성 타입은 `frontend/src/api.generated.ts`입니다. 변경 시 네 담당의 입력·출력을 함께 확인하세요.
 
 ## 현재 동작하는 흐름
 

@@ -1,0 +1,776 @@
+{
+  "$defs": {
+    "AppliedExecution": {
+      "additionalProperties": false,
+      "properties": {
+        "execution_id": {
+          "title": "Execution Id",
+          "type": "string"
+        },
+        "status": {
+          "const": "applied",
+          "title": "Status",
+          "type": "string"
+        },
+        "virtual": {
+          "const": true,
+          "title": "Virtual",
+          "type": "boolean"
+        },
+        "command": {
+          "$ref": "#/$defs/Command"
+        },
+        "state": {
+          "$ref": "#/$defs/Snapshot"
+        }
+      },
+      "required": [
+        "execution_id",
+        "status",
+        "virtual",
+        "command",
+        "state"
+      ],
+      "title": "AppliedExecution",
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "title": "Actor",
+          "type": "string"
+        },
+        "report_digest": {
+          "title": "Report Digest",
+          "type": "string"
+        },
+        "expires_at": {
+          "title": "Expires At",
+          "type": "number"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "actor",
+        "report_digest",
+        "expires_at",
+        "reason"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "AuditEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "created",
+            "evaluation_failed",
+            "evaluated",
+            "approve",
+            "reject",
+            "execution_denied",
+            "execution_reserved",
+            "executed",
+            "execution_unknown"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "at": {
+          "title": "At",
+          "type": "number"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "draft",
+                "evaluating",
+                "blocked",
+                "hold",
+                "awaiting_approval",
+                "approved",
+                "rejected",
+                "revalidation_required",
+                "executing",
+                "completed",
+                "execution_unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verdict"
+        },
+        "report_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Report Digest"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actor"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "execution_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Id"
+        }
+      },
+      "required": [
+        "kind",
+        "at"
+      ],
+      "title": "AuditEvent",
+      "type": "object"
+    },
+    "Command": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "set_pump_speed",
+          "default": "set_pump_speed",
+          "title": "Type",
+          "type": "string"
+        },
+        "target_pct": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Target Pct",
+          "type": "number"
+        },
+        "duration_s": {
+          "default": 300,
+          "maximum": 3600,
+          "minimum": 1,
+          "title": "Duration S",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "target_pct"
+      ],
+      "title": "Command",
+      "type": "object"
+    },
+    "DecisionReport": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "command_digest": {
+          "title": "Command Digest",
+          "type": "string"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/Snapshot"
+        },
+        "snapshot_digest": {
+          "title": "Snapshot Digest",
+          "type": "string"
+        },
+        "model_version": {
+          "title": "Model Version",
+          "type": "string"
+        },
+        "policy_version": {
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "mock": {
+          "title": "Mock",
+          "type": "boolean"
+        },
+        "can_approve": {
+          "title": "Can Approve",
+          "type": "boolean"
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceReview"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "simulation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SimulationResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "blocked",
+            "hold",
+            "awaiting_approval"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "reason_code": {
+          "enum": [
+            "INVALID_STATE",
+            "POLICY_VIOLATION",
+            "LIMIT_EXCEEDED",
+            "DEMO_PASS",
+            "EVIDENCE_INCOMPLETE",
+            "SIMULATION_INCOMPLETE",
+            "MODULE_FAILURE",
+            "LIVE_POLICY_NOT_CONFIGURED"
+          ],
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "digest": {
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "command_digest",
+        "snapshot",
+        "snapshot_digest",
+        "model_version",
+        "policy_version",
+        "mock",
+        "can_approve",
+        "evidence",
+        "simulation",
+        "verdict",
+        "reason_code",
+        "reason",
+        "digest"
+      ],
+      "title": "DecisionReport",
+      "type": "object"
+    },
+    "EvidenceCard": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "stance": {
+          "enum": [
+            "support",
+            "counter",
+            "limitation"
+          ],
+          "title": "Stance",
+          "type": "string"
+        },
+        "claim": {
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "partial",
+            "mismatch",
+            "unknown"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "source_type": {
+          "enum": [
+            "team_authored_fixture",
+            "paper",
+            "manual",
+            "field_record"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "matched_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Conditions",
+          "type": "array"
+        },
+        "missing_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "title",
+        "stance",
+        "claim",
+        "applicability",
+        "locator",
+        "source_type"
+      ],
+      "title": "EvidenceCard",
+      "type": "object"
+    },
+    "EvidenceReview": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "mock": {
+          "title": "Mock",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "demo_fixture",
+            "completed",
+            "insufficient",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/EvidenceCard"
+          },
+          "title": "Cards",
+          "type": "array"
+        },
+        "proposed_tests": {
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          },
+          "maxItems": 3,
+          "title": "Proposed Tests",
+          "type": "array"
+        },
+        "limitation": {
+          "minLength": 1,
+          "title": "Limitation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mock",
+        "status",
+        "limitation"
+      ],
+      "title": "EvidenceReview",
+      "type": "object"
+    },
+    "NewRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "equipment_id": {
+          "const": "cooling-demo-01",
+          "default": "cooling-demo-01",
+          "title": "Equipment Id",
+          "type": "string"
+        },
+        "purpose": {
+          "default": "냉각 펌프 속도 변경 검토",
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "command": {
+          "$ref": "#/$defs/Command"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "NewRequest",
+      "type": "object"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "normal",
+            "degraded_cooling"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Scenario",
+      "type": "object"
+    },
+    "ScenarioResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "normal",
+            "degraded_cooling"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "baseline_peak_c": {
+          "title": "Baseline Peak C",
+          "type": "number"
+        },
+        "candidate_peak_c": {
+          "title": "Candidate Peak C",
+          "type": "number"
+        },
+        "limit_c": {
+          "title": "Limit C",
+          "type": "number"
+        },
+        "exceeded": {
+          "title": "Exceeded",
+          "type": "boolean"
+        },
+        "value_origin": {
+          "enum": [
+            "hardcoded_demo_fixture",
+            "model_calculation"
+          ],
+          "title": "Value Origin",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "baseline_peak_c",
+        "candidate_peak_c",
+        "limit_c",
+        "exceeded",
+        "value_origin"
+      ],
+      "title": "ScenarioResult",
+      "type": "object"
+    },
+    "SimulationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "mock": {
+          "title": "Mock",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "out_of_domain",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "scenarios": {
+          "items": {
+            "$ref": "#/$defs/ScenarioResult"
+          },
+          "title": "Scenarios",
+          "type": "array"
+        },
+        "limitation": {
+          "minLength": 1,
+          "title": "Limitation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mock",
+        "status",
+        "model_version",
+        "limitation"
+      ],
+      "title": "SimulationResult",
+      "type": "object"
+    },
+    "Snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "temperature_c": {
+          "title": "Temperature C",
+          "type": "number"
+        },
+        "load_ratio": {
+          "title": "Load Ratio",
+          "type": "number"
+        },
+        "pump_speed_pct": {
+          "title": "Pump Speed Pct",
+          "type": "number"
+        },
+        "observed_at": {
+          "title": "Observed At",
+          "type": "number"
+        },
+        "sensor_quality": {
+          "default": "valid",
+          "enum": [
+            "valid",
+            "invalid"
+          ],
+          "title": "Sensor Quality",
+          "type": "string"
+        },
+        "data_origin": {
+          "const": "synthetic",
+          "default": "synthetic",
+          "title": "Data Origin",
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "temperature_c",
+        "load_ratio",
+        "pump_speed_pct",
+        "observed_at"
+      ],
+      "title": "Snapshot",
+      "type": "object"
+    },
+    "UnknownExecution": {
+      "additionalProperties": false,
+      "properties": {
+        "execution_id": {
+          "title": "Execution Id",
+          "type": "string"
+        },
+        "status": {
+          "const": "unknown",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "execution_id",
+        "status"
+      ],
+      "title": "UnknownExecution",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "integer"
+    },
+    "request": {
+      "$ref": "#/$defs/NewRequest"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "evaluating",
+        "blocked",
+        "hold",
+        "awaiting_approval",
+        "approved",
+        "rejected",
+        "revalidation_required",
+        "executing",
+        "completed",
+        "execution_unknown"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "report": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DecisionReport"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "approval": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Approval"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AppliedExecution"
+        },
+        {
+          "$ref": "#/$defs/UnknownExecution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Execution"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/AuditEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "request",
+    "status",
+    "report",
+    "approval",
+    "execution",
+    "events"
+  ],
+  "title": "RequestRecord",
+  "type": "object"
+}

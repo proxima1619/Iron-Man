@@ -1,0 +1,9 @@
+{
+  "revision": 1,
+  "temperature_c": 60.0,
+  "load_ratio": 1.0,
+  "pump_speed_pct": 100.0,
+  "observed_at": 0.0,
+  "sensor_quality": "valid",
+  "data_origin": "synthetic"
+}

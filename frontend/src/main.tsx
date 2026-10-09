@@ -2,31 +2,9 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 
-type Row = {
-  id: string;
-  status: string;
-  request: { command: { target_pct: number } };
-  report: null | {
-    digest: string;
-    reason: string;
-    mock: boolean;
-    simulation: null | {
-      limitation: string;
-      scenarios: {
-        kind: string;
-        baseline_peak_c: number;
-        candidate_peak_c: number;
-        exceeded: boolean;
-      }[];
-    };
-    evidence: null | {
-      limitation: string;
-      cards: { title: string; claim: string; locator: string }[];
-    };
-  };
-  events: { kind: string; at: number }[];
-  execution: unknown;
-};
+import type { components } from "./api.generated";
+
+type Row = components["schemas"]["RequestRecord"];
 const labels: Record<string, string> = {
   draft: "접수",
   evaluating: "검토 중",
@@ -201,7 +179,11 @@ function App() {
             </label>
             <div className="actions">
               <button
-                disabled={busy || row.status !== "awaiting_approval"}
+                disabled={
+                  busy ||
+                  row.status !== "awaiting_approval" ||
+                  !row.report?.can_approve
+                }
                 onClick={() =>
                   post("decisions", {
                     decision: "approve",
@@ -213,7 +195,11 @@ function App() {
                 승인
               </button>
               <button
-                disabled={busy || row.status !== "awaiting_approval"}
+                disabled={
+                  busy ||
+                  row.status !== "awaiting_approval" ||
+                  !row.report?.can_approve
+                }
                 onClick={() =>
                   post("decisions", {
                     decision: "reject",

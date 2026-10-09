@@ -2,7 +2,7 @@
 from backend.contracts import NewRequest, Snapshot, EvidenceReview, Scenario
 
 def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
-    return EvidenceReview(cards=[{
+    return EvidenceReview(mock=True, status="demo_fixture", cards=[{
         "evidence_id": "demo-evidence-01", "source_id": "team-demo-note",
         "title": "팀 작성 모의 운전 조건", "stance": "limitation",
         "claim": "냉각 효율 저하 조건을 추가 확인하는 흐름을 시연합니다.",

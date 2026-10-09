@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "mock": true,
+  "status": "completed",
+  "model_version": "mock-cooling-v1",
+  "scenarios": [
+    {
+      "kind": "normal",
+      "evidence_id": null,
+      "baseline_peak_c": 65.0,
+      "candidate_peak_c": 68.0,
+      "limit_c": 80.0,
+      "exceeded": false,
+      "value_origin": "hardcoded_demo_fixture"
+    },
+    {
+      "kind": "degraded_cooling",
+      "evidence_id": "demo-evidence-01",
+      "baseline_peak_c": 65.0,
+      "candidate_peak_c": 68.0,
+      "limit_c": 80.0,
+      "exceeded": false,
+      "value_origin": "hardcoded_demo_fixture"
+    }
+  ],
+  "limitation": "고정 모의 값입니다. 열수지·시간별 계산·현장 검증은 미구현입니다."
+}

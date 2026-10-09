@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "mock": false,
+  "status": "insufficient",
+  "cards": [],
+  "proposed_tests": [],
+  "limitation": "필수 적용 조건에 맞는 출처를 확보하지 못했습니다."
+}

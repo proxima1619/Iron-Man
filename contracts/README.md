@@ -1,11 +1,92 @@
-# 공통 계약
+# 팀 연동 계약 v1.0
 
-현재 계약의 원본은 `backend/contracts.py`와 FastAPI `/openapi.json`입니다.
-서버 실행 후 `/docs`에서 확인하세요. 정적 사본을 별도 수정하지 않습니다.
+**1번이 먼저 제공하는 공동 개발 기준**입니다. 이 계약을 기준으로 2·3번은 반환값을 만들고, 4번은 샘플 응답으로 화면을 개발할 수 있습니다. 실제 계산·검색·LLM 구현은 포함하지 않습니다.
 
-1번이 계약 변경을 취합하고 2·3·4번과 합의합니다.
-- 2번: `simulate(command, snapshot, scenarios)` / `DemoAdapter`
-- 3번: `review_evidence(request, snapshot)`
-- 4번: `/requests` → `/evaluate` → `/decisions` → `/execute`
+## 어디부터 볼까?
 
-이번 골격에는 수정 revision API가 없습니다. 수정은 새로운 요청을 생성하며 이전 승인을 재사용하지 않습니다.
+| 담당 | 먼저 볼 파일 | 구현할 경계 |
+|---|---|---|
+| 2번 | `SimulationResult.schema.json`, `examples/simulation-demo.json`, `examples/simulation-out-of-domain.json` | `simulate(command, snapshot, scenarios) -> SimulationResult` |
+| 3번 | `EvidenceReview.schema.json`, `examples/evidence-demo.json`, `examples/evidence-insufficient.json` | `review_evidence(request, snapshot) -> EvidenceReview` |
+| 4번 | `openapi.json`, `examples/request-record-demo.json`, `frontend/src/api.generated.ts` | 요청·보고서·승인·실행 API |
+
+Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소 루트 또는 이 문서가 있는 `contracts/` 기준으로 확인하세요. 실제 모듈은 Pydantic 객체 또는 같은 형태의 dict를 반환할 수 있습니다. 서버는 모듈 응답을 다시 검증합니다.
+
+## 공통 규칙
+
+- `schema_version`: `1.0`. 알 수 없는 필드는 거절합니다. 이름·의미·단위를 바꾸기 전에 1번과 합의하세요.
+- 온도는 °C, 속도는 %, 유지 시간은 s, 시각은 Unix 초입니다. NaN·무한대는 거절합니다.
+- `mock`는 필수 boolean입니다. 실제 계산 값/문서로 바뀌었을 때만 false로 설정하세요.
+- 실패를 정상 값 0, 빈 성공 결과, 가짜 출처로 대신하지 않습니다.
+- `limitation`은 필수입니다. 계산 범위, 부족한 근거 또는 실패 이유를 설명합니다.
+- 요청의 수정은 현재 새 요청 생성으로 처리합니다. 이전 승인을 재사용하지 않습니다.
+
+## 2번: 계산 결과
+
+| status | scenarios | 서버 처리 |
+|---|---|---|
+| `completed` | 요청한 모든 시나리오 결과 | 온도 한계 검사 |
+| `out_of_domain` | 빈 배열 | `hold / SIMULATION_INCOMPLETE` |
+| `failed` | 빈 배열 | `hold / SIMULATION_INCOMPLETE` |
+
+시나리오마다 `kind`, `evidence_id`, `baseline_peak_c`, `candidate_peak_c`, `limit_c`, `exceeded`, `value_origin`을 반환합니다. `exceeded`는 변경 후 최고 온도가 한계보다 **클 때** true입니다. 한계와 같은 경우 false인 MVP 정의이며, 안전 여유·시간별 판정 등 확장은 별도 합의합니다.
+
+`value_origin`은 `hardcoded_demo_fixture` 또는 `model_calculation`입니다. 입력으로 받은 시나리오를 모두 반환해야 하며, 누락·추가·중복·근거 ID 불일치는 보류됩니다. `model_version`은 모듈의 `MODEL_VERSION`과 일치해야 합니다.
+
+현재 시험은 `normal`, `degraded_cooling` 두 종류입니다. 효율 수치·부하 등 임의 파라미터 제안은 아직 계약에 없습니다. 2·3번이 필요한 변수·단위·범위를 합의한 뒤 확장하세요.
+
+## 3번: 근거 검토
+
+| status | 뜻 | 서버 처리 |
+|---|---|---|
+| `demo_fixture` | 팀 작성 모의 응답, 반드시 mock=true | 가상 설비 데모 경로 |
+| `completed` | 출처를 갖춘 검토 결과 | 적용 조건과 후속 계산 확인 |
+| `insufficient` | 근거 부족·필수 조건 미확인 | `hold / EVIDENCE_INCOMPLETE` |
+| `failed` | 검색·검토 처리 실패 | `hold / EVIDENCE_INCOMPLETE` |
+
+각 카드에 출처 ID, 주장, 지지/반례/한계, 원문 위치, 출처 종류와 적용 가능성을 넣습니다. 원문 URL은 없으면 null입니다. `matched_conditions`와 `missing_conditions`로 확인·미확인 조건을 구분하세요.
+
+`proposed_tests`는 최대 3개이며 카드의 실제 `evidence_id`를 참조해야 합니다. 같은 종류의 시험은 서버가 첫 제안을 사용합니다. 현재는 모든 비모의 카드의 적용 조건이 확인되어야 다음 단계로 갑니다. 필수·참고 근거의 정책 구분은 후속 과제입니다.
+
+## 1번: 판정 의미
+
+| reason_code | verdict | 의미 |
+|---|---|---|
+| `INVALID_STATE` | hold | 상태 품질·유효 시간 문제 |
+| `POLICY_VIOLATION` | blocked | 데모 정책 위반 |
+| `LIMIT_EXCEEDED` | blocked | 채택한 계산에서 한계 초과 |
+| `EVIDENCE_INCOMPLETE` | hold | 필수 근거·적용 조건 미완료 |
+| `SIMULATION_INCOMPLETE` | hold | 범위 밖·계산 실패 |
+| `MODULE_FAILURE` | hold | 모듈 예외·잘못된 형식·필수 결과 누락 |
+| `LIVE_POLICY_NOT_CONFIGURED` | hold | 비모의 모듈을 연결했지만 승인 정책 미설정 |
+| `DEMO_PASS` | awaiting_approval | 모의 모듈끼리의 가상 설비 승인 가능 |
+
+**실제 모듈을 연결했다고 자동으로 승인 가능해지지는 않습니다.** 현 단계에는 검증된 실제 모델·필수 근거 정책이 없으므로 비모의 결과는 위험 시 차단, 그 외에는 보류합니다. 실제 연동 승인 정책은 1·2·3번이 모델 범위·안전 기준·필수 근거를 합의한 뒤 구현합니다.
+
+## 4번: API 순서
+
+1. `POST /requests` — `examples/request.json` 입력, 201과 `RequestRecord` 반환.
+2. `POST /requests/{id}/evaluate` — 현재는 동기 처리, 완료 보고서 반환.
+3. `GET /requests/{id}` — 현재 상태 조회.
+4. `POST /requests/{id}/decisions` — `{ "report_digest": "보고서 digest", "decision": "approve 또는 reject", "reason": "판단 이유" }`.
+5. `POST /requests/{id}/execute` — `{ "report_digest": "보고서 digest" }`.
+
+모든 요청/상태 API는 Bearer 데모 토큰 필요. 승인·거절과 `/demo/state`는 승인자 토큰 필요. 인증 실패 401, 역할 부족 403, 없는 요청 404, 상태·승인 충돌 409, 요청 스키마 위반 422입니다. 모듈 문제는 HTTP 200 보고서의 `hold`로 반환되므로 HTTP 성공을 승인 가능으로 해석하지 마세요.
+
+승인 버튼은 `status == awaiting_approval`이고 `report.can_approve == true`일 때 활성화합니다. 실행 버튼은 `status == approved`일 때 활성화합니다. `report.verdict`는 검토 당시 판정, `status`는 이후 승인·실행까지 포함하는 현재 상태입니다.
+
+에러 본문은 FastAPI 기본 `detail`이며 문자열 또는 검증 오류 배열입니다. 프런트에서 둘 다 처리합니다.
+
+## 계약 갱신·검증
+
+```bash
+# 저장소 루트
+.venv/bin/python -m scripts.export_contracts
+.venv/bin/pytest -q
+
+cd frontend
+npm run generate:api
+npm run build
+```
+
+JSON Schema/OpenAPI와 TypeScript 생성 파일을 직접 수정하지 마세요. 원본 Python 타입을 바꾸고 다시 생성합니다. 테스트는 서버와 저장된 OpenAPI의 일치를 확인하고, CI는 생성된 TypeScript 차이를 확인합니다.
