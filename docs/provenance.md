@@ -13,7 +13,16 @@
 - 시뮬레이터 계수·임계값: 데모 가정. 현재 온도값은 물리 식으로 계산하며 실측 보정값·현실 설비의 안전 기준이 아닙니다.
 - `examples/simulator/calibration-synthetic.json`: 별도 계수의 합성 생성기로 작성한 학습/검증 기록. 실제 설비 데이터가 아니며 보정 도구의 동작만 검증합니다. 생성 코드와 보정 결과의 입력 해시를 함께 제공합니다.
 
-## 외부 라이브러리
+## 3번 실제 외부 문헌 수집 — 2026-10-09
+
+Europe PMC REST API로 실제 검색과 공개 JATS XML 원문 다운로드를 수행했다.
+`data/sources/paper-sources.json`은 PMC11557826, PMC10587106, PMC8874691의
+CC BY 4.0 문단 발췌다. 원 저자·저널·DOI·날짜·원문 URL·문단 위치·XML 해시와 라이선스를 기록했다.
+공백 정규화와 문단 선택만 수행했으며 그림·표·참고문헌은 포함하지 않았다.
+해당 논문의 계수를 가상 설비에 적용하거나 현실 안전성을 검증한 것은 아니다.
+자세한 논문 목록과 적용 한계는 docs/evidence_v3_handoff.md를 참조한다.
+
+## 외부 라이브러리 목록
 
 FastAPI, Pydantic, Uvicorn, Pytest, HTTPX, React, React DOM, TypeScript, Vite 및 전이 의존성 사용.
 정확한 설치 버전은 `requirements-dev.lock.txt`, `frontend/package-lock.json`에서 확인. 각 라이브러리의 라이선스를 따릅니다.

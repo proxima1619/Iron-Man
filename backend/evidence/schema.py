@@ -1,10 +1,21 @@
 """Private LLM output schema; public Scenario remains owned by gateway."""
 from typing import Literal
-from pydantic import Field
+from pydantic import Field, field_validator
 from backend.contracts import StrictModel
 
 
-class Claim(StrictModel):
+class ReviewText(StrictModel):
+    @field_validator("*", mode="after", check_fields=False)
+    @classmethod
+    def meaningful_text(cls, value):
+        if isinstance(value, str) and not value.strip():
+            raise ValueError("Review text must not be blank")
+        if isinstance(value, list) and any(isinstance(item, str) and not item.strip() for item in value):
+            raise ValueError("Review condition must not be blank")
+        return value
+
+
+class Claim(ReviewText):
     source_id: str
     claim: str = Field(min_length=1, max_length=1500)
     stance: Literal["support", "counter", "limitation"]
@@ -15,6 +26,6 @@ class Claim(StrictModel):
     proposed_test: Literal["degraded_cooling"] | None
 
 
-class Analysis(StrictModel):
+class Analysis(ReviewText):
     cards: list[Claim] = Field(max_length=12)
     missing_conditions: list[str] = Field(max_length=10)

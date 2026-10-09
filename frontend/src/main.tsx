@@ -432,13 +432,14 @@ function App() {
                 근거 검토:{" "}
                 {row.report.evidence.mock
                   ? "모의 응답"
-                  : "LLM 검토 경로 · 사전 수집 문서"}{" "}
+                  : "LLM 검토 경로 · 출처 수집 방식은 아래 설명 참조"}{" "}
                 · {row.report.evidence.status}
               </p>
             )}
             {row.report?.evidence?.cards.map((c) => (
               <article key={c.title}>
                 <h3>{c.title}</h3>
+                {c.source_url && <a href={c.source_url} target="_blank" rel="noopener noreferrer">논문·출처 원문 열기</a>}
                 <p>{c.claim}</p>
                 <small>
                   원본 위치: {c.locator} · {c.stance} · 적용 조건:{" "}
