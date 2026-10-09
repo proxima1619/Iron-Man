@@ -71,7 +71,7 @@ $result | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 data/tep-referen
 
 ### 배포 담당 1번에게 넘길 사항
 
-원본 데이터는 저장소나 wheel에 포함하지 않는다. 로컬 경로는 API 프로세스가 직접 읽으므로 별도 프로그램이나 MATLAB 라이선스는 필요하지 않다. 배포 시 데이터/허가 고지를 서버에 별도로 전달하고 API 컨테이너에 **읽기 전용**으로 마운트한 경로를 `IRON_MAN_TEP_REFERENCE_DIR`에 지정해야 한다. `readme.txt`, `teprob.f.txt`, `temain.f.txt`, `temain_mod.f.txt`도 해시/변수 정의 검사에 필요하다. Dockerfile·Compose·CI 최종 통합은 1번 담당이며 이번 작업에서 컨테이너 배포·라이선스 적용 범위 확인을 완료했다고 표시하지 않는다. 참조 경로가 없으면 참조 탐색에만 실패 메시지를 표시하고 외부 TEP 실행은 계속 지원한다.
+원본 데이터는 저장소나 wheel에 포함하지 않는다. 로컬 경로는 API 프로세스가 직접 읽으므로 별도 프로그램이나 MATLAB 라이선스는 필요하지 않다. 배포 시 데이터/허가 고지를 서버에 별도로 전달하고 API 컨테이너에 **읽기 전용**으로 마운트한 경로를 `IRON_MAN_TEP_REFERENCE_DIR`에 지정해야 한다. `readme.txt`, `teprob.f.txt`, `temain.f.txt`, `temain_mod.f.txt`도 해시/변수 정의 검사에 필요하다. 기존 TEP 코어의 Docker·CI·HTTP·저장·재시작·공개 HTTPS 검증은 1번의 [배포 기록](codex-log/tep-public-deployment-validation.md)에서 완료를 확인했다. 이번 참조 마운트·재배포·라이선스 적용 범위 확인은 별도 미완료다. 참조 경로가 없으면 참조 탐색에만 실패 메시지를 표시하고 외부 TEP 실행은 계속 지원한다. 공개 정상 이력과 참조 탐색은 코어 실행 데모에 필수가 아니다.
 
 ### 검증
 
