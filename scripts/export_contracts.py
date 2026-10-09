@@ -12,7 +12,7 @@ from backend.evidence.service import review_evidence
 ROOT = Path(__file__).resolve().parents[1]
 
 def write(relative, value):
-    (ROOT / relative).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+    (ROOT / relative).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 if __name__ == '__main__':
     write('contracts/openapi.json', app.openapi())
