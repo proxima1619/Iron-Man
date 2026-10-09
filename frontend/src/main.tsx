@@ -4,6 +4,10 @@ import type { components } from "./api.generated";
 import "./style.css";
 import { VirtualPlant } from "./VirtualPlant";
 import { TepResults } from "./TepResults";
+import { Home } from "./Home";
+import { DemoPage } from "./DemoPage";
+import { EvidencePanel } from "./EvidencePanel";
+import { RecordFeedback } from "./RecordFeedback";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];

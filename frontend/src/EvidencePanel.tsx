@@ -80,6 +80,14 @@ export function EvidencePanel({
   record?: components["schemas"]["RequestRecord"] | null;
   evidence?: Review;
 }) {
+  if (report && !("temperature_c" in report.snapshot)) {
+    return <section aria-label="TEP 근거 검토 상태">
+      <h2>TEP 위험·근거 정책 미설정</h2>
+      <p>{report.reason}</p>
+      <p>초기화 프로필 {report.snapshot.profile}. 현장 계측값과 근거 검증은 없으며 승인·실행을 보류합니다.</p>
+    </section>;
+  }
+  const coolingSnapshot = report && "temperature_c" in report.snapshot ? report.snapshot : null;
   const review = evidence || report?.evidence;
   const origin = review ? evidenceOrigin(review) : null;
   const orderedCards = [...(review?.cards || [])].sort(
@@ -101,7 +109,7 @@ export function EvidencePanel({
             ? "이 보고서에는 문헌 근거가 저장되지 않았습니다. 저장된 계산 결과와 서버 판단을 아래에서 확인하세요."
             : "근거 결과가 아직 전달되지 않았습니다.")}
       </p>
-      {report && (
+      {report && coolingSnapshot && (
         <div className="result-explanation">
           <h3>저장된 결과로 보는 판단 근거</h3>
           <p>
@@ -176,16 +184,16 @@ export function EvidencePanel({
           <dl>
             <dt>초기 온도·부하</dt>
             <dd>
-              {report.snapshot.temperature_c.toFixed(2)}°C · 부하{" "}
-              {report.snapshot.load_ratio}
+              {coolingSnapshot.temperature_c.toFixed(2)}°C · 부하{" "}
+              {coolingSnapshot.load_ratio}
             </dd>
             <dt>기존 목표·초기 속도</dt>
             <dd>
-              {report.snapshot.target_pump_speed_pct ??
-                report.snapshot.pump_speed_pct}
-              % · 초기 실제 속도 {report.snapshot.pump_speed_pct}%
+              {coolingSnapshot.target_pump_speed_pct ??
+                coolingSnapshot.pump_speed_pct}
+              % · 초기 실제 속도 {coolingSnapshot.pump_speed_pct}%
             </dd>
-            {record && (
+            {record?.request.command.type === "set_pump_speed" && (
               <>
                 <dt>변경 요청</dt>
                 <dd>
@@ -200,8 +208,8 @@ export function EvidencePanel({
             </dd>
             <dt>센서·모델 범위</dt>
             <dd>
-              {report.snapshot.sensor_quality === "valid" ? "유효" : "불량"} ·{" "}
-              {report.snapshot.domain_status === "ready"
+              {coolingSnapshot.sensor_quality === "valid" ? "유효" : "불량"} ·{" "}
+              {coolingSnapshot.domain_status === "ready"
                 ? "지원 범위"
                 : "지원 범위 밖"}
             </dd>

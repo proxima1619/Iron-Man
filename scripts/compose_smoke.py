@@ -53,6 +53,7 @@ if __name__ == '__main__':
     except urllib.error.HTTPError as error:
         assert error.code == 401
     from scripts.tep_smoke import run as run_tep
+    api('/demo/reset', {}, token=APPROVER)
     def tep_request(path, *, token, body=None):
         try:
             return api(path, body, token, with_status=True)

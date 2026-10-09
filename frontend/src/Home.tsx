@@ -42,6 +42,7 @@ export function Home() {
         <a className="home-console-link" href="#demo">
           데모 체험하기 ↗
         </a>
+        <a href="#review">TEP 검토 콘솔 ↗</a>
       </nav>
       <section className="home-hero">
         <div className="home-intro">
@@ -125,10 +126,11 @@ export function Home() {
       </section>
       <section className="home-system" aria-label="서비스 상태">
         <div>
-          <h2>로컬 시연 환경</h2>
+          <h2>가상 설비 시연 환경</h2>
           <p>
-            합성 냉각 모델을 사용합니다. TEP 데이터와 실제 PLC는 연결되지
-            않았습니다.
+            데모 체험은 합성 냉각 모델을 사용합니다. 검토 콘솔에서는 TEP 코어의
+            기준·변경 시계열을 비교하며, 전용 안전 정책이 없어 승인·실행을 보류합니다.
+            실제 PLC와 현장 센서는 연결되지 않았습니다.
           </p>
         </div>
         <p role="status" className={`home-health ${health}`}>
