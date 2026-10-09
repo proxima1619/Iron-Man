@@ -52,6 +52,7 @@ if __name__ == '__main__':
         time.sleep(0.2)
         report = api(f'/requests/{row["id"]}')
     assert report['status'] == 'blocked'
+    api('/demo/state', {'load_ratio': .6, 'sensor_quality': 'valid'}, token=APPROVER)
     approved = api('/requests', {'command': {'target_pct': 80}, 'purpose': 'Virtual approval persistence smoke'})
     approved = api(f'/requests/{approved["id"]}/evaluate', {})
     deadline = time.monotonic() + 100

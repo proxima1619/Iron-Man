@@ -346,6 +346,22 @@ export interface components {
             /** Execution Id */
             execution_id: string | null;
         };
+        /** BranchAssessment */
+        BranchAssessment: {
+            /** Peak C */
+            peak_c: number;
+            /** First Exceeded S */
+            first_exceeded_s: number | null;
+            /** Equilibrium C */
+            equilibrium_c: number | null;
+            /**
+             * Equilibrium Status
+             * @enum {string}
+             */
+            equilibrium_status: "finite" | "unbounded_heating" | "no_unique_equilibrium";
+            /** Thermal Time Constant S */
+            thermal_time_constant_s: number | null;
+        };
         /** Command */
         "Command-Input": {
             /**
@@ -626,6 +642,43 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** ParameterRange */
+        ParameterRange: {
+            /** Minimum */
+            minimum: number;
+            /** Maximum */
+            maximum: number;
+        };
+        /** PhysicalAssessment */
+        PhysicalAssessment: {
+            /**
+             * Version
+             * @default cooling-assessment-v4
+             * @constant
+             */
+            version: "cooling-assessment-v4";
+            /** Horizon S */
+            horizon_s: number;
+            baseline: components["schemas"]["BranchAssessment"];
+            candidate: components["schemas"]["BranchAssessment"];
+            /**
+             * Parameter Origin
+             * @default demo_assumption
+             * @constant
+             */
+            parameter_origin: "demo_assumption";
+            /**
+             * Calibration Status
+             * @default not_calibrated
+             * @constant
+             */
+            calibration_status: "not_calibrated";
+            /** Parameter Ranges */
+            parameter_ranges: {
+                [key: string]: components["schemas"]["ParameterRange"];
+            };
+            sensitivity: components["schemas"]["SensitivityAssessment"];
+        };
         /** RequestHistory */
         RequestHistory: {
             /** Reports */
@@ -722,6 +775,27 @@ export interface components {
              * @enum {string}
              */
             value_origin: "hardcoded_demo_fixture" | "model_calculation";
+            physical_assessment: components["schemas"]["PhysicalAssessment"] | null;
+        };
+        /** SensitivityAssessment */
+        SensitivityAssessment: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "out_of_domain";
+            /** Baseline Worst Peak C */
+            baseline_worst_peak_c: number | null;
+            /** Candidate Worst Peak C */
+            candidate_worst_peak_c: number | null;
+            /** Baseline Worst Equilibrium C */
+            baseline_worst_equilibrium_c: number | null;
+            /** Candidate Worst Equilibrium C */
+            candidate_worst_equilibrium_c: number | null;
+            /** Evaluated Parameter Sets */
+            evaluated_parameter_sets: number;
+            /** Limitation */
+            limitation: string;
         };
         /** SessionInfo */
         SessionInfo: {

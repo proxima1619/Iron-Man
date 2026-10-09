@@ -32,7 +32,7 @@
     },
     "snapshot_digest": "d61783bd9c19c9656d221bbef5c095f6dbeb43175a1d6d41f92a6a7b3338056f",
     "model_version": "cooling-demo-v3",
-    "policy_version": "virtual-cooling-policy-v2",
+    "policy_version": "virtual-cooling-policy-v3",
     "execution_scope": "virtual",
     "mock": true,
     "can_approve": false,
@@ -41,7 +41,7 @@
     "verdict": "hold",
     "reason_code": "EVALUATION_TIMEOUT",
     "reason": "예시: 평가 제한 시간 초과",
-    "digest": "6e58d0491b6b848065b5961b5467ed414225e5da3e01aa2625e1237dffdcc669",
+    "digest": "b626e6d70d11ac145c2e4ea1a3af005514c06b3d84aa599b3d8bb5d78938029c",
     "assessment": null
   },
   "approval": null,
@@ -59,19 +59,10 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "awaiting_approval",
-      "report_digest": "7d9dacff77dd27f035fb590efafd7f2fdb5393485ff86aada19373c57ced1679",
+      "verdict": "blocked",
+      "report_digest": "e767b82a3d4dadeba0bc7685660ed4fa60a9379e22958d908a72c4975cc297b9",
       "actor": null,
       "reason": null,
-      "execution_id": null
-    },
-    {
-      "kind": "notification_queued",
-      "at": 1700000000.0,
-      "verdict": null,
-      "report_digest": null,
-      "actor": null,
-      "reason": "SMTP 또는 승인자 이메일 미설정",
       "execution_id": null
     },
     {
@@ -96,7 +87,7 @@
       "kind": "evaluated",
       "at": 1700000090.0,
       "verdict": "hold",
-      "report_digest": "6e58d0491b6b848065b5961b5467ed414225e5da3e01aa2625e1237dffdcc669",
+      "report_digest": "b626e6d70d11ac145c2e4ea1a3af005514c06b3d84aa599b3d8bb5d78938029c",
       "actor": null,
       "reason": null,
       "execution_id": null

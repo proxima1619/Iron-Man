@@ -138,6 +138,12 @@ export function VirtualPlant({
         >
           가상 설비 초기화
         </button>
+        <button
+          disabled={busy || !approver || plant?.domain_status !== "ready"}
+          onClick={() => void change("/demo/state", { load_ratio: .6, sensor_quality: "valid" })}
+        >
+          데모 부하 0.6으로 변경
+        </button>
       </div>
       <p className="muted">
         상태 조회는 관측 시각을 갱신하지 않습니다. 오래된 관측은 승인 담당자가

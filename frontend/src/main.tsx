@@ -319,7 +319,7 @@ function App() {
                 />
               </label>
               <label>
-                유지 시간 (초)
+                예측 구간 (초)
                 <input
                   required
                   type="number"
@@ -410,8 +410,9 @@ function App() {
                 같은 초기 상태에서 기존 속도와 요청 속도의 결과를 비교합니다.
               </p>
               <p className="muted">
-                초기 상태 시연: 60% 위험 조건 차단 / 80% 가상 정책 통과 후
-                담당자 검토. 현재 정책의 예측 구간은 300초입니다.
+                초기 부하 1에서는 80%도 장기 위험으로 차단됩니다. 부하 0.6의
+                80% 요청은 모든 가상 검사를 통과하면 담당자 검토로 이어집니다.
+                요청 300초 외에 3600초·평형 온도·계수 민감도를 검사합니다.
               </p>
             </section>
           ) : (
@@ -438,7 +439,7 @@ function App() {
                     </strong>
                   </div>
                   <div>
-                    <small>유지 시간</small>
+                    <small>예측 구간</small>
                     <strong>{row.request.command.duration_s}초</strong>
                   </div>
                   <div>

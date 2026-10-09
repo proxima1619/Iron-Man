@@ -1398,6 +1398,68 @@
         ],
         "title": "AuditEvent"
       },
+      "BranchAssessment": {
+        "properties": {
+          "peak_c": {
+            "type": "number",
+            "title": "Peak C"
+          },
+          "first_exceeded_s": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Exceeded S"
+          },
+          "equilibrium_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equilibrium C"
+          },
+          "equilibrium_status": {
+            "type": "string",
+            "enum": [
+              "finite",
+              "unbounded_heating",
+              "no_unique_equilibrium"
+            ],
+            "title": "Equilibrium Status"
+          },
+          "thermal_time_constant_s": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thermal Time Constant S"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "peak_c",
+          "first_exceeded_s",
+          "equilibrium_c",
+          "equilibrium_status",
+          "thermal_time_constant_s"
+        ],
+        "title": "BranchAssessment"
+      },
       "Command-Input": {
         "properties": {
           "type": {
@@ -2179,6 +2241,82 @@
         ],
         "title": "Notification"
       },
+      "ParameterRange": {
+        "properties": {
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "minimum",
+          "maximum"
+        ],
+        "title": "ParameterRange"
+      },
+      "PhysicalAssessment": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cooling-assessment-v4",
+            "title": "Version",
+            "default": "cooling-assessment-v4"
+          },
+          "horizon_s": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 3600.0,
+            "title": "Horizon S"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/BranchAssessment"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/BranchAssessment"
+          },
+          "parameter_origin": {
+            "type": "string",
+            "const": "demo_assumption",
+            "title": "Parameter Origin",
+            "default": "demo_assumption"
+          },
+          "calibration_status": {
+            "type": "string",
+            "const": "not_calibrated",
+            "title": "Calibration Status",
+            "default": "not_calibrated"
+          },
+          "parameter_ranges": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ParameterRange"
+            },
+            "type": "object",
+            "title": "Parameter Ranges"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/SensitivityAssessment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "horizon_s",
+          "baseline",
+          "candidate",
+          "parameter_origin",
+          "calibration_status",
+          "parameter_ranges",
+          "sensitivity"
+        ],
+        "title": "PhysicalAssessment"
+      },
       "RequestHistory": {
         "properties": {
           "reports": {
@@ -2461,6 +2599,16 @@
               "model_calculation"
             ],
             "title": "Value Origin"
+          },
+          "physical_assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhysicalAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -2472,9 +2620,87 @@
           "candidate_peak_c",
           "limit_c",
           "exceeded",
-          "value_origin"
+          "value_origin",
+          "physical_assessment"
         ],
         "title": "ScenarioResult"
+      },
+      "SensitivityAssessment": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "out_of_domain"
+            ],
+            "title": "Status"
+          },
+          "baseline_worst_peak_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Worst Peak C"
+          },
+          "candidate_worst_peak_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Worst Peak C"
+          },
+          "baseline_worst_equilibrium_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Worst Equilibrium C"
+          },
+          "candidate_worst_equilibrium_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Worst Equilibrium C"
+          },
+          "evaluated_parameter_sets": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Evaluated Parameter Sets"
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "baseline_worst_peak_c",
+          "candidate_worst_peak_c",
+          "baseline_worst_equilibrium_c",
+          "candidate_worst_equilibrium_c",
+          "evaluated_parameter_sets",
+          "limitation"
+        ],
+        "title": "SensitivityAssessment"
       },
       "SessionInfo": {
         "properties": {

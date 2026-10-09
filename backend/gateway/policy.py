@@ -3,8 +3,9 @@ import hashlib
 import json
 from backend.contracts import NewRequest, Snapshot, EvidenceReview, SimulationResult
 from backend.evidence.service import load_sources
+from backend.simulator.assessment import ASSESSMENT_VERSION, HORIZON_S, PARAMETER_RANGES
 
-POLICY_VERSION = "virtual-cooling-policy-v2"
+POLICY_VERSION = "virtual-cooling-policy-v3"
 APPROVED_MODEL = "cooling-demo-v3"
 LIMIT_C = 80.0
 FORECAST_S = 300
@@ -65,4 +66,37 @@ def simulation_issue(result: SimulationResult):
         row.value_origin != "model_calculation" or row.limit_c != LIMIT_C for row in result.scenarios
     ):
         return "지정 모델의 계산 결과와 서버 온도 한계 80°C를 확인할 수 없습니다."
+    for row in result.scenarios:
+        assessment = row.physical_assessment
+        if (assessment is None or assessment.version != ASSESSMENT_VERSION
+                or assessment.horizon_s != HORIZON_S
+                or {key: value.model_dump() for key, value in assessment.parameter_ranges.items()} != PARAMETER_RANGES
+                or assessment.baseline.peak_c < row.baseline_peak_c
+                or assessment.candidate.peak_c < row.candidate_peak_c):
+            return "장기 예측·지정 계수 범위의 평가가 누락되었거나 일치하지 않습니다."
+    return None
+
+
+def physical_risk(result: SimulationResult):
+    """Known violations take precedence over incomplete sensitivity coverage."""
+    for row in result.scenarios:
+        assessment = row.physical_assessment
+        if row.exceeded or row.baseline_peak_c > LIMIT_C:
+            return True
+        for branch in (assessment.baseline, assessment.candidate):
+            if branch.peak_c > LIMIT_C or (branch.equilibrium_c is not None and branch.equilibrium_c > LIMIT_C):
+                return True
+        sensitivity = assessment.sensitivity
+        if sensitivity.status == "completed" and any(value > LIMIT_C for value in (
+                sensitivity.baseline_worst_peak_c, sensitivity.candidate_worst_peak_c,
+                sensitivity.baseline_worst_equilibrium_c, sensitivity.candidate_worst_equilibrium_c)):
+            return True
+    return False
+
+
+def coverage_issue(result: SimulationResult):
+    if any(row.physical_assessment.sensitivity.status != "completed"
+           or row.physical_assessment.baseline.equilibrium_status != "finite"
+           or row.physical_assessment.candidate.equilibrium_status != "finite" for row in result.scenarios):
+        return "장기 평형 또는 계수 민감도 시험의 지원 범위를 확인하지 못했습니다."
     return None

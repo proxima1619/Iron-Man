@@ -51,7 +51,7 @@ def test_live_counterexample_connects_to_simulation(monkeypatch):
 
 @pytest.mark.parametrize("field,value", [
     ("source_id", "invented"), ("excerpt", "invented quote"),
-    ("proposed_test", "execute_command"), ("applicability", "mismatch"),
+    ("proposed_test", "arbitrary code()"), ("applicability", "mismatch"),
     ("stance", "support"), ("missing_conditions", ["unknown load"]),
     ("approval", True),
 ])
@@ -95,7 +95,7 @@ def test_document_instructions_cannot_change_request_or_policy(monkeypatch):
     gateway, row = evaluate()
     assert row["status"] == "hold" and row["approval"] is None
     assert row["request"]["command"]["target_pct"] == 60
-    assert row["report"]["policy_version"] == "virtual-cooling-policy-v2"
+    assert row["report"]["policy_version"] == "virtual-cooling-policy-v3"
     assert not gateway.adapter.executions
 
 

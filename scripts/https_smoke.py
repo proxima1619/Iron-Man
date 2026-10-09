@@ -63,6 +63,8 @@ def run(access, ca_file=None, http_url=None):
     assert request("/api/state", token=operator)[0] == 200
     assert request("/api/demo/reset", token=approver, body={})[0] == 200
     for speed, verdict in ((60, "blocked"), (80, "awaiting_approval")):
+        if speed == 80:
+            assert request("/api/demo/state", token=approver, body={"load_ratio": .6})[0] == 200
         status, body = request("/api/requests", token=operator,
                                body={"command": {"target_pct": speed}, "purpose": "HTTPS deployment smoke"})
         assert status == 201
@@ -96,7 +98,7 @@ def run(access, ca_file=None, http_url=None):
             assert json.loads(request(path + "/execute", token=operator, body=execution)[1]) == applied
     status, body = request("/api/demo/advance", token=approver, body={"seconds_s": 10})
     moved = json.loads(body)
-    assert status == 200 and 80 < moved["pump_speed_pct"] < 100 and moved["temperature_c"] > 60
+    assert status == 200 and 80 < moved["pump_speed_pct"] < 100 and moved["temperature_c"] < 60
     assert request("/api/demo/state", token=approver, body={"load_ratio": 1, "sensor_quality": "invalid"})[0] == 200
     status, body = request("/api/requests", token=operator, body={"command": {"target_pct": 80}})
     assert status == 201

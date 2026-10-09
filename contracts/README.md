@@ -37,6 +37,20 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 
 시나리오마다 `kind`, `evidence_id`, `baseline_peak_c`, `candidate_peak_c`, `limit_c`, `exceeded`, `value_origin`을 반환합니다. `exceeded`는 변경 후 최고 온도가 한계보다 **클 때** true입니다. 한계와 같은 경우 false인 MVP 정의이며, 안전 여유·시간별 판정 등 확장은 별도 합의합니다.
 
+### 추가 물리 평가 (`cooling-assessment-v4`)
+
+`ScenarioResult.physical_assessment`는 과거 보고서에서 null을 허용하는 추가 필드입니다. 기존 최고값과 `exceeded`는 요청 구간의 의미를 유지합니다. 새 가상 정책은 추가 평가 없이 승인하지 않습니다.
+
+| 필드 | 의미 |
+|---|---|
+| `version`, `horizon_s` | 추가 평가 버전, 3600초 |
+| `baseline`, `candidate` | 장기 `peak_c`, `first_exceeded_s`(초/없으면 null), `equilibrium_c`(°C), `equilibrium_status`, `thermal_time_constant_s`(초) |
+| `calibration_status`, `parameter_origin` | 현재 `not_calibrated`, `demo_assumption` |
+| `parameter_ranges` | 물리 계수 이름별 `minimum`, `maximum`; 단위는 모델 카드와 동일 |
+| `sensitivity` | 16개 끝점 조합의 지원 상태, 완료한 조합 수, 기존/요청 최악 장기 최고값·평형값(°C), 가정과 한계 |
+
+민감도 계산이 지원 범위를 벗어나면 `sensitivity.status=out_of_domain`이고 민감도 온도값은 모두 null입니다. 명목 장기 계산 자체가 지원 불가이면 전체 `SimulationResult`는 `out_of_domain`과 빈 시나리오입니다. 최초 초과 시각은 적분 표본 기준이며 연속 시간의 정확한 시각이 아닙니다. [방법·계수 보정·한계](../docs/PHYSICAL_ASSESSMENT.md)를 확인하세요.
+
 `value_origin`은 `hardcoded_demo_fixture` 또는 `model_calculation`입니다. 입력으로 받은 시나리오를 모두 반환해야 하며, 누락·추가·중복·근거 ID 불일치는 보류됩니다. `model_version`은 모듈의 `MODEL_VERSION`과 일치해야 합니다.
 
 현재 시험은 `normal`, `degraded_cooling` 두 종류입니다. 효율 수치·부하 등 임의 파라미터 제안은 아직 계약에 없습니다. 2·3번이 필요한 변수·단위·범위를 합의한 뒤 확장하세요.
@@ -65,13 +79,13 @@ Python 타입 원본은 `backend/contracts.py`입니다. 위 경로는 저장소
 | `SIMULATION_INCOMPLETE` | hold | 범위 밖·계산 실패 |
 | `MODULE_FAILURE` | hold | 모듈 예외·잘못된 형식·필수 결과 누락 |
 | `LIVE_POLICY_NOT_CONFIGURED` | hold | 비모의 모듈을 연결했지만 승인 정책 미설정 |
-| `DEMO_PASS` | awaiting_approval | 모의 모듈끼리의 가상 설비 승인 가능 |
+| `DEMO_PASS` | awaiting_approval | 지정 가상 물리 계산·근거 정책 통과; 담당자 승인 가능 |
 | `EVALUATION_CONTEXT_CHANGED` | hold | 검토 도중 상태·버전·snapshot 유효 시간 변경 |
 | `EVALUATION_TIMEOUT` | hold | 제한 시간 초과 |
 | `EVALUATION_CANCELLED` | hold | 사용자 취소 또는 정상 서버 종료 |
 | `WORKER_FAILURE` | hold | 평가 프로세스 시작·실행·출력 오류 |
 
-**실제 모듈을 연결했다고 자동으로 승인 가능해지지는 않습니다.** 현 단계에는 검증된 실제 모델·필수 근거 정책이 없으므로 비모의 결과는 위험 시 차단, 그 외에는 보류합니다. 실제 연동 승인 정책은 1·2·3번이 모델 범위·안전 기준·필수 근거를 합의한 뒤 구현합니다.
+**실제 모듈을 연결했다고 자동으로 승인 가능해지지는 않습니다.** 지정 가상 모델·추가 물리 평가·근거·가상 어댑터만 담당자 승인 대기로 갈 수 있습니다. 실제 연동 승인 정책은 1·2·3번이 모델 범위·안전 기준·필수 근거를 합의한 뒤 구현합니다.
 
 ## 4번: API 순서
 
@@ -120,12 +134,10 @@ JSON Schema/OpenAPI와 TypeScript 생성 파일을 직접 수정하지 마세요
 
 ## 가상 승인 정책
 
+보고서의 `execution_scope`는 `virtual` 또는 `unconfigured`입니다. 과거 보고서의 누락 필드는 unconfigured로 해석합니다. `virtual-cooling-policy-v3`를 통과한 요청만 승인 대기로 전환되며 승인·적용 시 장기·평형·민감도 위험, 현재 상태와 원래 보고서 유효 시간을 다시 검사합니다. `DEMO_POLICY_OUT_OF_SCOPE`는 지정 모델·어댑터·합성 상태·300초 요청 구간 이외의 요청을 보류한 상태입니다. [정책 조건](../docs/VIRTUAL_POLICY.md)을 참고하세요.
+
 ## 4번 검토 화면 확장
 
 선택 보고서 필드 `assessment`는 기존/변경 최고 온도의 절대 차이·설정 기준·분류를 표시합니다. 예측-실측 잔차가 아닙니다. 기존 v3 가상 승인 정책의 제한은 유지하며, 설정 기준 초과는 `MATERIAL_DEVIATION`으로 지정 승인자에게 검토를 요청합니다. 기준 변경 후에는 승인·적용 전에 재검증이 필요합니다.
 
 `NewRequest.requester_contact`는 선택 입력이며 일반 요청 응답에서 제외합니다. `/session`은 인증 역할·편차/알림 설정을 반환합니다. `/requests/{id}/review-contact`, `/requests/{id}/notifications`, 알림 발송 API는 approver 전용입니다. `DecisionInput.decision`에 `request_retest`를 추가했습니다. 이 판단은 실행 전 요청을 보류하고 기존 승인을 제거하며 operator 또는 approver가 요청할 수 있습니다. [상세 API와 처리](../docs/MODULE4.md)
-
-## 기존 가상 승인 정책
-
-보고서의 `execution_scope`는 `virtual` 또는 `unconfigured`입니다. 과거 보고서의 누락 필드는 unconfigured로 해석합니다. `virtual-cooling-policy-v2`를 통과한 요청만 승인 대기로 전환되며 승인·적용 시 현재 상태와 원래 보고서 유효 시간을 다시 검사합니다. `DEMO_POLICY_OUT_OF_SCOPE`는 지정 모델·어댑터·합성 상태·300초 예측 범위 이외의 요청을 보류한 상태입니다. [정책 조건](../docs/VIRTUAL_POLICY.md)을 참고하세요.

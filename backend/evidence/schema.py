@@ -23,7 +23,8 @@ class Claim(ReviewText):
     applicability: Literal["applicable", "partial", "mismatch", "unknown"]
     matched_conditions: list[str] = Field(max_length=10)
     missing_conditions: list[str] = Field(max_length=10)
-    proposed_test: Literal["degraded_cooling"] | None
+    # Unknown names are data to report as unverified, never executable scenarios.
+    proposed_test: str | None = Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")
 
 
 class Analysis(ReviewText):

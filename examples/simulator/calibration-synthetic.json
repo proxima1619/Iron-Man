@@ -1,0 +1,547 @@
+{
+  "schema_version": "1.0",
+  "source_id": "synthetic-workflow-example-not-equipment-data",
+  "data_origin": "synthetic",
+  "candidate_model_version": "synthetic-fit-example-v1",
+  "thermal_capacity_j_per_k": 200000.0,
+  "capacity_source": "synthetic generator assumption; not measured",
+  "coolant_temperature_c": 25.0,
+  "coolant_source": "synthetic constant; not measured",
+  "training": [
+    {
+      "recording_id": "synthetic-train",
+      "efficiency": 1.0,
+      "samples": [
+        {
+          "time_s": 0.0,
+          "temperature_c": 55.0,
+          "pump_speed_pct": 100.0,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 5.0,
+          "temperature_c": 54.86962562263496,
+          "pump_speed_pct": 93.45857237517136,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 10.0,
+          "temperature_c": 54.79114965954815,
+          "pump_speed_pct": 87.9869016346145,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 15.0,
+          "temperature_c": 54.75511261914505,
+          "pump_speed_pct": 83.41004434746377,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 20.0,
+          "temperature_c": 54.75379906554219,
+          "pump_speed_pct": 79.5816665776397,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 25.0,
+          "temperature_c": 54.780886681674126,
+          "pump_speed_pct": 76.3793652103608,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 30.0,
+          "temperature_c": 54.83117450879547,
+          "pump_speed_pct": 73.70075440875551,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 35.0,
+          "temperature_c": 54.900370263332924,
+          "pump_speed_pct": 71.46019207449486,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 40.0,
+          "temperature_c": 54.98492228111986,
+          "pump_speed_pct": 69.58604164894628,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 45.0,
+          "temperature_c": 55.08188556968052,
+          "pump_speed_pct": 68.0183817075669,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 50.0,
+          "temperature_c": 55.18881421697042,
+          "pump_speed_pct": 66.70709011735944,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 55.0,
+          "temperature_c": 55.303674376555364,
+          "pump_speed_pct": 65.61024150296169,
+          "target_pct": 60.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 60.0,
+          "temperature_c": 55.424773469644244,
+          "pump_speed_pct": 64.69276678422585,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 65.0,
+          "temperature_c": 55.7178900794565,
+          "pump_speed_pct": 68.831402645867,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 70.0,
+          "temperature_c": 55.97382485573347,
+          "pump_speed_pct": 72.293223833647,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 75.0,
+          "temperature_c": 56.198007403880716,
+          "pump_speed_pct": 75.18891370267798,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 80.0,
+          "temperature_c": 56.39510218712517,
+          "pump_speed_pct": 77.61105492915355,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 85.0,
+          "temperature_c": 56.56910081607276,
+          "pump_speed_pct": 79.63708961737655,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 90.0,
+          "temperature_c": 56.72340840217365,
+          "pump_speed_pct": 81.33179532363947,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 95.0,
+          "temperature_c": 56.86092240054602,
+          "pump_speed_pct": 82.74935616182981,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 100.0,
+          "temperature_c": 56.98410331997936,
+          "pump_speed_pct": 83.93509520934983,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 105.0,
+          "temperature_c": 57.09503729137827,
+          "pump_speed_pct": 84.92692360283769,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 110.0,
+          "temperature_c": 57.195490861139106,
+          "pump_speed_pct": 85.75655265501928,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 115.0,
+          "temperature_c": 57.286958587386984,
+          "pump_speed_pct": 86.45050774719336,
+          "target_pct": 90.0,
+          "load_ratio": 0.9
+        },
+        {
+          "time_s": 120.0,
+          "temperature_c": 57.370704118536395,
+          "pump_speed_pct": 87.03097641410898,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 125.0,
+          "temperature_c": 57.08340979442102,
+          "pump_speed_pct": 85.06348237738611,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 130.0,
+          "temperature_c": 56.81847370635605,
+          "pump_speed_pct": 83.41774383675086,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 135.0,
+          "temperature_c": 56.57258552706857,
+          "pump_speed_pct": 82.04114228493951,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 140.0,
+          "temperature_c": 56.34300723919193,
+          "pump_speed_pct": 80.8896642186132,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 145.0,
+          "temperature_c": 56.127469035115055,
+          "pump_speed_pct": 79.92649391309817,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 150.0,
+          "temperature_c": 55.9240851752672,
+          "pump_speed_pct": 79.12083632868092,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 155.0,
+          "temperature_c": 55.731285696179214,
+          "pump_speed_pct": 78.44693251373516,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 160.0,
+          "temperature_c": 55.54776078355955,
+          "pump_speed_pct": 77.88323602457848,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 165.0,
+          "temperature_c": 55.37241532106286,
+          "pump_speed_pct": 77.4117240300765,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 170.0,
+          "temperature_c": 55.204331654115585,
+          "pump_speed_pct": 77.01732107523135,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 175.0,
+          "temperature_c": 55.04273901387286,
+          "pump_speed_pct": 76.68741707998967,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        },
+        {
+          "time_s": 180.0,
+          "temperature_c": 54.88698836047594,
+          "pump_speed_pct": 76.41146416244837,
+          "target_pct": 75.0,
+          "load_ratio": 0.5
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "recording_id": "synthetic-validation",
+      "efficiency": 1.0,
+      "samples": [
+        {
+          "time_s": 0.0,
+          "temperature_c": 65.0,
+          "pump_speed_pct": 60.0,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 5.0,
+          "temperature_c": 64.87856233254881,
+          "pump_speed_pct": 65.72374917172505,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 10.0,
+          "temperature_c": 64.70235733088957,
+          "pump_speed_pct": 70.5114610697123,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 15.0,
+          "temperature_c": 64.4821427150528,
+          "pump_speed_pct": 74.51621119596919,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 20.0,
+          "temperature_c": 64.22699022204682,
+          "pump_speed_pct": 77.86604174456527,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 25.0,
+          "temperature_c": 63.94450859782007,
+          "pump_speed_pct": 80.66805544093431,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 30.0,
+          "temperature_c": 63.641049216789106,
+          "pump_speed_pct": 83.01183989233894,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 35.0,
+          "temperature_c": 63.32189104457157,
+          "pump_speed_pct": 84.97233193481702,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 40.0,
+          "temperature_c": 62.99140403139588,
+          "pump_speed_pct": 86.61221355717203,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 45.0,
+          "temperature_c": 62.65319149196106,
+          "pump_speed_pct": 87.98391600587898,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 50.0,
+          "temperature_c": 62.31021287332315,
+          "pump_speed_pct": 89.13129614731052,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 55.0,
+          "temperature_c": 61.96488874111533,
+          "pump_speed_pct": 90.09103868490854,
+          "target_pct": 95.0,
+          "load_ratio": 0.6
+        },
+        {
+          "time_s": 60.0,
+          "temperature_c": 61.619189972598924,
+          "pump_speed_pct": 90.89382906380239,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 65.0,
+          "temperature_c": 61.48331178618476,
+          "pump_speed_pct": 87.47694229814229,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 70.0,
+          "temperature_c": 61.38168378504775,
+          "pump_speed_pct": 84.6188384694772,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 75.0,
+          "temperature_c": 61.30827712411579,
+          "pump_speed_pct": 82.22813662429854,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 80.0,
+          "temperature_c": 61.25812484710208,
+          "pump_speed_pct": 80.22839985643941,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 85.0,
+          "temperature_c": 61.227124716874776,
+          "pump_speed_pct": 78.55569142197176,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 90.0,
+          "temperature_c": 61.21188177008471,
+          "pump_speed_pct": 77.15653051654186,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 95.0,
+          "temperature_c": 61.20958172911962,
+          "pump_speed_pct": 75.98618235607097,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 100.0,
+          "temperature_c": 61.217888608499564,
+          "pump_speed_pct": 75.00722789028936,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 105.0,
+          "temperature_c": 61.23486145396859,
+          "pump_speed_pct": 74.18836741915557,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 110.0,
+          "temperature_c": 61.2588863287086,
+          "pump_speed_pct": 73.50341986069066,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 115.0,
+          "temperature_c": 61.28862053457511,
+          "pump_speed_pct": 72.93048567423827,
+          "target_pct": 70.0,
+          "load_ratio": 0.8
+        },
+        {
+          "time_s": 120.0,
+          "temperature_c": 61.32294671188532,
+          "pump_speed_pct": 72.45124667564761,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 125.0,
+          "temperature_c": 61.24184289082905,
+          "pump_speed_pct": 76.95645107628532,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 130.0,
+          "temperature_c": 61.121768110386725,
+          "pump_speed_pct": 80.72489376387723,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 135.0,
+          "temperature_c": 60.970438711673204,
+          "pump_speed_pct": 83.87706157398922,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 140.0,
+          "temperature_c": 60.7943406573736,
+          "pump_speed_pct": 86.51373744432217,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 145.0,
+          "temperature_c": 60.59890114708408,
+          "pump_speed_pct": 88.71922270525727,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 150.0,
+          "temperature_c": 60.38864302552822,
+          "pump_speed_pct": 90.56403241089151,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 155.0,
+          "temperature_c": 60.16732128493811,
+          "pump_speed_pct": 92.10714988725105,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 160.0,
+          "temperature_c": 59.93804214389077,
+          "pump_speed_pct": 93.39791258140527,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 165.0,
+          "temperature_c": 59.703365865649445,
+          "pump_speed_pct": 94.4775895069435,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 170.0,
+          "temperature_c": 59.46539482437353,
+          "pump_speed_pct": 95.38070072081659,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 175.0,
+          "temperature_c": 59.22584845496653,
+          "pump_speed_pct": 96.13612101862161,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        },
+        {
+          "time_s": 180.0,
+          "temperature_c": 58.98612671386691,
+          "pump_speed_pct": 96.7680031363162,
+          "target_pct": 100.0,
+          "load_ratio": 0.7
+        }
+      ]
+    }
+  ],
+  "max_temperature_rmse_c": 0.1,
+  "max_temperature_error_c": 0.2,
+  "max_speed_rmse_pct": 0.1
+}

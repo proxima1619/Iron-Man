@@ -27,19 +27,10 @@
     {
       "kind": "evaluated",
       "at": 1700000000.0,
-      "verdict": "awaiting_approval",
-      "report_digest": "7d9dacff77dd27f035fb590efafd7f2fdb5393485ff86aada19373c57ced1679",
+      "verdict": "blocked",
+      "report_digest": "e767b82a3d4dadeba0bc7685660ed4fa60a9379e22958d908a72c4975cc297b9",
       "actor": null,
       "reason": null,
-      "execution_id": null
-    },
-    {
-      "kind": "notification_queued",
-      "at": 1700000000.0,
-      "verdict": null,
-      "report_digest": null,
-      "actor": null,
-      "reason": "SMTP 또는 승인자 이메일 미설정",
       "execution_id": null
     },
     {

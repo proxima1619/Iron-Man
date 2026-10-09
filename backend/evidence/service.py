@@ -64,10 +64,16 @@ def validate_analysis(raw: dict, sources: list[dict], context: dict | None = Non
         card.update({key: source[key] for key in source if key != "text"})
         card["evidence_id"] = evidence_id
         card["parameter_origin"] = "demo_assumption" if claim.proposed_test else None
+        if claim.proposed_test and claim.proposed_test != "degraded_cooling":
+            card["missing_conditions"] = [*card["missing_conditions"],
+                f"지원되지 않는 시험 {claim.proposed_test}: 검증하지 못함. 2번 시험 계약 합의 필요"]
+            card["proposed_test"] = None
+            card["parameter_origin"] = None
+            card["applicability"] = "partial"
         cards.append(card)
-        if claim.proposed_test and not tests:
+        if card["proposed_test"] and not tests:
             tests.append(Scenario(kind=claim.proposed_test, evidence_id=evidence_id))
-    sufficient = bool(cards) and all(c["applicability"] == "applicable" for c in cards)
+    sufficient = bool(cards) and all(c["applicability"] == "applicable" and c["matched_conditions"] for c in cards)
     missing = list(dict.fromkeys([*analysis.missing_conditions,
                                  *(condition for c in cards for condition in c["missing_conditions"])]))
     sufficient = sufficient and not missing
@@ -89,6 +95,7 @@ def validate_analysis(raw: dict, sources: list[dict], context: dict | None = Non
 def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
     mode = os.environ.get("IRON_MAN_EVIDENCE_MODE", "fixture")
     if mode != "fixture":
+        failure_stage = "configuration"
         try:
             if mode != "live":
                 raise ValueError("Unsupported evidence mode")
@@ -97,6 +104,7 @@ def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
                 return EvidenceReview(mock=False, status="insufficient", cards=[], proposed_tests=[],
                     limitation=context_description(context) + " 입력 부적합: " + "; ".join(context["domain_reasons"]))
             source_mode = os.environ.get("IRON_MAN_EVIDENCE_SOURCE_MODE", "local")
+            failure_stage = "source_collection"
             if source_mode == "local":
                 sources = load_sources()
             elif source_mode == "europepmc":
@@ -105,16 +113,19 @@ def review_evidence(request: NewRequest, snapshot: Snapshot) -> EvidenceReview:
                 raise ValueError("Unsupported source mode")
             if not sources:
                 return EvidenceReview(mock=False, status="insufficient", cards=[], proposed_tests=[],
-                                      limitation="사전 수집 문서에 관련 근거가 없습니다.")
-            result = validate_analysis(llm.analyze({"request": request.model_dump(),
+                                      limitation="선택한 문서 묶음 또는 논문 검색에서 검토 가능한 원문 근거를 확보하지 못했습니다.")
+            failure_stage = "llm_review"
+            raw = llm.analyze({"request": request.model_dump(),
                                                  "snapshot": snapshot.model_dump(),
                                                  "review_context": context,
-                                                 "documents": sources}), sources, context)
+                                                 "documents": sources})
+            failure_stage = "output_validation"
+            result = validate_analysis(raw, sources, context)
             label = "실시간 Europe PMC 논문 검색·원문 수집" if source_mode == "europepmc" else "사전 수집 문서 검토"
             return result.model_copy(update={"limitation": label + ". " + result.limitation})
         except Exception:
             return EvidenceReview(mock=False, status="failed", cards=[], proposed_tests=[],
-                                  limitation="문서·LLM 검토 실패 또는 시간 초과. 실행을 보류하고 설정·출처를 확인하세요.")
+                                  limitation=f"근거 검토 실패 단계: {failure_stage}. 문서·LLM 검토 실패 또는 시간 초과. 실행을 보류하고 설정·출처를 확인하세요.")
     return EvidenceReview(mock=True, status="demo_fixture", cards=[{
         "evidence_id": "demo-evidence-01", "source_id": "team-demo-note",
         "title": "팀 작성 모의 운전 조건", "stance": "limitation",

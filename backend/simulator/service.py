@@ -3,7 +3,7 @@
 import math
 
 from backend.contracts import Command, Scenario, SimulationResult, Snapshot
-from backend.simulator.model import MODEL, advance_state
+from backend.simulator.model import MODEL, CoolingModel, advance_state
 
 MODEL_VERSION = MODEL.version
 LIMIT_C = MODEL.limit_c
@@ -26,7 +26,8 @@ def _check_state(temperature_c: float, speed_pct: float, time_s: float) -> None:
 
 
 def _run(snapshot: Snapshot, target_pct: float, duration_s: int,
-         efficiency: float, *, dt_s: float = DT_S) -> dict:
+         efficiency: float, *, dt_s: float = DT_S, model: CoolingModel = MODEL,
+         collect_series: bool = True) -> dict:
     if not math.isfinite(dt_s) or not 0 < dt_s <= MODEL.dt_s:
         raise ValueError("dt_s must be finite and in (0, 1] seconds")
     temperature = snapshot.temperature_c
@@ -41,14 +42,15 @@ def _run(snapshot: Snapshot, target_pct: float, duration_s: int,
         next_time_s = min(duration_s, (index + 1) * dt_s)
         temperature, effective_speed = advance_state(
             temperature, effective_speed, target_pct, snapshot.load_ratio,
-            efficiency, next_time_s - elapsed_s)
+            efficiency, next_time_s - elapsed_s, model=model)
         elapsed_s = next_time_s
         _check_state(temperature, effective_speed, elapsed_s)
         peak = max(peak, temperature)
         if first_exceeded is None and temperature > LIMIT_C:
             first_exceeded = elapsed_s
-        series.append({"time_s": round(elapsed_s, 10), "temperature_c": temperature,
-                       "pump_speed_pct": effective_speed})
+        if collect_series:
+            series.append({"time_s": round(elapsed_s, 10), "temperature_c": temperature,
+                           "pump_speed_pct": effective_speed})
     return {"series": series, "peak_c": peak,
             "first_exceeded_s": first_exceeded}
 
@@ -89,7 +91,9 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
                   "실제 설비·센서·전력 사용량의 정확도를 검증하지 않았습니다. "
                   "기준 시험은 현재 목표 속도를 유지하며, 두 시험은 같은 실제 속도·온도에서 시작합니다. "
                   "duration_s는 예측 구간이며 실행된 목표 속도의 자동 만료 시간이 아닙니다. "
-                  "시계열은 현 v1 API 계약에 포함되지 않습니다.")
+                  "요청 구간과 별도로 3600초 및 일정 조건의 평형 온도를 검사합니다. "
+                  "4개 계수 ±10%의 16개 끝점 조합은 데모 민감도 시험이며 신뢰구간·전체 범위 보장이 아닙니다. "
+                  "계수는 실측 보정 전이며 시계열은 현 v1 API 계약에 포함되지 않습니다.")
     if reasons:
         return SimulationResult(mock=False, status="out_of_domain",
             model_version=MODEL_VERSION, scenarios=[],
@@ -111,11 +115,17 @@ def simulate(command: Command, snapshot: Snapshot, scenarios: list[Scenario],
                     model_version=MODEL_VERSION, scenarios=[],
                     limitation=f"{limitation} 계산 범위 초과: {scenario.kind}/{branch}: {exc}")
         baseline, candidate = runs["baseline"], runs["candidate"]
+        from backend.simulator.assessment import assess
+        try:
+            physical = assess(snapshot, baseline_target, command.target_pct, efficiency)
+        except ModelDomainError as exc:
+            return SimulationResult(mock=False, status="out_of_domain", model_version=MODEL_VERSION,
+                scenarios=[], limitation=f"{limitation} 장기 계산 범위 초과: {scenario.kind}: {exc}")
         rows.append({"kind": scenario.kind, "evidence_id": scenario.evidence_id,
                      "baseline_peak_c": baseline["peak_c"],
                      "candidate_peak_c": candidate["peak_c"],
                      "limit_c": LIMIT_C,
                      "exceeded": candidate["peak_c"] > LIMIT_C,
-                     "value_origin": "model_calculation"})
+                     "value_origin": "model_calculation", "physical_assessment": physical})
     return SimulationResult(mock=False, status="completed", model_version=MODEL_VERSION,
                             scenarios=rows, limitation=limitation)

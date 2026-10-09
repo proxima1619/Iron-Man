@@ -1,0 +1,181 @@
+{
+  "$defs": {
+    "Measurement": {
+      "additionalProperties": false,
+      "properties": {
+        "time_s": {
+          "maximum": 3600,
+          "minimum": 0,
+          "title": "Time S",
+          "type": "number"
+        },
+        "temperature_c": {
+          "maximum": 120,
+          "minimum": 0,
+          "title": "Temperature C",
+          "type": "number"
+        },
+        "pump_speed_pct": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Pump Speed Pct",
+          "type": "number"
+        },
+        "target_pct": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Target Pct",
+          "type": "number"
+        },
+        "load_ratio": {
+          "maximum": 1.5,
+          "minimum": 0,
+          "title": "Load Ratio",
+          "type": "number"
+        }
+      },
+      "required": [
+        "time_s",
+        "temperature_c",
+        "pump_speed_pct",
+        "target_pct",
+        "load_ratio"
+      ],
+      "title": "Measurement",
+      "type": "object"
+    },
+    "Recording": {
+      "additionalProperties": false,
+      "properties": {
+        "recording_id": {
+          "minLength": 1,
+          "title": "Recording Id",
+          "type": "string"
+        },
+        "efficiency": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Efficiency",
+          "type": "number"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/$defs/Measurement"
+          },
+          "maxItems": 1000,
+          "minItems": 3,
+          "title": "Samples",
+          "type": "array"
+        }
+      },
+      "required": [
+        "recording_id",
+        "samples"
+      ],
+      "title": "Recording",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "data_origin": {
+      "enum": [
+        "synthetic",
+        "measured"
+      ],
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "candidate_model_version": {
+      "minLength": 1,
+      "title": "Candidate Model Version",
+      "type": "string"
+    },
+    "thermal_capacity_j_per_k": {
+      "maximum": 2000000,
+      "minimum": 10000,
+      "title": "Thermal Capacity J Per K",
+      "type": "number"
+    },
+    "capacity_source": {
+      "minLength": 1,
+      "title": "Capacity Source",
+      "type": "string"
+    },
+    "coolant_temperature_c": {
+      "maximum": 80,
+      "minimum": 0,
+      "title": "Coolant Temperature C",
+      "type": "number"
+    },
+    "coolant_source": {
+      "minLength": 1,
+      "title": "Coolant Source",
+      "type": "string"
+    },
+    "training": {
+      "items": {
+        "$ref": "#/$defs/Recording"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Training",
+      "type": "array"
+    },
+    "validation": {
+      "items": {
+        "$ref": "#/$defs/Recording"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Validation",
+      "type": "array"
+    },
+    "max_temperature_rmse_c": {
+      "exclusiveMinimum": 0,
+      "maximum": 10,
+      "title": "Max Temperature Rmse C",
+      "type": "number"
+    },
+    "max_temperature_error_c": {
+      "exclusiveMinimum": 0,
+      "maximum": 20,
+      "title": "Max Temperature Error C",
+      "type": "number"
+    },
+    "max_speed_rmse_pct": {
+      "exclusiveMinimum": 0,
+      "maximum": 10,
+      "title": "Max Speed Rmse Pct",
+      "type": "number"
+    }
+  },
+  "required": [
+    "source_id",
+    "data_origin",
+    "candidate_model_version",
+    "thermal_capacity_j_per_k",
+    "capacity_source",
+    "coolant_temperature_c",
+    "coolant_source",
+    "training",
+    "validation",
+    "max_temperature_rmse_c",
+    "max_temperature_error_c",
+    "max_speed_rmse_pct"
+  ],
+  "title": "CalibrationDataset",
+  "type": "object"
+}
