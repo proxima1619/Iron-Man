@@ -22,7 +22,7 @@ def approver(actor=Depends(identity)):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mode": "demo_only", "mock_modules": ["simulator", "evidence"],
+    return {"status": "ok", "mode": "demo_only", "mock_modules": ["evidence"],
             "storage": "in_memory", "real_equipment_connected": False}
 
 @app.get("/state", response_model=Snapshot)

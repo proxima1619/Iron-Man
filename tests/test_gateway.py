@@ -14,6 +14,11 @@ APP = {"Authorization": "Bearer local-approver"}
 def client(monkeypatch):
     monkeypatch.setenv("IRON_MAN_OPERATOR_TOKEN", "local-operator")
     monkeypatch.setenv("IRON_MAN_APPROVER_TOKEN", "local-approver")
+    # Approval-path tests exercise the explicit mock-only gateway policy.
+    calculation = simulator.simulate
+    def mock_simulate(*args):
+        return calculation(*args).model_copy(update={"mock": True})
+    monkeypatch.setattr(simulator, "simulate", mock_simulate)
     monkeypatch.setattr(main, "gateway", Gateway())
     return TestClient(main.app)
 

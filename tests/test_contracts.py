@@ -13,7 +13,7 @@ from backend.simulator import service as simulator
 @pytest.fixture
 def result_data():
     command = NewRequest(command={'target_pct':80})
-    state = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100, observed_at=0)
+    state = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100, observed_at=1)
     return simulate(command.command, state, [Scenario(kind='normal')]).model_dump()
 
 @pytest.mark.parametrize('problem', ['empty', 'nan', 'wrong_flag', 'extra', 'duplicate'])
@@ -83,11 +83,11 @@ def test_non_mock_module_does_not_implicitly_enable_execution(client, monkeypatc
     assert row['report']['reason_code'] == 'LIVE_POLICY_NOT_CONFIGURED'
 
 def test_published_schema_matches_backend():
-    assert json.loads(Path('contracts/openapi.json').read_text()) == app.openapi()
+    assert json.loads(Path('contracts/openapi.json').read_text(encoding='utf-8')) == app.openapi()
 
 @pytest.mark.parametrize('path, model', [
     ('request-record-demo', RequestRecord), ('evidence-demo', EvidenceReview), ('evidence-insufficient', EvidenceReview),
     ('simulation-demo', SimulationResult), ('simulation-out-of-domain', SimulationResult),
 ])
 def test_shared_example_validates(path, model):
-    model.model_validate_json(Path(f'contracts/examples/{path}.json').read_text())
+    model.model_validate_json(Path(f'contracts/examples/{path}.json').read_text(encoding='utf-8'))
