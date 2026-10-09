@@ -635,6 +635,9 @@ footer {
 .record-feedback p, .record-feedback li, .evidence-catalog p { line-height: 1.7; overflow-wrap: anywhere; word-break: keep-all; }
 .feedback-text { white-space: pre-wrap; }
 .record-feedback ul { padding-left: 22px; }
+.tep-origin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-block: 16px; }
+.tep-origin-grid article { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--lavender-soft); }
+.tep-origin-grid p { margin-bottom: 0; line-height: 1.65; }
 .evidence-catalog { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--border); }
 .evidence-catalog details { margin-block: 12px; }
 .new-demo summary { padding-block: 16px; font-weight: 700; cursor: pointer; }

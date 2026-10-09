@@ -11,6 +11,7 @@ export function RecordFeedback({
   record: Row;
   token: string;
 }) {
+  const isTep = record.request.command.type === "set_tep_cooling_water";
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -85,8 +86,9 @@ export function RecordFeedback({
     <section className="record-feedback" aria-label="저장 기록 AI 피드백">
       <h3>이 기록을 AI에게 설명받기</h3>
       <p>
-        저장된 명령과 결과를 논문과 함께 분석합니다. 과거 결과는 그대로
-        유지됩니다.
+        {isTep
+          ? "저장된 TEP 기준·변경 결과와 설정된 문헌을 함께 검토합니다. 계산을 다시 실행하지 않으며 과거 결과는 그대로 유지됩니다."
+          : "저장된 명령과 결과를 논문과 함께 분석합니다. 과거 결과는 그대로 유지됩니다."}
       </p>
       <button
         className="primary"
@@ -156,6 +158,11 @@ export function RecordFeedback({
             분석, 실행 허가 아님
           </p>
         </div>
+      )}
+      {isTep && !feedback && (
+        <p className="muted">
+          검토가 끝나면 출처, 인용문, TEP 적용 조건, 부족 조건과 모델 한계가 아래에 표시됩니다. 이 피드백은 서버의 보류 판정이나 승인 권한을 바꾸지 않습니다.
+        </p>
       )}
     </section>
   );

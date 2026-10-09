@@ -16,10 +16,23 @@ export function TepResults({ result }: { result: Result }) {
   const y = (v: number) => 245 - 190 * (v - min) / span;
   const line = (points: typeof a) => points.map(p => `${x(p.time_s)},${y(p.xmeas[index])}`).join(" ");
   return <section>
-    <h2>TEP 외부 시뮬레이션 비교</h2>
+    <div className="section-head">
+      <h2>이번 요청에서 새로 실행한 TEP 결과</h2>
+      <span className="badge">외부 엔진 계산</span>
+    </div>
     <p><strong>시뮬레이션 데이터 · 현장 실측 아님</strong></p>
     <p>{result.detail}</p>
     <p>실행 상태: {result.status} {result.failure_code || ""}</p>
+    <div className="tep-origin-grid" aria-label="실행 결과와 참조 자료 구분">
+      <article>
+        <strong>기준 / 변경 결과</strong>
+        <p>현재 요청마다 외부 TEP 엔진이 같은 초기 조건으로 각각 계산한 결과입니다. 아래 그래프와 통계가 이번 실행 기록입니다.</p>
+      </article>
+      <article>
+        <strong>사전 생성 참조 기록</strong>
+        <p>이 TEP 보고서에는 참조 기록이 연결되지 않았습니다. 참조 데이터 탐색은 선택 기능이며, 데이터가 없어도 기준·변경 시뮬레이션은 실행됩니다.</p>
+      </article>
+    </div>
     {result.status === "completed" && <>
       <p>{result.configuration.variable}: 기준 {result.provenance?.initial_xmv[Number(result.configuration.variable.slice(3))-1].toFixed(6)} → 변경 {result.configuration.candidate_value} percent_full_scale. 펌프 속도가 아닙니다.</p>
       <label>측정 변수
@@ -53,6 +66,7 @@ export function TepResults({ result }: { result: Result }) {
       <p>제어기: {result.configuration.controller} · 모드: {result.configuration.operating_mode} · 시드: {result.configuration.random_seed}</p>
       <p>적분 간격 {result.configuration.integration_step_s}s · 관측 주기 {result.configuration.sample_period_s}s · 시험 {result.configuration.horizon_s}s</p>
       <p>실측 오차 평가 / 실제 설비 적용성 검증: 미완료</p>
+      <p>TEP 시뮬레이션에서 관측된 범위나 참조 데이터의 통계는 현장 안전 한계로 사용하지 않습니다.</p>
       {result.provenance && <>
         <p>출처: <a href={`https://github.com/rcandell/tesim/tree/${result.provenance.source_commit}`} target="_blank" rel="noreferrer">NIST TE 구현</a></p>
         <p>커밋: <code>{result.provenance.source_commit}</code> · {result.provenance.compiler}</p>
