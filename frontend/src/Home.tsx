@@ -1,31 +1,34 @@
 import { useEffect, useState } from "react";
 import "./home.css";
+import { DemoExperience } from "./DemoExperience";
 
 export function Home() {
   const [health, setHealth] = useState<"loading" | "ready" | "offline">(
     "loading",
   );
   useEffect(() => {
+    let active = true;
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 5000);
     fetch("/api/health", { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error("health check failed");
         const body = await response.json();
-        setHealth(
-          body.status === "ok" && body.storage === "sqlite"
-            ? "ready"
-            : "offline",
-        );
+        if (active)
+          setHealth(
+            body.status === "ok" && body.storage === "sqlite"
+              ? "ready"
+              : "offline",
+          );
       })
       .catch(() => {
-        if (!controller.signal.aborted) setHealth("offline");
+        if (active) setHealth("offline");
       })
       .finally(() => {
         window.clearTimeout(timer);
-        if (controller.signal.aborted) setHealth("offline");
       });
     return () => {
+      active = false;
       window.clearTimeout(timer);
       controller.abort();
     };
@@ -37,8 +40,8 @@ export function Home() {
           IRON MAN<span>설비 변경 안전 관문</span>
         </a>
         <a href="#flow">검토 흐름</a>
-        <a className="home-console-link" href="#review">
-          검토 콘솔 열기 ↗
+        <a className="home-console-link" href="#demo">
+          데모 체험하기 ↗
         </a>
       </nav>
       <section className="home-hero">
@@ -53,8 +56,8 @@ export function Home() {
             변경 요청을 가상 설비에서 검토하고, 위험 조건과 근거를 확인한
             담당자의 판단을 기록합니다.
           </p>
-          <a className="home-start" href="#review">
-            냉각 펌프 검토 시작 →
+          <a className="home-start" href="#demo">
+            데모 직접 체험하기 →
           </a>
         </div>
         <div
@@ -121,6 +124,7 @@ export function Home() {
           </div>
         </dl>
       </section>
+      <DemoExperience />
       <section className="home-system" aria-label="서비스 상태">
         <div>
           <h2>로컬 시연 환경</h2>

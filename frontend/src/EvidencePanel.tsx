@@ -73,8 +73,10 @@ const statuses: Record<string, string> = {
 
 export function EvidencePanel({
   report,
+  record,
 }: {
   report: Report | null | undefined;
+  record?: components["schemas"]["RequestRecord"] | null;
 }) {
   const review = report?.evidence;
   const origin = review ? evidenceOrigin(review) : null;
@@ -87,8 +89,109 @@ export function EvidencePanel({
         {origin && <span className="badge">{origin.title}</span>}
       </div>
       <p className="muted">
-        {origin?.detail || "근거 결과가 아직 전달되지 않았습니다."}
+        {origin?.detail ||
+          (report
+            ? "이 보고서에는 문헌 근거가 저장되지 않았습니다. 저장된 계산 결과와 서버 판단을 아래에서 확인하세요."
+            : "근거 결과가 아직 전달되지 않았습니다.")}
       </p>
+      {report && (
+        <div className="result-explanation">
+          <h3>저장된 결과로 보는 판단 근거</h3>
+          <p>
+            <strong>서버 판단:</strong> {report.reason}{" "}
+            <code>{report.reason_code}</code>
+          </p>
+          {report.simulation?.scenarios.length ? (
+            <ul>
+              {report.simulation.scenarios.map((s) => (
+                <li key={s.kind}>
+                  <strong>
+                    {s.kind === "normal" ? "정상 냉각" : "냉각 효율 저하"}:
+                  </strong>{" "}
+                  기존 최고 {s.baseline_peak_c.toFixed(2)}°C → 변경 최고{" "}
+                  {s.candidate_peak_c.toFixed(2)}°C. 차이{" "}
+                  {(s.candidate_peak_c - s.baseline_peak_c).toFixed(2)}°C.{" "}
+                  {s.exceeded
+                    ? `변경 결과가 ${s.limit_c}°C 제한을 ${(s.candidate_peak_c - s.limit_c).toFixed(2)}°C 초과합니다.`
+                    : `변경 결과는 ${s.limit_c}°C 제한 이내입니다.`}
+                  {s.baseline_peak_c > s.limit_c &&
+                    " 기존 운전 결과도 제한을 초과하므로 함께 검토해야 합니다."}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">
+              계산 결과가 저장되지 않아 숫자에 근거한 효과 비교는 할 수
+              없습니다. 서버 보류 사유와 문헌 검토 결과를 확인하세요.
+            </p>
+          )}
+          {record?.execution?.status === "applied" ? (
+            <p>
+              <strong>가상 적용 기록:</strong> 목표 속도{" "}
+              {record.execution.command.target_pct}% 접수 · 접수 당시 실제 속도{" "}
+              {record.execution.state.pump_speed_pct.toFixed(2)}%. 적용 접수는
+              예측 온도와 실측 결과가 일치했다는 검증이 아닙니다.
+            </p>
+          ) : record?.execution?.status === "unknown" ? (
+            <p className="danger-text">
+              실행 결과가 불명입니다. 추가 실행을 시도하지 말고 서버 기록을
+              확인해야 합니다.
+            </p>
+          ) : (
+            record && (
+              <p className="muted">
+                이 요청의 가상 적용 완료 기록은 없습니다. 위 온도는 시뮬레이션
+                예측 결과입니다.
+              </p>
+            )
+          )}
+          <h3>이 판단에 사용한 조건</h3>
+          <dl>
+            <dt>초기 온도·부하</dt>
+            <dd>
+              {report.snapshot.temperature_c.toFixed(2)}°C · 부하{" "}
+              {report.snapshot.load_ratio}
+            </dd>
+            <dt>기존 목표·초기 속도</dt>
+            <dd>
+              {report.snapshot.target_pump_speed_pct ??
+                report.snapshot.pump_speed_pct}
+              % · 초기 실제 속도 {report.snapshot.pump_speed_pct}%
+            </dd>
+            {record && (
+              <>
+                <dt>변경 요청</dt>
+                <dd>
+                  {record.request.command.target_pct}% · 예측 구간{" "}
+                  {record.request.command.duration_s}초
+                </dd>
+              </>
+            )}
+            <dt>모델·정책</dt>
+            <dd>
+              {report.model_version} · {report.policy_version}
+            </dd>
+            <dt>센서·모델 범위</dt>
+            <dd>
+              {report.snapshot.sensor_quality === "valid" ? "유효" : "불량"} ·{" "}
+              {report.snapshot.domain_status === "ready"
+                ? "지원 범위"
+                : "지원 범위 밖"}
+            </dd>
+            <dt>데이터·실행 범위</dt>
+            <dd>
+              합성 상태 ·{" "}
+              {report.execution_scope === "virtual"
+                ? "가상 설비 전용"
+                : "미설정"}
+            </dd>
+          </dl>
+          <p className="muted">
+            저장된 과거 상태에서 얻은 판단입니다. 현재 상태·모델·정책·승인
+            유효성은 적용 전 서버가 다시 검사합니다.
+          </p>
+        </div>
+      )}
       {review && (
         <p>
           근거 검토 상태:{" "}
@@ -195,8 +298,16 @@ export function EvidencePanel({
       })}
       <h3>근거 검토의 한계와 부족 조건</h3>
       <p className="annotation">
-        {review?.limitation || "근거 범위와 한계를 확인할 수 없습니다."}
+        {review?.limitation ||
+          (report
+            ? "문헌 근거의 적용 조건과 부족 조건이 이 보고서에 저장되지 않았습니다. 계산 결과만으로 실제 설비 안전을 보증할 수 없습니다."
+            : "근거 범위와 한계를 확인할 수 없습니다.")}
       </p>
+      {report?.simulation?.limitation && (
+        <p className="annotation">
+          <strong>계산 모델의 한계:</strong> {report.simulation.limitation}
+        </p>
+      )}
     </section>
   );
 }

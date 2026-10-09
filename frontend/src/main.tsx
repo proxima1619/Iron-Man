@@ -626,7 +626,7 @@ function App() {
                   </p>
                 </div>
               </section>
-              <EvidencePanel report={report} />
+              <EvidencePanel report={report} record={row} />
               <section>
                 <h2>모델 범위와 불확실성</h2>
                 <p>
