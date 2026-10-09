@@ -457,6 +457,43 @@ class Notification(StrictModel):
     detail: str
 
 
+class RecordFeedback(StrictModel):
+    request_id: str
+    record_revision: int
+    record_digest: str
+    report_digest: str | None
+    generated_at: float
+    model: str
+    status: Literal["completed", "insufficient"]
+    advisory_only: Literal[True] = True
+    summary: str
+    result_interpretation: str
+    model_limitations: list[str]
+    missing_conditions: list[str]
+    recommended_checks: list[str]
+    evidence: EvidenceReview
+
+
+class EvidenceSourceSummary(StrictModel):
+    source_id: str
+    title: str
+    source_type: str
+    source_url: str | None
+    publisher: str
+    locator: str
+
+
+class EvidenceCatalog(StrictModel):
+    mode: Literal["fixture", "live", "invalid"]
+    source_mode: Literal["local", "europepmc", "invalid"]
+    api_key_configured: bool
+    model_configured: bool
+    ready: bool
+    sources: list[EvidenceSourceSummary]
+    issues: list[str]
+    catalog_error: bool
+
+
 class SessionInfo(StrictModel):
     role: Literal["operator", "approver"]
     actor_label: str

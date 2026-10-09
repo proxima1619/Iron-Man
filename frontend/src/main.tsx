@@ -88,7 +88,7 @@ function App() {
   const locked =
     !!row &&
     ["evaluating", "executing", "completed", "execution_unknown"].includes(
-      row.status
+      row.status,
     );
   async function api<T>(path: string, body?: unknown): Promise<T> {
     const controller = new AbortController(),
@@ -108,13 +108,13 @@ function App() {
         throw new Error(
           typeof data.detail === "string"
             ? data.detail
-            : JSON.stringify(data.detail)
+            : JSON.stringify(data.detail),
         );
       return data as T;
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError")
         throw new Error(
-          "응답 시간 초과. 저장된 상태를 새로고침해 처리 결과를 확인하세요."
+          "응답 시간 초과. 저장된 상태를 새로고침해 처리 결과를 확인하세요.",
         );
       throw e;
     } finally {
@@ -132,7 +132,7 @@ function App() {
       const [messages, owner] = await Promise.all([
         api<Note[]>(`/requests/${value.id}/notifications`),
         api<{ requester_contact: string | null }>(
-          `/requests/${value.id}/review-contact`
+          `/requests/${value.id}/review-contact`,
         ),
       ]);
       setNotes(messages);
@@ -196,7 +196,7 @@ function App() {
         });
         if (!response.ok)
           throw new Error(
-            "평가 상태 조회 실패. 연결을 확인하고 저장된 요청을 새로고침하세요."
+            "평가 상태 조회 실패. 연결을 확인하고 저장된 요청을 새로고침하세요.",
           );
         const value = (await response.json()) as Row;
         if (stopped) return;
@@ -211,7 +211,7 @@ function App() {
           setRow(value);
           setConfirmed(false);
           setRows((previous) =>
-            previous.map((saved) => (saved.id === id ? value : saved))
+            previous.map((saved) => (saved.id === id ? value : saved)),
           );
           return;
         }
@@ -231,6 +231,9 @@ function App() {
   }, [row?.id, row?.status, token, session?.role]);
   return (
     <main>
+      <a className="console-home no-print" href="#home">
+        ← 홈페이지
+      </a>
       <header>
         <div>
           <span className="eyebrow">IRON MAN / OPERATOR REVIEW</span>
@@ -315,7 +318,7 @@ function App() {
                   });
                   setRow(created);
                   await refresh(
-                    await api<Row>(`/requests/${created.id}/evaluate`, {})
+                    await api<Row>(`/requests/${created.id}/evaluate`, {}),
                   );
                 });
               }}
@@ -421,7 +424,7 @@ function App() {
                   disabled={busy || !session}
                   onClick={() =>
                     void run(async () =>
-                      details(await api<Row>(`/requests/${saved.id}`))
+                      details(await api<Row>(`/requests/${saved.id}`)),
                     )
                   }
                 >
@@ -538,7 +541,7 @@ function App() {
                           100,
                           s.baseline_peak_c,
                           s.candidate_peak_c,
-                          s.limit_c
+                          s.limit_c,
                         ) * 1.05;
                       return (
                         <article className="scenario" key={s.kind}>
@@ -584,7 +587,7 @@ function App() {
                           <p className="muted">
                             0°C 기준 막대 · 제한 {num(s.limit_c)}°C · 절대 차이{" "}
                             {num(
-                              Math.abs(s.candidate_peak_c - s.baseline_peak_c)
+                              Math.abs(s.candidate_peak_c - s.baseline_peak_c),
                             )}
                             °C ·{" "}
                             {s.value_origin === "model_calculation"
@@ -623,8 +626,8 @@ function App() {
                               <td>
                                 {num(
                                   Math.abs(
-                                    s.candidate_peak_c - s.baseline_peak_c
-                                  )
+                                    s.candidate_peak_c - s.baseline_peak_c,
+                                  ),
                                 )}
                                 °C
                               </td>
@@ -661,71 +664,8 @@ function App() {
                   </p>
                 </div>
               </section>
-              <section>
-                <h2>판단 근거와 적용 조건</h2>
-                <p className="muted">
-                  {report?.evidence
-                    ? `${
-                        report.evidence.mock
-                          ? "모의 근거 검토"
-                          : "사전 수집 문서의 LLM 검토"
-                      } · ${report.evidence.status}`
-                    : "근거 결과 없음"}
-                </p>
-                {report?.evidence?.cards.map((c) => {
-                  const url = safeUrl(c.source_url);
-                  return (
-                    <article
-                      className="evidence"
-                      id={`evidence-${c.evidence_id}`}
-                      key={c.evidence_id}
-                    >
-                      <div className="section-head">
-                        <span className="eyebrow">
-                          {label(c.stance)} / {label(c.source_type)}
-                        </span>
-                        <span className="badge">{label(c.applicability)}</span>
-                      </div>
-                      <h3>{c.title}</h3>
-                      <p>{c.claim}</p>
-                      {c.excerpt && <blockquote>{c.excerpt}</blockquote>}
-                      <dl>
-                        <dt>일치 조건</dt>
-                        <dd>
-                          {c.matched_conditions?.join(" / ") || "명시되지 않음"}
-                        </dd>
-                        <dt>미확인 조건</dt>
-                        <dd>
-                          {c.missing_conditions?.join(" / ") ||
-                            "명시된 미확인 조건 없음"}
-                        </dd>
-                        <dt>원본 위치</dt>
-                        <dd>{c.locator || "없음"}</dd>
-                        <dt>발행·버전</dt>
-                        <dd>
-                          {c.publisher || "미표기"} · {c.version || "미표기"} ·{" "}
-                          {c.published_at || "미표기"}
-                        </dd>
-                      </dl>
-                      {url && (
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          원문 확인 ↗
-                        </a>
-                      )}
-                      {c.proposed_test && (
-                        <p className="muted">
-                          추가 시험: {label(c.proposed_test)} · 계수 출처:{" "}
-                          {c.parameter_origin || "미표기"}
-                        </p>
-                      )}
-                    </article>
-                  );
-                })}
-                <p className="annotation">
-                  {report?.evidence?.limitation ||
-                    "근거 범위와 한계를 확인할 수 없습니다."}
-                </p>
-              </section>
+              {row && <RecordFeedback record={row} token={token} />}
+              <EvidencePanel report={report} record={row} />
               <section>
                 <h2>모델 범위와 불확실성</h2>
                 <p>
@@ -764,7 +704,7 @@ function App() {
                     ? fresh
                       ? `스냅샷 유효 시간 ${Math.max(
                           0,
-                          Math.ceil(60 - age)
+                          Math.ceil(60 - age),
                         )}초 남음`
                       : "스냅샷이 오래되었습니다. 재검증하세요."
                     : "검토 보고서가 필요합니다."}{" "}
@@ -922,10 +862,10 @@ function App() {
                           void run(async () => {
                             await api(
                               `/requests/${row.id}/notifications/${note.id}/send`,
-                              {}
+                              {},
                             );
                             await details(
-                              await api<Row>(`/requests/${row.id}`)
+                              await api<Row>(`/requests/${row.id}`),
                             );
                           })
                         }
@@ -981,8 +921,22 @@ function App() {
     </main>
   );
 }
+function Website() {
+  const [page, setPage] = useState(window.location.hash);
+  useEffect(() => {
+    const onHash = () => {
+      setPage(window.location.hash);
+      if (["#home", "#demo", "#review", ""].includes(window.location.hash))
+        window.scrollTo(0, 0);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const consolePage = page === "#review" || page.startsWith("#evidence-");
+  return consolePage ? <App /> : page === "#demo" ? <DemoPage /> : <Home />;
+}
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <Website />
+  </React.StrictMode>,
 );

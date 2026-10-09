@@ -16,7 +16,7 @@ def run(access, url):
             "username": access["username"], "password": access["password"], "origin": url,
         })
         page = context.new_page()
-        page.goto(url)
+        page.goto(url + "/#review")
         expect(page.get_by_role("heading", name="변경 전에, 결과를 확인합니다.")).to_be_visible()
         page.get_by_label("데모 토큰").fill(access["approver_token"])
         page.get_by_role("button", name="연결 확인").click()
