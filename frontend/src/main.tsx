@@ -6,6 +6,7 @@ import { VirtualPlant } from "./VirtualPlant";
 import { Home } from "./Home";
 import { DemoPage } from "./DemoPage";
 import { EvidencePanel } from "./EvidencePanel";
+import { EvidenceCatalog } from "./EvidenceCatalog";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -276,6 +277,7 @@ function App() {
           {error}
         </p>
       )}
+      <EvidenceCatalog token={token} />
       <VirtualPlant
         token={token}
         approver={approver}
@@ -410,9 +412,9 @@ function App() {
                 같은 초기 상태에서 기존 속도와 요청 속도의 결과를 비교합니다.
               </p>
               <p className="muted">
-                초기 부하 1에서는 80%도 장기 위험으로 차단됩니다. 부하 0.6의
-                80% 요청은 모든 가상 검사를 통과하면 담당자 검토로 이어집니다.
-                요청 300초 외에 3600초·평형 온도·계수 민감도를 검사합니다.
+                초기 부하 1에서는 80%도 장기 위험으로 차단됩니다. 부하 0.6의 80%
+                요청은 모든 가상 검사를 통과하면 담당자 검토로 이어집니다. 요청
+                300초 외에 3600초·평형 온도·계수 민감도를 검사합니다.
               </p>
             </section>
           ) : (

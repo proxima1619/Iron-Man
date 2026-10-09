@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
-from backend.contracts import NewRequest, Snapshot, EvidenceReview, Scenario
+from backend.contracts import NewRequest, Snapshot, EvidenceReview, Scenario, EvidenceCatalog
 from backend.evidence import llm
 from backend.evidence.schema import Analysis
 from backend.evidence.context import review_context, context_description
@@ -42,6 +42,38 @@ def load_sources(path: Path | None = None) -> list[dict]:
     return sources
 
 
+def evidence_catalog() -> EvidenceCatalog:
+    """Read-only configuration and metadata, never credentials or document bodies."""
+    mode = os.getenv("IRON_MAN_EVIDENCE_MODE", "fixture")
+    source_mode = os.getenv("IRON_MAN_EVIDENCE_SOURCE_MODE", "local")
+    key_ready = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    model_ready = bool(os.getenv("IRON_MAN_EVIDENCE_MODEL", "").strip())
+    issues, summaries = [], []
+    catalog_error = False
+    if mode != "live":
+        issues.append("현재 모의 검토 모드입니다. 실제 논문 분석에는 live 설정이 필요합니다.")
+    if mode not in {"fixture", "live"} or source_mode not in {"local", "europepmc"}:
+        issues.append("근거 모드 설정이 유효하지 않습니다.")
+    if not key_ready:
+        issues.append("서버에 OPENAI_API_KEY가 설정되지 않았습니다.")
+    if not model_ready:
+        issues.append("서버에 IRON_MAN_EVIDENCE_MODEL이 설정되지 않았습니다.")
+    if source_mode == "local":
+        try:
+            sources = load_sources()
+            summaries = [{k: source[k] for k in ("source_id", "title", "source_type", "source_url", "publisher", "locator")}
+                         for source in sources]
+            if not sources:
+                issues.append("사전 수집 문서 목록이 비어 있습니다.")
+        except Exception:
+            catalog_error = True
+            issues.append("문서 목록을 읽거나 검증하지 못했습니다. 서버의 출처 설정을 확인하세요.")
+    return EvidenceCatalog(mode=mode if mode in {"fixture", "live"} else "invalid",
+        source_mode=source_mode if source_mode in {"local", "europepmc"} else "invalid",
+        api_key_configured=key_ready, model_configured=model_ready, ready=not issues,
+        sources=summaries, issues=issues, catalog_error=catalog_error)
+
+
 def validate_analysis(raw: dict, sources: list[dict], context: dict | None = None) -> EvidenceReview:
     analysis = Analysis.model_validate(raw)
     by_id = {source["source_id"]: source for source in sources}
@@ -76,6 +108,10 @@ def validate_analysis(raw: dict, sources: list[dict], context: dict | None = Non
     sufficient = bool(cards) and all(c["applicability"] == "applicable" and c["matched_conditions"] for c in cards)
     missing = list(dict.fromkeys([*analysis.missing_conditions,
                                  *(condition for c in cards for condition in c["missing_conditions"])]))
+    if any(source["source_type"] == "paper" for source in sources):
+        for stance, label in (("support", "지지 근거"), ("counter", "반례·실패 조건 근거")):
+            if not any(c["stance"] == stance for c in cards):
+                missing.append(f"수집한 논문 발췌에서 적용 가능한 {label}를 확보하지 못했습니다.")
     sufficient = sufficient and not missing
     kinds = {source["source_type"] for source in sources}
     limitation = "실제 LLM 문서 검토. 현실 설비 안전을 보증하지 않습니다."

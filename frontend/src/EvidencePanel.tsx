@@ -80,6 +80,11 @@ export function EvidencePanel({
 }) {
   const review = report?.evidence;
   const origin = review ? evidenceOrigin(review) : null;
+  const orderedCards = [...(review?.cards || [])].sort(
+    (a, b) =>
+      ["support", "counter", "limitation"].indexOf(a.stance) -
+      ["support", "counter", "limitation"].indexOf(b.stance),
+  );
   const evidenceHold =
     report?.verdict === "hold" && report.reason_code === "EVIDENCE_INCOMPLETE";
   return (
@@ -241,7 +246,31 @@ export function EvidencePanel({
             : "관련 출처와 적용 조건을 추가로 확인해야 합니다."}
         </p>
       )}
-      {review?.cards.map((c) => {
+      {review && !review.mock && (
+        <div className="evidence-summary">
+          <h3>논문 검토 결과 요약</h3>
+          <ul>
+            {["support", "counter", "limitation"].map((stance) => {
+              const count = review.cards.filter(
+                (c) => c.stance === stance,
+              ).length;
+              return (
+                <li key={stance}>
+                  <strong>
+                    {stances[stance]}: {count}건.
+                  </strong>
+                  {count === 0 && " 이 검토에서 근거를 확보하지 못했습니다."}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="muted">
+            반례는 별도 반대 논문 또는 같은 논문의 실패 조건에서 나올 수
+            있습니다. 근거 개수는 안전성이나 적용 가능성을 보장하지 않습니다.
+          </p>
+        </div>
+      )}
+      {orderedCards.map((c, index) => {
         const url = sourceUrl(c.source_url);
         return (
           <article
@@ -249,6 +278,9 @@ export function EvidencePanel({
             id={`evidence-${c.evidence_id}`}
             key={c.evidence_id}
           >
+            {(index === 0 || orderedCards[index - 1].stance !== c.stance) && (
+              <h3>{stances[c.stance]}</h3>
+            )}
             <div className="section-head">
               <span className="eyebrow">
                 {stances[c.stance] || c.stance} /{" "}

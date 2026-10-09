@@ -21,6 +21,68 @@
         }
       }
     },
+    "/evidence/catalog": {
+      "get": {
+        "summary": "Catalog",
+        "operationId": "catalog_evidence_catalog_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-iron-man-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Iron-Man-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceCatalog"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/state": {
       "get": {
         "summary": "State",
@@ -2016,6 +2078,71 @@
         ],
         "title": "EvidenceCard"
       },
+      "EvidenceCatalog": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixture",
+              "live",
+              "invalid"
+            ],
+            "title": "Mode"
+          },
+          "source_mode": {
+            "type": "string",
+            "enum": [
+              "local",
+              "europepmc",
+              "invalid"
+            ],
+            "title": "Source Mode"
+          },
+          "api_key_configured": {
+            "type": "boolean",
+            "title": "Api Key Configured"
+          },
+          "model_configured": {
+            "type": "boolean",
+            "title": "Model Configured"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSourceSummary"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "catalog_error": {
+            "type": "boolean",
+            "title": "Catalog Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "source_mode",
+          "api_key_configured",
+          "model_configured",
+          "ready",
+          "sources",
+          "issues",
+          "catalog_error"
+        ],
+        "title": "EvidenceCatalog"
+      },
       "EvidenceReview": {
         "properties": {
           "schema_version": {
@@ -2070,6 +2197,52 @@
           "limitation"
         ],
         "title": "EvidenceReview"
+      },
+      "EvidenceSourceSummary": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "publisher": {
+            "type": "string",
+            "title": "Publisher"
+          },
+          "locator": {
+            "type": "string",
+            "title": "Locator"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "source_type",
+          "source_url",
+          "publisher",
+          "locator"
+        ],
+        "title": "EvidenceSourceSummary"
       },
       "ExecutionInput": {
         "properties": {

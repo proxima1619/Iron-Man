@@ -11,6 +11,8 @@ from backend.gateway.service import Gateway
 from backend.gateway import review, notifications
 from backend.contracts import SessionInfo, Notification, ReviewContact
 from backend.config import validate_runtime_config
+from backend.contracts import EvidenceCatalog
+from backend.evidence.service import evidence_catalog
 
 gateway = None
 
@@ -57,8 +59,12 @@ def approver(actor=Depends(identity)):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mode": "demo_only", "mock_modules": ["evidence"],
+    return {"status": "ok", "mode": "demo_only", "mock_modules": ["evidence"] if os.getenv("IRON_MAN_EVIDENCE_MODE", "fixture") == "fixture" else [],
             "storage": "sqlite", "real_equipment_connected": False}
+
+@app.get("/evidence/catalog", response_model=EvidenceCatalog)
+def catalog(actor=Depends(identity)):
+    return evidence_catalog()
 
 @app.get("/state", response_model=Snapshot)
 def state(actor=Depends(identity)):

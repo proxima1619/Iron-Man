@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { components } from "./api.generated";
 import { EvidencePanel } from "./EvidencePanel";
+import { EvidenceCatalog } from "./EvidenceCatalog";
 
 type Row = components["schemas"]["RequestRecord"];
 type Session = components["schemas"]["SessionInfo"];
@@ -223,6 +224,7 @@ export function DemoExperience() {
               </p>
             )}
           </div>
+          <EvidenceCatalog token={operator} />
           <h3>1. 시연 조건 선택</h3>
           <label>
             준비할 부하 비율

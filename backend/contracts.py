@@ -314,6 +314,26 @@ class Notification(StrictModel):
     detail: str
 
 
+class EvidenceSourceSummary(StrictModel):
+    source_id: str
+    title: str
+    source_type: str
+    source_url: str | None
+    publisher: str
+    locator: str
+
+
+class EvidenceCatalog(StrictModel):
+    mode: Literal["fixture", "live", "invalid"]
+    source_mode: Literal["local", "europepmc", "invalid"]
+    api_key_configured: bool
+    model_configured: bool
+    ready: bool
+    sources: list[EvidenceSourceSummary]
+    issues: list[str]
+    catalog_error: bool
+
+
 class SessionInfo(StrictModel):
     role: Literal["operator", "approver"]
     actor_label: str

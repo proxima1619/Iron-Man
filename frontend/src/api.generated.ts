@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evidence/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_evidence_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/state": {
         parameters: {
             query?: never;
@@ -551,6 +568,31 @@ export interface components {
             /** Missing Conditions */
             missing_conditions: string[];
         };
+        /** EvidenceCatalog */
+        EvidenceCatalog: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "fixture" | "live" | "invalid";
+            /**
+             * Source Mode
+             * @enum {string}
+             */
+            source_mode: "local" | "europepmc" | "invalid";
+            /** Api Key Configured */
+            api_key_configured: boolean;
+            /** Model Configured */
+            model_configured: boolean;
+            /** Ready */
+            ready: boolean;
+            /** Sources */
+            sources: components["schemas"]["EvidenceSourceSummary"][];
+            /** Issues */
+            issues: string[];
+            /** Catalog Error */
+            catalog_error: boolean;
+        };
         /** EvidenceReview */
         EvidenceReview: {
             /**
@@ -572,6 +614,21 @@ export interface components {
             proposed_tests: components["schemas"]["Scenario"][];
             /** Limitation */
             limitation: string;
+        };
+        /** EvidenceSourceSummary */
+        EvidenceSourceSummary: {
+            /** Source Id */
+            source_id: string;
+            /** Title */
+            title: string;
+            /** Source Type */
+            source_type: string;
+            /** Source Url */
+            source_url: string | null;
+            /** Publisher */
+            publisher: string;
+            /** Locator */
+            locator: string;
         };
         /** ExecutionInput */
         ExecutionInput: {
@@ -945,6 +1002,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    catalog_evidence_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-iron-man-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceCatalog"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
