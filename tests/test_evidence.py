@@ -51,7 +51,7 @@ def test_live_counterexample_connects_to_simulation(monkeypatch):
 
 @pytest.mark.parametrize("field,value", [
     ("source_id", "invented"), ("excerpt", "invented quote"),
-    ("proposed_test", "execute_command"), ("applicability", "mismatch"),
+    ("proposed_test", "arbitrary code()"), ("applicability", "mismatch"),
     ("stance", "support"), ("missing_conditions", ["unknown load"]),
     ("approval", True),
 ])

@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "mock": false,
+  "status": "insufficient",
+  "cards": [
+    {
+      "evidence_id": "evidence-718698be13943065",
+      "source_id": "paper-PMC10587106",
+      "title": "Estimation and sensitivity analysis of fouling resistance in phosphoric acid/steam heat exchanger using artificial neural networks and regression methods",
+      "stance": "limitation",
+      "claim": "인산·증기 열교환기 연구와 가상 냉각 탱크의 운전 조건 동일성을 확인하지 못했다.",
+      "applicability": "mismatch",
+      "locator": "Europe PMC fullTextXML PMC10587106: abstract/p[1]; abstract/p[2]; body/p[2]; body/p[3]; body/p[4]; body/p[5]",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10587106/",
+      "source_type": "paper",
+      "excerpt": "One of the most frequent problem in phosphoric acid concentration plant is the heat exchanger build-up. This problem causes a reduction of the performance of this equipment and an increase of energy losses which lead to damage the apparatus. In this study, estimation of fouling resistance in a cross-flow heat exchanger was solved using a linear [Partial Least Squares (PLS)] and non linear [Artific",
+      "publisher": "Scientific Reports | Rania Jradi, Christophe Marvillet, Mohamed Razak Jeday",
+      "version": "PMCID=PMC10587106; DOI=10.1038/s41598-023-44516-6; XML-SHA256=731b2acbe05e140e944e6bdc7339a402ac5fd08d1f5e640640f60c2da592c053",
+      "published_at": "2023-10-19",
+      "usage": "https://creativecommons.org/licenses/by/4.0/; authors attributed; whitespace normalized; selected paragraphs only; no figures",
+      "proposed_test": null,
+      "parameter_origin": null,
+      "matched_conditions": [
+        "열교환 성능 검토 주제"
+      ],
+      "missing_conditions": [
+        "유체·설비 동일성",
+        "현재 온도·실제/목표 속도에 대한 문헌 적용 범위"
+      ]
+    }
+  ],
+  "proposed_tests": [],
+  "limitation": "자동 시험 예시 · 실제 LLM 미호출. 근거 출력 계약 검증. 현실 설비 안전을 보증하지 않습니다. 공개 논문 원문 발췌를 사용하며 해당 논문의 설비·유체·범위와 가상 모델의 차이를 확인해야 합니다. 검토 입력: 현재 온도 60.972°C, 실제 속도 68.9252%, 기존 목표 60%, 요청 목표 60%, 부하 1, 가상 시각 30s, 예측 구간 300s, 모델 cooling-demo-v3. 기존 목표 출처: snapshot. 미확인 조건: 유체·설비 동일성; 현재 온도·실제/목표 속도에 대한 문헌 적용 범위 문서 묶음 SHA256: b0761468d4b66d2e326341b9fd3989a443e23494a6907a50a83b51230f002505"
+}

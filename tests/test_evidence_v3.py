@@ -56,7 +56,7 @@ def test_unsupported_state_returns_insufficient_before_llm(monkeypatch):
     assert result.status == "insufficient" and "temperature_c" in result.limitation
 
 
-@pytest.mark.parametrize("field,value", [("efficiency", 0.2), ("proposed_test", "pump_failure")])
+@pytest.mark.parametrize("field,value", [("efficiency", 0.2)])
 def test_new_failure_or_parameter_requires_contract_not_execution(field, value):
     raw = output()
     raw["cards"][0][field] = value

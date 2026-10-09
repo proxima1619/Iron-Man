@@ -1,0 +1,40 @@
+{
+  "example_only": true,
+  "llm_executed": false,
+  "live_model_quality_verified": false,
+  "generation": "Deterministic schema/validator/exception paths; not live LLM inference",
+  "request": {
+    "equipment_id": "cooling-demo-01",
+    "purpose": "냉각 펌프 속도 변경 검토",
+    "command": {
+      "type": "set_pump_speed",
+      "target_pct": 60.0,
+      "duration_s": 300
+    }
+  },
+  "snapshot": {
+    "revision": 3,
+    "temperature_c": 60.97200057806551,
+    "load_ratio": 1.0,
+    "pump_speed_pct": 68.92520713290413,
+    "observed_at": 1700000000.0,
+    "sensor_quality": "valid",
+    "data_origin": "synthetic",
+    "target_pump_speed_pct": 60.0,
+    "simulation_time_s": 30.0,
+    "model_version": "cooling-demo-v3",
+    "calculated_at": null,
+    "domain_status": "ready",
+    "domain_reason": null
+  },
+  "source_bundles": {
+    "team": "99651eb7c3bbcf95f5bd49ded18d47063bbb4d2ad13b122435721390a492220a",
+    "papers": "b0761468d4b66d2e326341b9fd3989a443e23494a6907a50a83b51230f002505"
+  },
+  "files": {
+    "normal.json": "completed team-document test response",
+    "insufficient.json": "real paper excerpt with unconfirmed applicability",
+    "failed.json": "LLM timeout test response",
+    "unsupported-test.json": "unverified proposal omitted pending owner 2 agreement"
+  }
+}

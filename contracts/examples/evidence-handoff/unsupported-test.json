@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "mock": false,
+  "status": "insufficient",
+  "cards": [
+    {
+      "evidence_id": "evidence-8c9a2fc404cf2b5e",
+      "source_id": "team-cooling-counter-v1",
+      "title": "가상 냉각 탱크 검토 규정 — 효율 저하 반례",
+      "stance": "counter",
+      "claim": "가상 설비에서 냉각 효율 저하 조건을 추가 확인한다.",
+      "applicability": "partial",
+      "locator": "data/sources/cooling-demo.json / team-cooling-counter-v1",
+      "source_url": null,
+      "source_type": "team_authored_demo",
+      "excerpt": "대상은 cooling-demo-01 가상 냉각 탱크다. 펌프 속도를 낮추는 변경은 정상 냉각 조건만으로 검토하지 않는다. 냉각 효율이 저하되면 제거되는 열량이 줄어 온도가 상승할 수 있다는 데모 가정을 사용한다. degraded_cooling 추가 시험에서 동일 명령의 온도 제한 초과 여부를 확인해야 한다. 효율 수치는 문헌값이 아니며 시뮬레이터 담당자가 정한 데모 조건을 사용한다.",
+      "publisher": "Iron Man 팀",
+      "version": "1",
+      "published_at": "2026-10-09",
+      "usage": "팀 작성 데모 자료, 프로젝트 내부 사용",
+      "proposed_test": null,
+      "parameter_origin": null,
+      "matched_conditions": [
+        "cooling-demo-01의 set_pump_speed 변경 검토",
+        "문서는 가상 설비 데모에만 적용"
+      ],
+      "missing_conditions": [
+        "지원되지 않는 시험 elevated_coolant_temperature: 검증하지 못함. 2번 시험 계약 합의 필요"
+      ]
+    }
+  ],
+  "proposed_tests": [],
+  "limitation": "자동 시험 예시 · 실제 LLM 미호출. 근거 출력 계약 검증. 현실 설비 안전을 보증하지 않습니다. 팀 작성 데모 규정은 실제 제조사 자료가 아닙니다. 검토 입력: 현재 온도 60.972°C, 실제 속도 68.9252%, 기존 목표 60%, 요청 목표 60%, 부하 1, 가상 시각 30s, 예측 구간 300s, 모델 cooling-demo-v3. 기존 목표 출처: snapshot. 미확인 조건: 지원되지 않는 시험 elevated_coolant_temperature: 검증하지 못함. 2번 시험 계약 합의 필요 문서 묶음 SHA256: 99651eb7c3bbcf95f5bd49ded18d47063bbb4d2ad13b122435721390a492220a"
+}

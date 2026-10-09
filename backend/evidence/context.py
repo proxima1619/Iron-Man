@@ -21,7 +21,11 @@ def review_context(request: NewRequest, snapshot: Snapshot) -> dict:
         "units": {"temperature_c": "degC", "speed": "%", "speed_gap": "percentage_points",
                   "load_ratio": "dimensionless", "time": "s", "efficiency": "dimensionless"},
         "supported_tests": [{"kind": "degraded_cooling", "efficiency": simulator.DEGRADED_EFFICIENCY,
-                             "parameter_origin": "demo_assumption", "parameter_owner": "simulator"}],
+                             "normal_efficiency": 1.0,
+                             "parameter_origin": "demo_assumption", "parameter_owner": "simulator",
+                             "meaning": "overall_cooling_degradation_not_specific_failure",
+                             "unchanged": ["pump_response_s", "load_ratio", "coolant_temperature_c"],
+                             "limitations": "특정 고장 식별·재현이나 실제 고장 상황의 안전성 검증이 아닌 포괄적 데모 반례"}],
     }
 
 
