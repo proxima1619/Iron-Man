@@ -12,6 +12,7 @@ from backend.evidence.service import review_evidence
 from backend.simulator.tep import service as tep
 from backend.simulator.tep.build import source_lock
 from backend.simulator.tep.reference_contracts import ReferenceCatalog, ReferenceSeries
+from backend.simulator.tep.calibration import TEPActuatorCalibrationDataset, TEPActuatorCalibrationResult
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,7 +21,8 @@ def write(relative, value):
 
 if __name__ == '__main__':
     write('contracts/openapi.json', app.openapi())
-    for model in (SimulationResult, EvidenceReview, RequestRecord, TEPResult, ReferenceCatalog, ReferenceSeries):
+    for model in (SimulationResult, EvidenceReview, RequestRecord, TEPResult, ReferenceCatalog, ReferenceSeries,
+                  TEPActuatorCalibrationDataset, TEPActuatorCalibrationResult):
         write(f'contracts/{model.__name__}.schema.json', model.model_json_schema())
     request = NewRequest(command={'target_pct': 80})
     snapshot = Snapshot(revision=1, temperature_c=60, load_ratio=1, pump_speed_pct=100,

@@ -1,0 +1,276 @@
+{
+  "$defs": {
+    "ActuatorErrors": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_count": {
+          "exclusiveMinimum": 0,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "unit": {
+          "const": "percent_full_scale",
+          "default": "percent_full_scale",
+          "title": "Unit",
+          "type": "string"
+        },
+        "bias": {
+          "title": "Bias",
+          "type": "number"
+        },
+        "rmse": {
+          "minimum": 0,
+          "title": "Rmse",
+          "type": "number"
+        },
+        "maximum_abs_error": {
+          "minimum": 0,
+          "title": "Maximum Abs Error",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sample_count",
+        "bias",
+        "rmse",
+        "maximum_abs_error"
+      ],
+      "title": "ActuatorErrors",
+      "type": "object"
+    },
+    "ActuatorFit": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "const": "actuator_response_time",
+          "default": "actuator_response_time",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "unit": {
+          "const": "s",
+          "default": "s",
+          "title": "Unit",
+          "type": "string"
+        },
+        "tau_s": {
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Tau S",
+          "type": "number"
+        },
+        "runtime_default_tau_s": {
+          "const": 5.0,
+          "default": 5.0,
+          "title": "Runtime Default Tau S",
+          "type": "number"
+        },
+        "training_errors": {
+          "$ref": "#/$defs/ActuatorErrors"
+        },
+        "validation_errors": {
+          "$ref": "#/$defs/ActuatorErrors"
+        },
+        "default_validation_errors": {
+          "$ref": "#/$defs/ActuatorErrors"
+        },
+        "nearby_prediction_change": {
+          "minimum": 0,
+          "title": "Nearby Prediction Change",
+          "type": "number"
+        },
+        "nearby_prediction_change_unit": {
+          "const": "percent_full_scale",
+          "default": "percent_full_scale",
+          "title": "Nearby Prediction Change Unit",
+          "type": "string"
+        },
+        "diagnostic_scope": {
+          "const": "local_sensitivity_not_confidence_interval",
+          "default": "local_sensitivity_not_confidence_interval",
+          "title": "Diagnostic Scope",
+          "type": "string"
+        },
+        "at_search_boundary": {
+          "title": "At Search Boundary",
+          "type": "boolean"
+        },
+        "validation_passed": {
+          "title": "Validation Passed",
+          "type": "boolean"
+        },
+        "rejection_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rejection Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tau_s",
+        "training_errors",
+        "validation_errors",
+        "default_validation_errors",
+        "nearby_prediction_change",
+        "at_search_boundary",
+        "validation_passed",
+        "rejection_reasons"
+      ],
+      "title": "ActuatorFit",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "tep-actuator-calibration-result-1.0",
+      "default": "tep-actuator-calibration-result-1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tool_version": {
+      "const": "tep-actuator-calibration-v1",
+      "default": "tep-actuator-calibration-v1",
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "candidate_ready",
+        "candidate_rejected",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "usage": {
+      "const": "offline_candidate_only",
+      "default": "offline_candidate_only",
+      "title": "Usage",
+      "type": "string"
+    },
+    "activated": {
+      "const": false,
+      "default": false,
+      "title": "Activated",
+      "type": "boolean"
+    },
+    "can_approve": {
+      "const": false,
+      "default": false,
+      "title": "Can Approve",
+      "type": "boolean"
+    },
+    "validation_scope": {
+      "const": "cooling_actuator_response_only",
+      "default": "cooling_actuator_response_only",
+      "title": "Validation Scope",
+      "type": "string"
+    },
+    "whole_process_field_validation": {
+      "const": "not_performed",
+      "default": "not_performed",
+      "title": "Whole Process Field Validation",
+      "type": "string"
+    },
+    "source_authentication": {
+      "const": "user_declared_not_authenticated",
+      "default": "user_declared_not_authenticated",
+      "title": "Source Authentication",
+      "type": "string"
+    },
+    "data_origin": {
+      "anyOf": [
+        {
+          "enum": [
+            "measured",
+            "simulation"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Origin"
+    },
+    "candidate_model_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Candidate Model Version"
+    },
+    "input_file_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Input File Sha256"
+    },
+    "canonical_dataset_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Canonical Dataset Sha256"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "fitted_parameters": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ActuatorFit"
+      },
+      "propertyNames": {
+        "enum": [
+          "XMV10",
+          "XMV11"
+        ]
+      },
+      "title": "Fitted Parameters",
+      "type": "object"
+    },
+    "failure_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Code"
+    },
+    "detail": {
+      "title": "Detail",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "detail"
+  ],
+  "title": "TEPActuatorCalibrationResult",
+  "type": "object"
+}
