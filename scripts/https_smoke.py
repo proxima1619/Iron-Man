@@ -60,6 +60,11 @@ def run(access, ca_file=None, http_url=None):
     assert request("/api/requests")[0] == 401  # Site password alone has no role.
     assert request("/api/requests", login=False, token=access["operator_token"])[0] == 401
     operator, approver = access["operator_token"], access["approver_token"]
+    from scripts.tep_smoke import run as run_tep
+    def tep_request(path, *, token, body=None):
+        status, raw = request("/api" + path, token=token, body=body)
+        return status, json.loads(raw)
+    run_tep(tep_request, operator, approver)
     assert request("/api/state", token=operator)[0] == 200
     assert request("/api/demo/reset", token=approver, body={})[0] == 200
     for speed, verdict in ((60, "blocked"), (80, "awaiting_approval")):
