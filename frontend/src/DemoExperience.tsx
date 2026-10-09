@@ -325,15 +325,17 @@ export function DemoExperience() {
                 void run(async () => {
                   await demoOnly();
                   setPlant(await api<Snapshot>("/demo/sample", "approver", {}));
+                  setRow(null);
+                  setFromDatabase(false);
                   setConfirmed(false);
+                  setReason("");
                 })
               }
             >
               가상 상태 다시 읽기
             </button>
             <p className="muted">
-              가상 센서의 관측 시각을 갱신합니다. 저장된 과거 결과를 수정하거나
-              설비를 초기화하지 않습니다.
+              관측 시각을 갱신하고 오른쪽의 이전 결과를 닫습니다. 새 검토를 시작하면 갱신된 상태로 계산합니다. 과거 기록은 목록에 보관됩니다.
             </p>
             <button
               className="primary full"
@@ -435,6 +437,7 @@ export function DemoExperience() {
                 </p>
               )}
               <p className="verdict">
+                {report && <strong>저장된 검토 판정: </strong>}
                 {report?.reason ||
                   (row.status === "evaluating"
                     ? "검토가 진행 중입니다."
@@ -541,7 +544,7 @@ export function DemoExperience() {
           {row && <RecordFeedback record={row} token={operator} />}
           {report?.reason_code === "INVALID_STATE" && (
             <aside className="evidence-hold">
-              <h3>왜 검토가 멈췄나요?</h3>
+              <h3>당시 검토가 보류된 이유</h3>
               <p>
                 {coolingSnapshot?.sensor_quality !== "valid"
                   ? "당시 센서 품질이 불량했습니다."
@@ -550,8 +553,7 @@ export function DemoExperience() {
                     : "센서와 모델 범위는 유효합니다. 당시 관측 시각이 60초 유효 시간을 벗어났거나 서버 시각보다 미래였기 때문에 검토가 시작되지 않았습니다."}
               </p>
               <p>
-                이 기록은 AI 피드백으로 설명받을 수 있습니다. 새 계산이 필요하면
-                왼쪽에서 가상 상태를 다시 읽고 새 요청을 시작하세요.
+                이 문구는 저장된 과거 판정이며 새 AI 호출 오류가 아닙니다. 관측 갱신 후에도 기존 보고서는 유지됩니다. 이 기록은 위의 AI 피드백으로 설명받을 수 있습니다. 새 계산이 필요하면 가상 상태를 다시 읽고 새 요청을 시작하세요.
               </p>
             </aside>
           )}
